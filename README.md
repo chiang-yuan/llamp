@@ -32,12 +32,12 @@ Experience the future of materials exploration with Materiathena – your intell
 
 - [ ] Convert Materials Project API response to natural language output
 - [ ] Instead of using prompt template, use langchain tool to read API specs and generate compatable input fields. Caveat: Materials Project's API specs may not be very comprehensive.
-- [ ] 
+- [ ] Streamlit integration with [crystaltoolkit](https://docs.crystaltoolkit.org/) to visualize quried material structure!!! :fire:
 
 
 ## Resources
 
-### Materials Projects
+### [Materials Projects](https://materialsproject.org/)
 
 - [Materials Project API Doc](https://docs.materialsproject.org/)
 - [Materials Porject API Specs](https://api.materialsproject.org/docs)
