@@ -38,7 +38,7 @@ Experience the future of materials exploration with Materiathena – your intell
 
 ## Resources
 
-### [Materials Projects](https://materialsproject.org/)
+### [Materials Project](https://materialsproject.org/)
 
 - [Materials Project API Doc](https://docs.materialsproject.org/)
 - [Materials Porject API Specs](https://api.materialsproject.org/docs)
