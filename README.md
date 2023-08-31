@@ -27,15 +27,6 @@ Whether you're a researcher, engineer, student, or anyone with a curiosity about
 
 Experience the future of materials exploration with Materiathena – your intelligent guide to the world of materials science and discovery.
 
-
-# TODOs
-
-- [ ] Convert Materials Project API response to natural language output
-- [ ] Instead of using prompt template, use langchain tool to read API specs and generate compatable input fields. Caveat: Materials Project's API specs may not be very comprehensive.
-- [ ] Streamlit integration with [crystaltoolkit](https://docs.crystaltoolkit.org/) to visualize quried material structure!!! :fire:
-- [ ] Wikipedia/Wolfram alpha integration for general information
-
-
 ## Resources
 
 ### [Materials Project](https://materialsproject.org/)
