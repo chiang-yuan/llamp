@@ -107,8 +107,8 @@ class LLMaterialsAgent:
                 {
                     "role": "function",
                     "name": function_name,
-                    # "content": json.dumps(function_response[0]),
-                    "content": function_response,
+                    "content": json.dumps(function_response[0]),
+                    # "content": function_response,
                 }
             )  # extend conversation with function response
             breakpoint()
