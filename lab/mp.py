@@ -10,7 +10,6 @@ from langchain.tools import APIOperation, OpenAPISpec
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
 MP_API_KEY = os.getenv("MP_API_KEY", None)
-openai.api_key = OPENAI_API_KEY
 
 # from langchain.chains import OpenAPIEndpointChain
 # from langchain.requests import Requests
@@ -93,7 +92,8 @@ class LLMaterialsAgent:
             }  # only one function in this example, but you can have multiple
             function_name = response_message["function_call"]["name"]
             function_to_call = available_functions[function_name]
-            function_args = json.loads(response_message["function_call"]["arguments"])
+            function_args = json.loads(
+                response_message["function_call"]["arguments"])
             function_response = function_to_call(query_params=function_args)
 
             breakpoint()
