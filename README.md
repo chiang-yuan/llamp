@@ -52,4 +52,5 @@ https://python.langchain.com/docs/modules/chains/additional/openapi
 - [Text summerization with langchain openai and create a 
 streamlit app](https://alphasec.io/summarize-text-with-langchain-and-openai/)
 - [Twitter bot for arxiv summarization](https://levelup.gitconnected.com/build-a-twitter-bot-for-arxiv-paper-summarization-by-openai-and-langchain-in-10-minutes-e57de6b32e03)
+- [Langchaing: Build a Text Summarization app](https://blog.streamlit.io/langchain-tutorial-3-build-a-text-summarization-app/)
 

@@ -170,9 +170,16 @@ class MPLLM:
     def material_routes(self):
         return {
             # "search_base": self.search_base,
+            "search_materials_bonds__get": None,
             "search_materials_thermo__get": self.search_materials_thermo,
-            # "search_materials_core__get": self.search_materials_core,
+            "search_materials_dielectric__get": None,
+            "search_materials_piezoelectric__get": None,
+            "search_materials_magnetism__get": None,
+            "search_materials_core__get": self.search_materials_core,
+            "search_materials_eos__get": None,
+            "get_by_key_materials_similarity__material_id___get": None,
             "search_materials_summary__get": self.search_materials_summary,
+            "search_materials_elasticity__get": None,
         }
 
     @property
