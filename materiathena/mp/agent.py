@@ -17,7 +17,9 @@ from ..utils import MP_API_KEY, OPENAI_API_KEY
 
 
 class MPLLM:
-    spec = OpenAPISpec.from_file("./mp_openapi.json")
+    spec = OpenAPISpec.from_file(
+        osp.join(Path(__file__).parent.resolve(), "mp_openapi.json")
+    )
 
     def __init__(self, mp_api_key=MP_API_KEY, openai_api_key=OPENAI_API_KEY) -> None:
         openai.api_key = openai_api_key
