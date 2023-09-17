@@ -32,7 +32,7 @@ class MPLLM:
         return self.mpr.materials._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-    
+
     def fetch_materials_similarity(self, material_id: str, query_params: dict):
         fields = query_params.pop("fields", None)
         if fields:
@@ -44,7 +44,7 @@ class MPLLM:
         return self.mpr.materials.get_data_by_id(
             document_id=material_id, **query_params
         )
-    
+
     def search_materials_bonds(self, query_params: dict):
         fields = query_params.pop("fields", None)
         if fields:
@@ -56,7 +56,7 @@ class MPLLM:
         return self.mpr.bonds._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-    
+
     def search_materials_eos(self, query_params: dict):
         fields = query_params.pop("fields", None)
         if fields:
@@ -64,7 +64,7 @@ class MPLLM:
         _fields = query_params.pop("_fields", None)
         if _fields:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
-        
+
         return self.mpr.eos._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
@@ -104,7 +104,7 @@ class MPLLM:
         return self.mpr.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-    
+
     def search_materials_dielectric(self, query_params):
         fields = query_params.pop("fields", None)
         if fields:
@@ -116,7 +116,7 @@ class MPLLM:
         return self.mpr.dielectric._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-    
+
     def search_materials_piezoelectric(self, query_params):
         fields = query_params.pop("fields", None)
         if fields:
@@ -128,7 +128,7 @@ class MPLLM:
         return self.mpr.piezoelectric._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-    
+
     def search_materials_magnetism(self, query_params):
         fields = query_params.pop("fields", None)
         if fields:
@@ -137,10 +137,40 @@ class MPLLM:
         if _fields:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
+        if "formula" in query_params:
+            material_docs = self.mpr.materials.search(
+                formula=query_params.pop("formula").split(","), fields=["material_id"]
+            )
+
+            material_ids = [doc["material_id"] for doc in material_docs]
+
+            # return self.mpr.magnetism._search(
+            #     num_chunks=None, chunk_size=1000, all_fields=True,
+            #     material_ids=material_ids,
+            #     **query_params
+            # )
+
+            return self.mpr.magnetism.search(
+                material_ids=material_ids,
+                fields=[
+                    "formula_pretty",
+                    "ordering",
+                    "is_magnetic",
+                    "exchange_symmetry",
+                    "num_magnetic_sites",
+                    "num_unique_magnetic_sites",
+                    "types_of_magnetic_species",
+                    "magmoms",
+                    "total_magnetization",
+                    "total_magnetization_normalized_vol",
+                    "total_magnetization_normalized_formula_units",
+                ],
+            )
+
         return self.mpr.magnetism._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-    
+
     def search_materials_elasticity(self, query_params):
         fields = query_params.pop("fields", None)
         if fields:
@@ -151,26 +181,26 @@ class MPLLM:
 
         if "formula" in query_params:
             material_docs = self.mpr.materials.search(
-                formula=query_params["formula"].split(","), 
-                fields=["material_id"]
+                formula=query_params["formula"].split(","), fields=["material_id"]
             )
 
             elastic_docs = []
             for doc in material_docs:
                 try:
                     elastic_doc = self.mpr.elasticity.get_data_by_id(
-                        document_id=doc['material_id'], fields=["pretty_formula", "elasticity", "task_id"]
+                        document_id=doc["material_id"],
+                        fields=["pretty_formula", "elasticity", "task_id"],
                     )
                     elastic_docs.extend(elastic_doc)
                 except Exception:
                     continue
-            
+
             return elastic_docs
 
         return self.mpr.elasticity._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-    
+
     def search_materials_electronic_structure(self, query_params):
         fields = query_params.pop("fields", None)
         if fields:
@@ -261,7 +291,7 @@ class MPLLM:
             "search_materials_tasks__get": self.search_materials_tasks,
             "get_by_key_materials_similarity__material_id___get": self.fetch_materials_similarity,
             "search_materials_bonds__get": self.search_materials_bonds,
-            "search_materials_eos__get" : None,
+            "search_materials_eos__get": None,
             "search_materials_thermo__get": self.search_materials_thermo,
             "search_materials_dielectric__get": self.search_materials_dielectric,
             "search_materials_piezoelectric__get": self.search_materials_piezoelectric,
@@ -275,7 +305,10 @@ class MPLLM:
         raise NotImplementedError("Molecule functions not supported yet.")
 
     def run_material_conversation(
-        self, user_input: str, model: str = "gpt-3.5-turbo-16k-0613", debug: bool = False
+        self,
+        user_input: str,
+        model: str = "gpt-3.5-turbo-16k-0613",
+        debug: bool = False,
     ):
         # TODO: polish system content
         messages = [
@@ -341,7 +374,7 @@ class MPLLM:
             )
         # else:
         #     raise Exception("Failed to get response from OpenAI API.")
-        
+
         if debug:
             print(second_response)
 
