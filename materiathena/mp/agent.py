@@ -30,7 +30,7 @@ class MPLLM:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.materials._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def fetch_materials_similarity(self, material_id: str, query_params: dict):
@@ -54,7 +54,7 @@ class MPLLM:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.bonds._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_eos(self, query_params: dict):
@@ -66,7 +66,7 @@ class MPLLM:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.eos._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_summary(self, query_params: dict):
@@ -90,7 +90,7 @@ class MPLLM:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.tasks._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_thermo(self, query_params):
@@ -102,7 +102,7 @@ class MPLLM:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.thermo._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_dielectric(self, query_params):
@@ -114,7 +114,7 @@ class MPLLM:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.dielectric._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_piezoelectric(self, query_params):
@@ -126,7 +126,7 @@ class MPLLM:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.piezoelectric._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_magnetism(self, query_params):
@@ -153,6 +153,7 @@ class MPLLM:
             return self.mpr.magnetism.search(
                 material_ids=material_ids,
                 fields=[
+                    "material_id",
                     "formula_pretty",
                     "ordering",
                     "is_magnetic",
@@ -168,7 +169,7 @@ class MPLLM:
             )
 
         return self.mpr.magnetism._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_elasticity(self, query_params):
@@ -198,7 +199,7 @@ class MPLLM:
             return elastic_docs
 
         return self.mpr.elasticity._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_electronic_structure(self, query_params):
@@ -210,7 +211,7 @@ class MPLLM:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.electronic_structure._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     @property
@@ -315,11 +316,12 @@ class MPLLM:
             {
                 "role": "system",
                 "content": (
-                    "You are a data-vigilent agent that responds user requrests based on data hosted on Materials Project."
+                    "You are a data-vigilent agent that responds user requests based on data hosted on Materials Project. "
+                    "Look carefully the function parameters and use ones you have been provided with. "
+                    "Don't make assumptions about the values to plug into functions. Ask for clarification if a user request is ambiguous. "
+                    "You must provide `fields` or `_fields` to specify which fields to return. "
                     "Read the response from function calls carefully and find out relevant information to respond to user requests."
-                    "Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous. Only use the functions you have been provided with."
-                    "You must provide `fields` or `_fields` to specify which fields to return."
-                    "Pass as many arguments as possible for function calling to restrict the response to avoid timeout."
+                    # "Pass as many arguments as possible for function calling to restrict the response to avoid timeout."
                 ),
             },
             {"role": "user", "content": user_input},
@@ -331,14 +333,18 @@ class MPLLM:
                 messages=messages,
                 functions=self.material_functions,
                 function_call="auto",
+                temperature=0,
+                top_p=1
             )
         except Exception as e:
-            print("Error:", e, "Trying again with gpt-4-32k-0613.")
+            print("Error:", e, "Trying again with gpt-4-32k.")
             response = openai.ChatCompletion.create(
-                model="gpt-4-32k-0613",
+                model="gpt-4-32k",
                 messages=messages,
                 functions=self.material_functions,
                 function_call="auto",
+                temperature=0,
+                top_p=1
             )
 
         if debug:
@@ -350,6 +356,9 @@ class MPLLM:
         function_to_call = self.material_routes[function_name]
         function_args = json.loads(response_message["function_call"]["arguments"])
         function_response = function_to_call(query_params=function_args)
+
+        if debug:
+            print(function_response)
 
         content = json.dumps(function_response)
 
@@ -367,9 +376,9 @@ class MPLLM:
                 messages=messages,
             )
         except Exception as e:
-            print("Error:", e, "Trying again with gpt-3.5-turbo-16k-0613.")
+            print("Error:", e, "Trying again with gpt-4-32k.")
             second_response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo-16k-0613",
+                model="gpt-4-32k",
                 messages=messages,
             )
         # else:
