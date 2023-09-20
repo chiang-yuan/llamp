@@ -3,7 +3,7 @@ requires      = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "materiathena"
+name = "llamp"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Yuan Chiang", email = "cyrusyc@lbl.gov" }]

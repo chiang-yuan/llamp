@@ -1,6 +1,7 @@
 import json
 import os.path as osp
 import re
+import time
 from pathlib import Path
 
 import openai
@@ -299,17 +300,17 @@ class MPLLM:
             # Here we only use a subset of functions.
             # functions = self.functions
             functions = json.load(f)
-            # idx = list(map(lambda x: x["name"], functions)).index(
-            #     "search_materials_core__get"
-            # )
-            # functions.pop(idx)
+            idx = list(map(lambda x: x["name"], functions)).index(
+                "search_materials_core__get"
+            )
+            functions.pop(idx)
             return functions
 
     @property
     def material_routes(self):
         return {
-            "search_materials_core_formula_autocomplete__get": self.search_materials_core,
-            "search_materials_core__get": self.search_materials_core,
+            # "search_materials_core_formula_autocomplete__get": self.search_materials_core,
+            # "search_materials_core__get": self.search_materials_core,
             "search_materials_absorption__get": None,
             "search_materials_bonds__get": self.search_materials_bonds,
             "search_materials_chemenv__get": None,
@@ -429,9 +430,9 @@ class MPLLM:
                     the expert-curated data retrieved from Materials Project and the 
                     conversation history below. Don't make assumptions about the values 
                     to plug into the functions. Ask for clarification if the user 
-                    request is ambiguous. Read the response from function calls 
-                    carefully and find out relevant information to respond to user 
-                    requests.""",
+                    request is ambiguous. Provide `_fields` or `field` to the function 
+                    whenever possible. Read the response from function calls carefully
+                    and find out relevant information to respond to user requests."""
                 ).strip().replace('\n', ' ')
             },
             *self.messages,
@@ -469,6 +470,7 @@ class MPLLM:
         
         while True:
             user_input = user_input if user_input else input("User: ")
+            print("User:", user_input)
             gen_reponse = self.general_reponse(
                 {"role": "user", "content": user_input},
                 model=model if model else "gpt-3.5-turbo-0613",
@@ -490,7 +492,13 @@ class MPLLM:
                     "name", None
                 )
 
+                print("OpenAI:", mat_reponse_msg)
+
                 if function_name:
+                    
+                    print("MP API call:", function_name)
+                    print("MP API args:", mat_reponse_msg["function_call"]["arguments"])
+
                     function_to_call = self.material_routes.get(function_name)
                     if function_to_call is None:
                         print(f"Function {function_name} is not supported yet.")
@@ -500,6 +508,9 @@ class MPLLM:
                         mat_reponse_msg["function_call"]["arguments"]
                     )
                     function_response = function_to_call(query_params=function_args)
+
+                    if debug:
+                        print("MP API response:", json.dumps(function_response))
 
                     gen_reponse = self.general_reponse(
                         {
@@ -514,11 +525,14 @@ class MPLLM:
 
                     gen_reponse_msg = gen_reponse["choices"][0]["message"]  # type: ignore
 
+            if gen_reponse_msg["content"] == "Goodbye!":
+                break
+
             self._messages.append(gen_reponse_msg)
             
-            print(gen_reponse_msg["content"])
+            print("OpenAI:", gen_reponse_msg["content"])
+            time.sleep(0.5)
 
             user_input = None
 
-            if gen_reponse_msg["content"] == "Goodbye!":
-                return
+            
