@@ -162,7 +162,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_absorption__get",
@@ -282,7 +285,10 @@
                     "type": "boolean",
                     "description": "Include all fields."
                 }
-            }
+            },
+            "required": [
+                "_fields"
+            ]
         }
     },
     {
@@ -356,7 +362,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_chemenv__get",
@@ -505,7 +514,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_tasks_trajectory__get",
@@ -591,7 +603,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "get_by_key_materials_thermo_phase_diagram__phase_diagram_id___ge",
@@ -614,7 +629,8 @@
             }
         },
         "required": [
-            "phase_diagram_id"
+            "phase_diagram_id",
+            "_fields"
         ]
     },
     {
@@ -804,7 +820,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_dielectric__get",
@@ -877,7 +896,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_piezoelectric__get",
@@ -926,7 +948,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_magnetism__get",
@@ -1007,7 +1032,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "get_by_key_materials_phonon__material_id___get",
@@ -1030,7 +1058,8 @@
             }
         },
         "required": [
-            "material_id"
+            "material_id",
+            "_fields"
         ]
     },
     {
@@ -1054,7 +1083,8 @@
             }
         },
         "required": [
-            "task_id"
+            "task_id",
+            "_fields"
         ]
     },
     {
@@ -1108,7 +1138,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "get_by_key_materials_similarity__material_id___get",
@@ -1189,7 +1222,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_grain_boundary__get",
@@ -1294,7 +1330,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "get_by_key_materials_fermi__task_id___get",
@@ -1637,7 +1676,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_robocrys_text_search__get",
@@ -1698,7 +1740,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_insertion_electrodes__get",
@@ -1899,7 +1944,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_oxidation_states__get",
@@ -1952,7 +2000,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_alloys__get",
@@ -2038,7 +2089,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_charge_density__get",
@@ -2612,7 +2666,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_electronic_structure_bandstructure__get",
@@ -2677,7 +2734,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_electronic_structure_dos__get",
@@ -2734,7 +2794,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_electronic_structure__get",
@@ -2891,7 +2954,10 @@
                     "description": "Include all fields."
                 }
             }
-        }
+        },
+        "required": [
+            "_fields"
+        ]
     },
     {
         "name": "search_materials_electronic_structure_bandstructure_object__get",
