@@ -7,11 +7,12 @@ from pathlib import Path
 import openai
 from langchain.tools import OpenAPISpec
 from mp_api.client import MPRester
+from pydantic import BaseModel
 
 from ..utils import MP_API_KEY, OPENAI_API_KEY
 
 
-class MPLLM:
+class MPLLM(BaseModel):
     spec = OpenAPISpec.from_file(
         osp.join(Path(__file__).parent.resolve(), "mp_openapi.json")
     )
@@ -85,6 +86,12 @@ class MPLLM:
         if _fields:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
+        if query_params.get("material_ids"):
+            material_ids = query_params.get("material_ids").split(",")
+            if len(material_ids) < 5: # TODO: move 5 to settings
+                return self.mpr.summary._search(
+                    num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+                )        
         return self.mpr.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
@@ -98,6 +105,17 @@ class MPLLM:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
         return self.mpr.robocrys._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+        )
+    
+    def search_materials_provenance(self, query_params: dict):
+        fields = query_params.pop("fields", None)
+        if fields:
+            query_params["fields"] = fields.split(",")
+        _fields = query_params.pop("_fields", None)
+        if _fields:
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
+        return self.mpr.provenance._search(
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_tasks(self, query_params: dict):
@@ -119,6 +137,9 @@ class MPLLM:
         _fields = query_params.pop("_fields", None)
         if _fields:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
+        
+        # FIXME: _limit is not a valid query parameter for thermo search
+        query_params["_limit"] = query_params.pop("limit", None)
 
         return self.mpr.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -211,7 +232,10 @@ class MPLLM:
                         document_id=doc["material_id"],
                         fields=["pretty_formula", "elasticity", "task_id"],
                     )
-                    elastic_docs.extend(elastic_doc)
+
+                    # print(elastic_doc)
+                    elastic_docs.append(elastic_doc)
+                    
                 except Exception:
                     continue
 
@@ -357,17 +381,24 @@ class MPLLM:
     def messages(self) -> list[dict[str, str]]:
         return self._messages
 
-    def trim_messages(self):
+    def trim_messages(self, debug: bool = False):
         total_tokens = sum(len(message["content"].split()) for message in self.messages)
         while total_tokens > self.max_tokens:
             oldest_message = self.messages.pop(0)
+            if debug:
+                print(f'remove message: {oldest_message}')
             total_tokens -= len(oldest_message["content"].split())
 
-    def general_reponse(self, message: dict[str, str], model="gpt-3.5-turbo-0613"):
+    def general_reponse(
+            self, 
+            message: dict[str, str], 
+            model="gpt-3.5-turbo-0613", 
+            debug: bool = False
+            ):
 
         if message["role"] != "function":
             self.messages.append(message)
-            self.trim_messages()
+            self.trim_messages(debug=debug)
 
         messages = [
             {
@@ -392,8 +423,8 @@ class MPLLM:
                 "content": re.sub(
                     r"\s+",
                     " ",
-                    """Now you need to decide, based on the conversation above, whether 
-                    to call Materials Project API for data or answer user requests 
+                    """Now you need to decide, based on the last request above, whether 
+                    to call Materials Project API for data or answer user request 
                     directly based on the information you have. If you decide to call 
                     Materials Project API, respond 'Calling Materials Project API...'.
                     If the user request is ambiguous, respond 'Please clarify your
@@ -415,10 +446,13 @@ class MPLLM:
         return response
 
     def material_response(
-        self, message: dict[str, str], model="gpt-3.5-turbo-16k-0613"
+        self, 
+        message: dict[str, str], 
+        model="gpt-3.5-turbo-16k-0613",
+        debug: bool = False
     ):
         self.messages.append(message)
-        self.trim_messages()
+        self.trim_messages(debug=debug)
 
         messages = [
             {
@@ -429,10 +463,11 @@ class MPLLM:
                     """You are a data-vigilant agent that answer user requests based on 
                     the expert-curated data retrieved from Materials Project and the 
                     conversation history below. Don't make assumptions about the values 
-                    to plug into the functions. Ask for clarification if the user 
-                    request is ambiguous. Provide `_fields` or `field` to the function 
-                    whenever possible. Read the response from function calls carefully
-                    and find out relevant information to respond to user requests."""
+                    to plug into the functions. Always read carefully the function 
+                    specifications. Ask for clarification if the user request is 
+                    ambiguous. Provide `_fields` or `field` to the function whenever 
+                    possible. Read the response from function calls carefully and find 
+                    out relevant information to respond to user requests."""
                 ).strip().replace('\n', ' ')
             },
             *self.messages,
@@ -474,9 +509,10 @@ class MPLLM:
             gen_reponse = self.general_reponse(
                 {"role": "user", "content": user_input},
                 model=model if model else "gpt-3.5-turbo-0613",
+                debug=debug
             )
             if debug:
-                print(gen_reponse)
+                print('OpenAI General:', gen_reponse)
 
             gen_reponse_msg = gen_reponse["choices"][0]["message"]  # type: ignore
 
@@ -484,30 +520,38 @@ class MPLLM:
                 mat_reponse = self.material_response(
                     {"role": "user", "content": user_input},
                     model=model if model else "gpt-3.5-turbo-16k-0613",
+                    debug=debug
                 )
                 if debug:
-                    print(mat_reponse)
+                    print('LLaMP Function Calling:', mat_reponse)
                 mat_reponse_msg = mat_reponse["choices"][0]["message"]  # type: ignore
                 function_name = mat_reponse_msg.get("function_call", {}).get(
                     "name", None
                 )
 
-                print("OpenAI:", mat_reponse_msg)
+                print("LLaMP:", mat_reponse_msg)
 
                 if function_name:
-                    
-                    print("MP API call:", function_name)
-                    print("MP API args:", mat_reponse_msg["function_call"]["arguments"])
+                    if debug:
+                        print("MP API call:", function_name)
+                        print("MP API args:", mat_reponse_msg["function_call"]["arguments"])
 
                     function_to_call = self.material_routes.get(function_name)
                     if function_to_call is None:
                         print(f"Function {function_name} is not supported yet.")
+                        user_input = None
                         continue
 
                     function_args = json.loads(
                         mat_reponse_msg["function_call"]["arguments"]
                     )
-                    function_response = function_to_call(query_params=function_args)
+                    try:
+                        function_response = function_to_call(query_params=function_args)
+                    except Exception as e:
+                        print("Error:", e)
+                        print("Please provide more information or try smaller request.")
+                        user_input = None
+                        continue
 
                     if debug:
                         print("MP API response:", json.dumps(function_response))
@@ -519,19 +563,20 @@ class MPLLM:
                             "content": json.dumps(function_response),
                         },
                         model=model if model else "gpt-3.5-turbo-0613",
+                        debug=debug
                     )
                     if debug:
-                        print(gen_reponse)
+                        print("OpenAI Text Completion:", gen_reponse)
 
                     gen_reponse_msg = gen_reponse["choices"][0]["message"]  # type: ignore
 
-            if gen_reponse_msg["content"] == "Goodbye!":
-                break
 
             self._messages.append(gen_reponse_msg)
             
             print("OpenAI:", gen_reponse_msg["content"])
             time.sleep(0.5)
+            if gen_reponse_msg["content"] == "Goodbye!":
+                break
 
             user_input = None
 

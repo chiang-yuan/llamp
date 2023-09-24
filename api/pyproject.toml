@@ -9,16 +9,21 @@ description = ""
 authors = [{ name = "Yuan Chiang", email = "cyrusyc@lbl.gov" }]
 license = { file = "LICENSE" }
 dependencies = [
-    "mp-api>=0.33.3",
+    "mp-api==0.33.3",
+    "openai",
+    "langchain>=0.0.295"
 ]
 requires-python = ">=3.9"
 
 
 [project.urls]
-Homepage = "https://github.com/chiang-yuan/materiathena"
+Homepage = "https://github.com/chiang-yuan/llamp"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
-include = ["materiathena"]
+include = ["llamp"]
 exclude = []
 
 
@@ -65,5 +70,5 @@ line-length = 88
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-# Assume Python 3.10.
-target-version = "py310"
+# Assume Python 3.11.
+target-version = "py311"
