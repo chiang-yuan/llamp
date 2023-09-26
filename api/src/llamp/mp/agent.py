@@ -3,19 +3,31 @@ import os.path as osp
 import re
 import time
 from pathlib import Path
-
 import openai
-from langchain.tools import OpenAPISpec
+from langchain.agents.agent_toolkits import OpenAPIToolkit
+from langchain.tools.json.tool import JsonSpec
+from langchain.schema import (
+    ChatMessage,
+    SystemMessage,
+    messages_to_dict,
+    AIMessage,
+    HumanMessage,
+)
 from mp_api.client import MPRester
 from pydantic import BaseModel
-
 from ..utils import MP_API_KEY, OPENAI_API_KEY
 
+# from langchain.agents.agent_toolkits.openapi import OpenAPISpec
 
-class MPLLM(BaseModel):
-    spec = OpenAPISpec.from_file(
-        osp.join(Path(__file__).parent.resolve(), "mp_openapi.json")
-    )
+
+class MPLLM:
+    spec = JsonSpec.from_file(Path(__file__).parent.resolve() / "mp_openapi.json")
+
+    # NOTE: json explorer
+    # spec = OpenAPIToolkit.parse_file(
+    #     osp.join(Path(__file__).parent.resolve(), "mp_openapi.json")
+    # )
+
     def __init__(
         self,
         mp_api_key=MP_API_KEY,
@@ -66,6 +78,18 @@ class MPLLM(BaseModel):
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
+    def search_materials_chemenv(self, query_params: dict):
+        fields = query_params.pop("fields", None)
+        if fields:
+            query_params["fields"] = fields.split(",")
+        _fields = query_params.pop("_fields", None)
+        if _fields:
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
+
+        return self.mpr.chemenv._search(
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
+        )
+
     def search_materials_eos(self, query_params: dict):
         fields = query_params.pop("fields", None)
         if fields:
@@ -86,15 +110,94 @@ class MPLLM(BaseModel):
         if _fields:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
-        if query_params.get("material_ids"):
-            material_ids = query_params.get("material_ids").split(",")
-            if len(material_ids) < 5: # TODO: move 5 to settings
-                return self.mpr.summary._search(
-                    num_chunks=None, chunk_size=1000, all_fields=True, **query_params
-                )        
-        return self.mpr.summary._search(
-            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
+        # if query_params.get("material_ids"):
+        #     material_ids = query_params.get("material_ids").split(",")
+        #     if len(material_ids) < 5:  # TODO: move 5 to settings
+        #         return self.mpr.summary._search(
+        #             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+        #         )
+
+        response = self.mpr.summary._search(
+            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
+        if len(response) < 5:
+            return response
+        else:
+            response = self.mpr.summary._search(
+                num_chunks=None,
+                chunk_size=1000,
+                all_fields=[
+                    "nsites",
+                    "elements",
+                    "nelements",
+                    "composition",
+                    "formula_pretty",
+                    "formula_anonymous",
+                    "chemsys",
+                    "volume",
+                    "density",
+                    "density_atomic",
+                    "symmetry",
+                    "property_name",
+                    "material_id",
+                    "deprecated",
+                    "deprecation_reasons",
+                    "last_updated",
+                    "warnings",
+                    "structure",
+                    "task_ids",
+                    "uncorrected_energy_per_atom",
+                    "energy_per_atom",
+                    "formation_energy_per_atom",
+                    "energy_above_hull",
+                    "is_stable",
+                    "equilibrium_reaction_energy_per_atom",
+                    "decomposes_to",
+                    "band_gap",
+                    "cbm",
+                    "vbm",
+                    "efermi",
+                    "is_gap_direct",
+                    "is_metal",
+                    "bandstructure",
+                    "dos",
+                    "dos_energy_up",
+                    "dos_energy_down",
+                    "is_magnetic",
+                    "ordering",
+                    "total_magnetization",
+                    "total_magnetization_normalized_vol",
+                    "total_magnetization_normalized_formula_units",
+                    "num_magnetic_sites",
+                    "num_unique_magnetic_sites",
+                    "types_of_magnetic_species",
+                    "k_voigt",
+                    "k_reuss",
+                    "k_vrh",
+                    "g_voigt",
+                    "g_reuss",
+                    "g_vrh",
+                    "universal_anisotropy",
+                    "homogeneous_poisson",
+                    "e_total",
+                    "e_ionic",
+                    "e_electronic",
+                    "n",
+                    "e_ij_max",
+                    "weighted_surface_energy_EV_PER_ANG2",
+                    "weighted_surface_energy",
+                    "weighted_work_function",
+                    "surface_anisotropy",
+                    "shape_factor",
+                    "has_reconstructed",
+                    "possible_species",
+                    "has_props",
+                    "theoretical",
+                    "database_IDs",
+                ],
+                **query_params,
+            )
+            return
 
     def search_materials_robocrys(self, query_params: dict):
         fields = query_params.pop("fields", None)
@@ -106,7 +209,7 @@ class MPLLM(BaseModel):
         return self.mpr.robocrys._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-    
+
     def search_materials_provenance(self, query_params: dict):
         fields = query_params.pop("fields", None)
         if fields:
@@ -137,7 +240,7 @@ class MPLLM(BaseModel):
         _fields = query_params.pop("_fields", None)
         if _fields:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
-        
+
         # FIXME: _limit is not a valid query parameter for thermo search
         query_params["_limit"] = query_params.pop("limit", None)
 
@@ -235,7 +338,7 @@ class MPLLM(BaseModel):
 
                     # print(elastic_doc)
                     elastic_docs.append(elastic_doc)
-                    
+
                 except Exception:
                     continue
 
@@ -386,16 +489,12 @@ class MPLLM(BaseModel):
         while total_tokens > self.max_tokens:
             oldest_message = self.messages.pop(0)
             if debug:
-                print(f'remove message: {oldest_message}')
+                print(f"remove message: {oldest_message}")
             total_tokens -= len(oldest_message["content"].split())
 
     def general_reponse(
-            self, 
-            message: dict[str, str], 
-            model="gpt-3.5-turbo-0613", 
-            debug: bool = False
-            ):
-
+        self, message: dict[str, str], model="gpt-3.5-turbo-0613", debug: bool = False
+    ):
         if message["role"] != "function":
             self.messages.append(message)
             self.trim_messages(debug=debug)
@@ -410,7 +509,9 @@ class MPLLM(BaseModel):
                     Materials Project API for expert-curated data, and answer user 
                     requests based on the data retrieved and information in the 
                     conversation history below.""",
-                ).strip().replace('\n', ' ')
+                )
+                .strip()
+                .replace("\n", " "),
             },
             *self.messages,
         ]
@@ -418,38 +519,43 @@ class MPLLM(BaseModel):
         if message["role"] == "function":
             messages.append(message)
         else:
-            messages.append({
-                "role": "system",
-                "content": re.sub(
-                    r"\s+",
-                    " ",
-                    """Now you need to decide, based on the last request above, whether 
+            messages.append(
+                {
+                    "role": "system",
+                    "content": re.sub(
+                        r"\s+",
+                        " ",
+                        """Now you need to decide, based on the last request above, whether 
                     to call Materials Project API for data or answer user request 
                     directly based on the information you have. If you decide to call 
                     Materials Project API, respond 'Calling Materials Project API...'.
                     If the user request is ambiguous, respond 'Please clarify your
                     request.' If user decide to end the conversation, respond 'Goodbye!'
                     """,
-                ).strip().replace('\n', ' ')
-            })
+                    )
+                    .strip()
+                    .replace("\n", " "),
+                }
+            )
 
         try:
             response = openai.ChatCompletion.create(
                 model=model, messages=messages, temperature=0, top_p=1
             )
         except Exception as e:
-            print("Error:", e, "Trying again with gpt-4-32k.")
-            response = openai.ChatCompletion.create(
-                model="gpt-4-32k", messages=messages, temperature=0, top_p=1
-            )
+            print("Error:", e)
+            response = {}
+            # response = openai.ChatCompletion.create(
+            #     model="gpt-4-32k", messages=messages, temperature=0, top_p=1
+            # )
 
         return response
 
     def material_response(
-        self, 
-        message: dict[str, str], 
+        self,
+        message: dict[str, str],
         model="gpt-3.5-turbo-16k-0613",
-        debug: bool = False
+        debug: bool = False,
     ):
         self.messages.append(message)
         self.trim_messages(debug=debug)
@@ -465,10 +571,13 @@ class MPLLM(BaseModel):
                     conversation history below. Don't make assumptions about the values 
                     to plug into the functions. Always read carefully the function 
                     specifications. Ask for clarification if the user request is 
-                    ambiguous. Provide `_fields` or `field` to the function whenever 
-                    possible. Read the response from function calls carefully and find 
-                    out relevant information to respond to user requests."""
-                ).strip().replace('\n', ' ')
+                    ambiguous. You must provide `_fields` or `field` to the function 
+                    arguments if required. Read the response from function calls 
+                    carefully and find out relevant information to respond to user 
+                    requests.""",
+                )
+                .strip()
+                .replace("\n", " "),
             },
             *self.messages,
         ]
@@ -483,16 +592,20 @@ class MPLLM(BaseModel):
                 top_p=1,
             )
         except Exception as e:
-            print("Error:", e, "Trying again with gpt-4-32k.")
-            response = openai.ChatCompletion.create(
-                model="gpt-4-32k",
-                messages=messages,
-                functions=self.material_functions,
-                function_call="auto",
-                temperature=0,
-                top_p=1,
-            )
+            print("Error:", e)
+            response = {}
+            # response = openai.ChatCompletion.create(
+            #     model="gpt-4-32k",
+            #     messages=messages,
+            #     functions=self.material_functions,
+            #     function_call="auto",
+            #     temperature=0,
+            #     top_p=1,
+            # )
         return response
+
+    def __call__(self, message: ChatMessage, model: str = "gpt-3.5-turbo-0613"):
+        pass
 
     def run_material_conversation(
         self,
@@ -502,17 +615,17 @@ class MPLLM(BaseModel):
     ):
         if debug:
             print("Conversation started.")
-        
+
         while True:
             user_input = user_input if user_input else input("User: ")
             print("User:", user_input)
             gen_reponse = self.general_reponse(
                 {"role": "user", "content": user_input},
                 model=model if model else "gpt-3.5-turbo-0613",
-                debug=debug
+                debug=debug,
             )
             if debug:
-                print('OpenAI General:', gen_reponse)
+                print("OpenAI General:", gen_reponse)
 
             gen_reponse_msg = gen_reponse["choices"][0]["message"]  # type: ignore
 
@@ -520,10 +633,10 @@ class MPLLM(BaseModel):
                 mat_reponse = self.material_response(
                     {"role": "user", "content": user_input},
                     model=model if model else "gpt-3.5-turbo-16k-0613",
-                    debug=debug
+                    debug=debug,
                 )
                 if debug:
-                    print('LLaMP Function Calling:', mat_reponse)
+                    print("LLaMP Function Calling:", mat_reponse)
                 mat_reponse_msg = mat_reponse["choices"][0]["message"]  # type: ignore
                 function_name = mat_reponse_msg.get("function_call", {}).get(
                     "name", None
@@ -534,7 +647,10 @@ class MPLLM(BaseModel):
                 if function_name:
                     if debug:
                         print("MP API call:", function_name)
-                        print("MP API args:", mat_reponse_msg["function_call"]["arguments"])
+                        print(
+                            "MP API args:",
+                            mat_reponse_msg["function_call"]["arguments"],
+                        )
 
                     function_to_call = self.material_routes.get(function_name)
                     if function_to_call is None:
@@ -563,21 +679,18 @@ class MPLLM(BaseModel):
                             "content": json.dumps(function_response),
                         },
                         model=model if model else "gpt-3.5-turbo-0613",
-                        debug=debug
+                        debug=debug,
                     )
                     if debug:
                         print("OpenAI Text Completion:", gen_reponse)
 
                     gen_reponse_msg = gen_reponse["choices"][0]["message"]  # type: ignore
 
-
             self._messages.append(gen_reponse_msg)
-            
+
             print("OpenAI:", gen_reponse_msg["content"])
             time.sleep(0.5)
             if gen_reponse_msg["content"] == "Goodbye!":
                 break
 
             user_input = None
-
-            

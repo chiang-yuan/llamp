@@ -11,9 +11,10 @@ license = { file = "LICENSE" }
 dependencies = [
     "mp-api==0.33.3",
     "openai",
-    "langchain>=0.0.295",
+    "langchain==0.0.301",
     "fastapi",
     "uvicorn",
+    "python-dotenv==1.0.0",
 ]
 requires-python = ">=3.9"
 
