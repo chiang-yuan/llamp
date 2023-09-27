@@ -12,16 +12,77 @@ from langchain.schema import (
     messages_to_dict,
     AIMessage,
     HumanMessage,
+    FunctionMessage,
 )
+
+from langchain.agents import BaseMultiActionAgent
+from langchain.llms import OpenAI
+
 from mp_api.client import MPRester
 from pydantic import BaseModel
+
 from ..utils import MP_API_KEY, OPENAI_API_KEY
 
 # from langchain.agents.agent_toolkits.openapi import OpenAPISpec
 
+from typing import List, Tuple, Any, Union
+from langchain.schema import AgentAction, AgentFinish
 
+
+class MultiLLaMP(BaseMultiActionAgent):
+    @property
+    def input_keys(self):
+        return ["input"]
+
+    def plan(
+        self, intermediate_steps: List[Tuple[AgentAction, str]], **kwargs: Any
+    ) -> Union[List[AgentAction], AgentFinish]:
+        """Given input, decided what to do.
+
+        Args:
+            intermediate_steps: Steps the LLM has taken to date,
+                along with observations
+            **kwargs: User inputs.
+
+        Returns:
+            Action specifying what tool to use.
+        """
+        if len(intermediate_steps) == 0:
+            return [
+                AgentAction(tool="Search", tool_input=kwargs["input"], log=""),
+                AgentAction(tool="RandomWord", tool_input=kwargs["input"], log=""),
+            ]
+        else:
+            return AgentFinish(return_values={"output": "bar"}, log="")
+
+    async def aplan(
+        self, intermediate_steps: List[Tuple[AgentAction, str]], **kwargs: Any
+    ) -> Union[List[AgentAction], AgentFinish]:
+        """Given input, decided what to do.
+
+        Args:
+            intermediate_steps: Steps the LLM has taken to date,
+                along with observations
+            **kwargs: User inputs.
+
+        Returns:
+            Action specifying what tool to use.
+        """
+        if len(intermediate_steps) == 0:
+            return [
+                AgentAction(tool="Search", tool_input=kwargs["input"], log=""),
+                AgentAction(tool="RandomWord", tool_input=kwargs["input"], log=""),
+            ]
+        else:
+            return AgentFinish(return_values={"output": "bar"}, log="")
+
+
+# TODO: change this a child of Pydantic BaseModel
 class MPLLM:
     spec = JsonSpec.from_file(Path(__file__).parent.resolve() / "mp_openapi.json")
+
+    call_mp_hint = "Call MP"
+    call_arxiv_hint = "Call arXiv"
 
     # NOTE: json explorer
     # spec = OpenAPIToolkit.parse_file(
@@ -208,6 +269,17 @@ class MPLLM:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
         return self.mpr.robocrys._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+        )
+
+    def search_materials_oxidation_states(self, query_params: dict):
+        fields = query_params.pop("fields", None)
+        if fields:
+            query_params["fields"] = fields.split(",")
+        _fields = query_params.pop("_fields", None)
+        if _fields:
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
+        return self.mpr.oxidation_states._search(
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_provenance(self, query_params: dict):
@@ -440,7 +512,7 @@ class MPLLM:
             # "search_materials_core__get": self.search_materials_core,
             "search_materials_absorption__get": None,
             "search_materials_bonds__get": self.search_materials_bonds,
-            "search_materials_chemenv__get": None,
+            "search_materials_chemenv__get": self.search_materials_chemenv,
             "search_materials_tasks_trajectory__get": None,
             "search_materials_tasks__get": self.search_materials_tasks,
             "get_by_key_materials_thermo_phase_diagram__phase_diagram_id___get": None,
@@ -449,7 +521,7 @@ class MPLLM:
             "search_materials_piezoelectric__get": self.search_materials_piezoelectric,
             "search_materials_magnetism__get": self.search_materials_magnetism,
             "get_by_key_materials_phonon__material_id___get": None,
-            "search_materials_eos__get": None,
+            "search_materials_eos__get": self.search_materials_eos,
             "get_by_key_materials_eos__task_id___get": None,
             "get_by_key_materials_similarity__material_id___get": self.fetch_materials_similarity,
             "search_materials_xas__get": None,
@@ -462,9 +534,9 @@ class MPLLM:
             "search_materials_robocrys_text_search__get": None,
             "search_materials_robocrys__get": self.search_materials_robocrys,
             "search_materials_insertion_electrodes__get": None,
-            "search_materials_oxidation_states__get": None,
+            "search_materials_oxidation_states__get": self.search_materials_oxidation_states,
             "search_materials_alloys__get": None,
-            "search_materials_provenance__get": None,
+            "search_materials_provenance__get": self.search_materials_provenance,
             "search_materials_charge_density__get": None,
             "get_by_key_materials_charge_density__fs_id___get": None,
             "search_materials_summary_stats__get": None,
@@ -525,10 +597,10 @@ class MPLLM:
                     "content": re.sub(
                         r"\s+",
                         " ",
-                        """Now you need to decide, based on the last request above, whether 
+                        f"""Now you need to decide, based on the last request above, whether 
                     to call Materials Project API for data or answer user request 
                     directly based on the information you have. If you decide to call 
-                    Materials Project API, respond 'Calling Materials Project API...'.
+                    Materials Project, respond {self.call_mp_hint}.
                     If the user request is ambiguous, respond 'Please clarify your
                     request.' If user decide to end the conversation, respond 'Goodbye!'
                     """,
@@ -568,13 +640,23 @@ class MPLLM:
                     " ",
                     """You are a data-vigilant agent that answer user requests based on 
                     the expert-curated data retrieved from Materials Project and the 
-                    conversation history below. Don't make assumptions about the values 
-                    to plug into the functions. Always read carefully the function 
+                    conversation history below. Always read carefully the function 
                     specifications. Ask for clarification if the user request is 
                     ambiguous. You must provide `_fields` or `field` to the function 
                     arguments if required. Read the response from function calls 
                     carefully and find out relevant information to respond to user 
                     requests.""",
+                )
+                .strip()
+                .replace("\n", " "),
+            },
+            {
+                "role": "user",
+                "content": re.sub(
+                    r"\s+",
+                    " ",
+                    """You must provide `_fields` or `field` to the function 
+                    arguments if required.""",
                 )
                 .strip()
                 .replace("\n", " "),
@@ -607,6 +689,79 @@ class MPLLM:
     def __call__(self, message: ChatMessage, model: str = "gpt-3.5-turbo-0613"):
         pass
 
+    def run(
+        self,
+        message: ChatMessage,
+        model: str = "gpt-3.5-turbo-0613",
+        debug: bool = False,
+    ) -> ChatMessage:
+        gen_reponse = self.general_reponse(
+            message,
+            model=model if model else "gpt-3.5-turbo-0613",
+            debug=debug,
+        )
+        if debug:
+            print("OpenAI General:", gen_reponse)
+
+        gen_reponse_msg = gen_reponse["choices"][0]["message"]  # type: ignore
+
+        if gen_reponse_msg["content"] == self.call_mp_hint:
+            mat_reponse = self.material_response(
+                message=message,
+                model=model if model else "gpt-3.5-turbo-16k-0613",
+                debug=debug,
+            )
+            if debug:
+                print("LLaMP Function Calling:", mat_reponse)
+            mat_reponse_msg = mat_reponse["choices"][0]["message"]  # type: ignore
+            function_name = mat_reponse_msg.get("function_call", {}).get("name", None)
+
+            print("LLaMP:", mat_reponse_msg)
+
+            if function_name:
+                if debug:
+                    print("MP API call:", function_name)
+                    print(
+                        "MP API args:",
+                        mat_reponse_msg["function_call"]["arguments"],
+                    )
+
+                function_to_call = self.material_routes.get(function_name)
+                if function_to_call is None:
+                    print(f"Function {function_name} is not supported yet.")
+                    return
+
+                function_args = json.loads(
+                    mat_reponse_msg["function_call"]["arguments"]
+                )
+                try:
+                    function_response = function_to_call(query_params=function_args)
+                except Exception as e:
+                    print("Error:", e)
+                    print("Please provide more information or try smaller request.")
+                    return
+
+                if debug:
+                    print("MP API response:", json.dumps(function_response))
+
+                gen_reponse = self.general_reponse(
+                    # FunctionMessage(json.dumps(function_response))
+                    {
+                        "role": "function",
+                        "name": function_name,
+                        "content": json.dumps(function_response),
+                    },
+                    model=model if model else "gpt-3.5-turbo-0613",
+                    debug=debug,
+                )
+                if debug:
+                    print("OpenAI Text Completion:", gen_reponse)
+
+                gen_reponse_msg = gen_reponse["choices"][0]["message"]  # type: ignore
+
+        self._messages.append(gen_reponse_msg)
+        return gen_reponse_msg
+
     def run_material_conversation(
         self,
         user_input: str | None = None,
@@ -629,7 +784,7 @@ class MPLLM:
 
             gen_reponse_msg = gen_reponse["choices"][0]["message"]  # type: ignore
 
-            if gen_reponse_msg["content"] == "Calling Materials Project API...":
+            if gen_reponse_msg["content"] == self.call_mp_hint:
                 mat_reponse = self.material_response(
                     {"role": "user", "content": user_input},
                     model=model if model else "gpt-3.5-turbo-16k-0613",
