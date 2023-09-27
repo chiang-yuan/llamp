@@ -21,37 +21,37 @@ app = FastAPI()
 multiagent = MultiLLaMP()
 
 mp = MPLLM()
-search = SerpAPIWrapper()  # get SERPAPI_API_KEY from .env
-wiki = WikipediaAPIWrapper()
-arxiv = ArxivAPIWrapper()
+# # search = SerpAPIWrapper()  # get SERPAPI_API_KEY from .env
+# wiki = WikipediaAPIWrapper()
+# arxiv = ArxivAPIWrapper()
 
-tools = [
-    Tool(
-        name="Search",
-        func=search.run,
-        description="useful when you need general but unreliable information about a topic on the web",
-    ),
-    Tool(
-        name="Wikipedia",
-        func=wiki.run,
-        description="useful when you need foundational knowldge about a topic on Wikipedia",
-    ),
-    Tool(
-        name="ArXiv",
-        func=arxiv.run,
-        description="useful when you need to search literature or compare Materials Project database with literature data.",
-    ),
-    Tool(
-        name="MP",
-        func=mp.run,
-        description="useful when you need rich, reliable, and expert-curated materials science data.",
-    ),
-]
+# tools = [
+#     Tool(
+#         name="Search",
+#         func=search.run,
+#         description="useful when you need general but unreliable information about a topic on the web",
+#     ),
+#     Tool(
+#         name="Wikipedia",
+#         func=wiki.run,
+#         description="useful when you need foundational knowldge about a topic on Wikipedia",
+#     ),
+#     Tool(
+#         name="ArXiv",
+#         func=arxiv.run,
+#         description="useful when you need to search literature or compare Materials Project database with literature data.",
+#     ),
+#     Tool(
+#         name="MP",
+#         func=mp.run,
+#         description="useful when you need rich, reliable, and expert-curated materials science data.",
+#     ),
+# ]
 
 
-agent_executor = AgentExecutor.from_agent_and_tools(
-    agent=multiagent, tools=tools, verbose=True
-)
+# agent_executor = AgentExecutor.from_agent_and_tools(
+#     agent=multiagent, tools=tools, verbose=True
+# )
 
 
 @app.get("/hello")
@@ -61,6 +61,8 @@ async def hello():
 
 @app.post("/ask")
 async def ask(message: ChatMessage):
+    # ChatMessage(role="user", content=message.text)
+
     response = await mp.run(message=message)
     return {
         "response": response,

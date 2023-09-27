@@ -14,7 +14,7 @@
 	let message = "";
 	let messages = [];
 	async function askLLaMP(question: string) {
-		const response = await fetch("/ask", {
+		const response = await fetch("http://127.0.0.1:8000/ask", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -22,7 +22,7 @@
 			body: JSON.stringify({ role: "user", content: message }),
 		});
 		const data = await response.json();
-		return data;
+		// return data;
 
 		if (response.ok) {
 			const data = await response.json();
@@ -55,6 +55,21 @@
 		</figure> -->
 		<!-- / -->
 
+		<div
+			class="input-group input-group-divider grid-cols-[auto_1fr_auto] rounded-container-token"
+		>
+			<button class="input-group-shim">+</button>
+			<textarea
+				bind:value={message}
+				class="bg-transparent border-0 ring-0"
+				name="prompt"
+				id="prompt"
+				placeholder="Write a message..."
+				on:click={() => askLLaMP(message)}
+			/>
+			<button class="variant-filled-primary">Send</button>
+		</div>
+
 		<!-- Chat messages -->
 		<div class="chat-container">
 			{#each messages as msg (index)}
@@ -66,10 +81,10 @@
 		</div>
 
 		<!-- User input -->
-		<div class="input-container">
+		<!-- <div class="input-container">
 			<input bind:value={message} placeholder="Type a message..." />
 			<button on:click={askLLaMP}>Send</button>
-		</div>
+		</div> -->
 
 		<div class="flex justify-center space-x-2">
 			<InputChip name="user-input" placeholder="Enter your text here" />
@@ -86,7 +101,13 @@
 			>
 				Send
 			</button> -->
-			<button type="submit" class="btn variant-filled"> Send </button>
+			<button
+				type="submit"
+				class="btn variant-filled"
+				on:click={askLLaMP}
+			>
+				Send
+			</button>
 		</form>
 
 		<div class="flex justify-center space-x-2">
@@ -138,5 +159,52 @@
 		50% {
 			transform: scale(1.5);
 		}
+	}
+
+	/* Temp */
+	button {
+		padding: 10px 20px;
+		background-color: #007bff;
+		color: #fff;
+		border: none;
+		border-radius: 5px;
+		cursor: pointer;
+	}
+
+	.clear {
+		clear: both;
+	}
+
+	.chat-container {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.chat-bubble {
+		max-width: 80%;
+		padding: 10px;
+		border-radius: 10px;
+		margin: 5px;
+		background-color: #f2f2f2;
+		align-self: flex-end;
+	}
+
+	.chat-bubble.from-agent {
+		background-color: #007bff;
+		color: #fff;
+		align-self: flex-start;
+	}
+
+	.input-container {
+		display: flex;
+		gap: 10px;
+	}
+
+	input {
+		flex: 1;
+		padding: 10px;
+		border: 1px solid #ccc;
+		border-radius: 5px;
 	}
 </style>
