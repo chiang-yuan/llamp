@@ -4,6 +4,8 @@ import re
 import time
 from pathlib import Path
 import openai
+
+from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
 from langchain.agents.agent_toolkits import OpenAPIToolkit
 from langchain.tools.json.tool import JsonSpec
 from langchain.schema import (
@@ -79,7 +81,8 @@ class MultiLLaMP(BaseMultiActionAgent):
 
 # TODO: change this a child of Pydantic BaseModel
 class MPLLM:
-    spec = JsonSpec.from_file(Path(__file__).parent.resolve() / "mp_openapi.json")
+    # spec = JsonSpec.from_file(Path(__file__).parent.resolve() / "mp_openapi.json")
+    spec_path = Path(__file__).parent.resolve() / "mp_openapi.json"
 
     call_mp_hint = "Call MP"
     call_arxiv_hint = "Call arXiv"
@@ -102,6 +105,27 @@ class MPLLM:
         )
         self.max_tokens = max_tokens
         self._messages: list[dict[str, str]] = []
+
+    @property
+    def spec(self):
+        return self.json_spec
+
+    @property
+    def reduced_spec(self):
+        with open(self.spec_path) as f:
+            import json
+
+            raw_spec = json.load(f)
+
+        raw_spec["servers"] = raw_spec.get(
+            "servers", ["https://api.materialsproject.org"]
+        )
+
+        return reduce_openapi_spec(raw_spec)
+
+    @property
+    def json_spec(self) -> JsonSpec:
+        return JsonSpec.from_file(self.spec_path)
 
     def search_materials_core(self, query_params: dict):
         fields = query_params.pop("fields", None)
@@ -181,6 +205,7 @@ class MPLLM:
         response = self.mpr.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
+        # TODO: move 5 to settings
         if len(response) < 5:
             return response
         else:
@@ -190,11 +215,11 @@ class MPLLM:
                 all_fields=[
                     "nsites",
                     "elements",
-                    "nelements",
+                    # "nelements",
                     "composition",
                     "formula_pretty",
-                    "formula_anonymous",
-                    "chemsys",
+                    # "formula_anonymous",
+                    # "chemsys",
                     "volume",
                     "density",
                     "density_atomic",
@@ -202,10 +227,10 @@ class MPLLM:
                     "property_name",
                     "material_id",
                     "deprecated",
-                    "deprecation_reasons",
+                    # "deprecation_reasons",
                     "last_updated",
                     "warnings",
-                    "structure",
+                    # "structure",
                     "task_ids",
                     "uncorrected_energy_per_atom",
                     "energy_per_atom",
@@ -271,6 +296,38 @@ class MPLLM:
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
 
+    def search_materials_synthesis(self, query_params: dict):
+        keywords = query_params.pop("keywords", None)
+        if keywords:
+            query_params["keywords"] = keywords.split(",")
+
+        operations = query_params.pop("operations", None)
+        if operations:
+            query_params["operations"] = operations.split(",")
+
+        condition_heating_atmosphere = query_params.pop(
+            "condition_heating_atmosphere", None
+        )
+        if condition_heating_atmosphere:
+            query_params[
+                "condition_heating_atmosphere"
+            ] = condition_heating_atmosphere.split(",")
+
+        condition_mixing_device = query_params.pop("condition_mixing_device", None)
+        if condition_mixing_device:
+            query_params["condition_mixing_device"] = condition_mixing_device.split(",")
+
+        condition_mixing_media = query_params.pop("condition_mixing_media", None)
+        if condition_mixing_media:
+            query_params["condition_mixing_media"] = condition_mixing_media.split(",")
+
+        doc = self.mpr.synthesis.search(**query_params)
+
+        if len(doc) < 5:
+            return doc
+        else:
+            return doc[:5]
+
     def search_materials_oxidation_states(self, query_params: dict):
         fields = query_params.pop("fields", None)
         if fields:
@@ -278,6 +335,11 @@ class MPLLM:
         _fields = query_params.pop("_fields", None)
         if _fields:
             query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
+
+        # FIXME
+        if "possible_species" not in query_params["fields"]:
+            query_params["fields"].append("possible_species")
+
         return self.mpr.oxidation_states._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
@@ -436,8 +498,8 @@ class MPLLM:
     def endpoints(self):
         endpoints = [
             (route, method, operation)
-            for route, paths in self.spec.paths.items()
-            for method, operation in paths
+            for route, paths in self.spec.dict_["paths"].items()
+            for method, operation in paths.items()
             if method in ["get", "post"]
         ]
         return endpoints
@@ -450,31 +512,35 @@ class MPLLM:
                 continue
 
             name = (
-                operation.operationId
-                if len(operation.operationId) <= 64
-                else operation.operationId[:64]
+                operation.get("operationId", None)
+                if len(operation.get("operationId", None)) <= 64
+                else operation.get("operationId", None)[:64]
             )
 
-            description = operation.description or operation.summary
+            description = operation.get("description", None) or operation.get(
+                "summary", None
+            )
 
             properties = {
-                property.name: {
-                    "type": property.param_schema.type,
-                    "description": property.description
-                    if property.description is not None
+                property["name"]: {
+                    "type": property.get("schema", {}).get("type", None),
+                    "description": property.get("description", None)
+                    if property.get("description", None) is not None
                     else "",
                     **(
-                        {"enum": property.param_schema.enum}
-                        if property.param_schema.enum is not None
+                        {"enum": property.get("schema", {}).get("enum", None)}
+                        if property.get("schema", {}).get("enum", None) is not None
                         else {}
                     ),
                 }
-                for property in operation.parameters
-                if property.param_schema.type is not None
+                for property in operation["parameters"]
+                if property.get("schema", {}).get("type", None) is not None
             }
 
             required = [
-                property.name for property in operation.parameters if property.required
+                property["name"]
+                for property in operation["parameters"]
+                if property["required"]
             ]
             functions.append(
                 {
@@ -533,7 +599,7 @@ class MPLLM:
             "search_materials_surface_properties__get": None,
             "search_materials_robocrys_text_search__get": None,
             "search_materials_robocrys__get": self.search_materials_robocrys,
-            "search_materials_insertion_electrodes__get": None,
+            "search_materials_synthesis__get": self.search_materials_synthesis,
             "search_materials_oxidation_states__get": self.search_materials_oxidation_states,
             "search_materials_alloys__get": None,
             "search_materials_provenance__get": self.search_materials_provenance,

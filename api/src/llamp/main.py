@@ -4,13 +4,19 @@ from llamp.mp.agent import MPLLM, MultiLLaMP
 from langchain.schema import ChatMessage
 
 from langchain.agents import Tool, AgentExecutor
-from langchain.utilities import SerpAPIWrapper, WikipediaAPIWrapper, ArxivAPIWrapper
+from langchain.utilities import (
+    SerpAPIWrapper,
+    WikipediaAPIWrapper,
+    ArxivAPIWrapper,
+    GoogleSearchAPIWrapper,
+)
 
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chains import ConversationalRetrievalChain
 
 from langchain.chat_models import ChatOpenAI
 from langchain.retrievers import WikipediaRetriever, ArxivRetriever
+
 
 llm = ChatOpenAI(
     temperature=0.0,
@@ -22,6 +28,7 @@ multiagent = MultiLLaMP()
 
 mp = MPLLM()
 # # search = SerpAPIWrapper()  # get SERPAPI_API_KEY from .env
+# search = GoogleSearchAPIWrapper()
 # wiki = WikipediaAPIWrapper()
 # arxiv = ArxivAPIWrapper()
 
