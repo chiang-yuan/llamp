@@ -321,7 +321,7 @@ class MPLLM:
         if condition_mixing_media:
             query_params["condition_mixing_media"] = condition_mixing_media.split(",")
 
-        doc = self.mpr.synthesis.search(**query_params)
+        doc = self.mpr.synthesis._search(**query_params)
 
         if len(doc) < 5:
             return doc
@@ -762,7 +762,7 @@ class MPLLM:
         debug: bool = False,
     ) -> ChatMessage:
         gen_reponse = self.general_reponse(
-            message,
+            message.dict(include={"role", "content"}),
             model=model if model else "gpt-3.5-turbo-0613",
             debug=debug,
         )
@@ -773,7 +773,7 @@ class MPLLM:
 
         if gen_reponse_msg["content"] == self.call_mp_hint:
             mat_reponse = self.material_response(
-                message=message,
+                message=message.dict(include={"role", "content"}),
                 model=model if model else "gpt-3.5-turbo-16k-0613",
                 debug=debug,
             )

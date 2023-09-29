@@ -1,22 +1,20 @@
+import uvicorn
 from fastapi import FastAPI
-from llamp.mp.agent import MPLLM, MultiLLaMP
-
+from fastapi.middleware.cors import CORSMiddleware
+from langchain.agents import AgentExecutor, Tool
+from langchain.chains import ConversationalRetrievalChain
+from langchain.chains.question_answering import load_qa_chain
+from langchain.chat_models import ChatOpenAI
+from langchain.retrievers import ArxivRetriever, WikipediaRetriever
 from langchain.schema import ChatMessage
-
-from langchain.agents import Tool, AgentExecutor
 from langchain.utilities import (
-    SerpAPIWrapper,
-    WikipediaAPIWrapper,
     ArxivAPIWrapper,
     GoogleSearchAPIWrapper,
+    SerpAPIWrapper,
+    WikipediaAPIWrapper,
 )
 
-from langchain.chains.question_answering import load_qa_chain
-from langchain.chains import ConversationalRetrievalChain
-
-from langchain.chat_models import ChatOpenAI
-from langchain.retrievers import WikipediaRetriever, ArxivRetriever
-
+from llamp.mp.agent import MPLLM, MultiLLaMP
 
 llm = ChatOpenAI(
     temperature=0.0,
@@ -61,21 +59,60 @@ mp = MPLLM()
 # )
 
 
-@app.get("/hello")
-async def hello():
-    return {"message": "Hello World"}
+app = FastAPI()
+
+# origins = [
+#     "http://localhost.tiangolo.com",
+#     "https://localhost.tiangolo.com",
+#     "http://localhost",
+#     "http://localhost:8080",
+# ]
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
-@app.post("/ask")
+# @app.get("/")
+# async def main():
+#     return {"message": "Hello World"}
+
+
+
+# @app.get("/")
+# async def root():
+#     return {"message": "Hello World"}
+
+
+# @app.get("/items/{item_id}")
+# async def read_item(item_id: int):
+#     return {"item_id": item_id}
+
+
+@app.post("/ask/")
 async def ask(message: ChatMessage):
     # ChatMessage(role="user", content=message.text)
 
-    response = await mp.run(message=message)
+    response = mp.run(
+        message=message, 
+        model="gpt-3.5-turbo-16k",
+        debug=True
+        )
     return {
         "response": response,
     }
 
 
-@app.post("/multi")
-async def multi(message: ChatMessage):
-    pass
+# @app.post("/multi")
+# async def multi(message: ChatMessage):
+#     pass
+
+
+if __name__ == "__main__":
+    uvicorn.run(app="app", host="127.0.0.1", port=8000, reload=True)

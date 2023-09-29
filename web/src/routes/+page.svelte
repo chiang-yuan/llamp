@@ -11,17 +11,19 @@
 	// Local
 	let anythingList: string[] = ["foo", "bar", "fizz", "buzz"];
 
+	let url = "https://127.0.0.1";
 	let message = "";
 	let messages = [];
 	async function askLLaMP(question: string) {
-		const response = await fetch("http://127.0.0.1:8000/ask", {
+		const response = await fetch("http://127.0.0.1:8000/ask/", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify({ role: "user", content: message }),
+			body: JSON.stringify({ role: "user", content: question }),
 		});
 		const data = await response.json();
+
 		// return data;
 
 		if (response.ok) {
@@ -65,9 +67,10 @@
 				name="prompt"
 				id="prompt"
 				placeholder="Write a message..."
-				on:click={() => askLLaMP(message)}
 			/>
-			<button class="variant-filled-primary">Send</button>
+			<button class="variant-filled-primary" on:click={askLLaMP(message)}
+				>Send</button
+			>
 		</div>
 
 		<!-- Chat messages -->
