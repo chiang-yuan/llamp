@@ -21,30 +21,65 @@ import { Avatar, CodeBlock, ListBox, ListBoxItem } from '@skeletonlabs/skeleton'
 		color: 'primary',
 	}
 
+	// for display purposes only
+	interface Question {
+		question: string;
+		title: string;
+		timeElapsedInitials: string;
+	};
+
+	const questions: Question[] = [
+		{
+			question: 'How do I extract BCC Al crystal structure and print pymatgen dictionary?',
+			title: 'Extract BCC Al crystal structure and print pymatgen dictionary',
+			timeElapsedInitials: '2H',
+		},
+		{
+			question: 'Is YbCl3 magnetic or non-magnetic?',
+			title: 'Magnetic properties of YbCl3?',
+			timeElapsedInitials: '1H',
+		},
+		{
+			question: 'Can you summarize the properties of the two magnetic substances?',
+			title: 'Summary of two magnetic substances',
+			timeElapsedInitials: '1.5H',
+		},
+		{
+			question: 'What is the crystal structure of LiFePO4?',
+			title: 'Crystal structure of LiFePO4?',
+			timeElapsedInitials: '1H',
+		},
+	];
+
+	let currentQuestion = questions[0].title;
+
+
 	let currentMessage = '';
 </script>
 
 
 
 
-<section class="card">
+<section class="flex-grow">
 	<div class="chat w-full h-full grid grid-cols-1 lg:grid-cols-[30%_1fr]">
 		<!-- Navigation -->
-		<div class="hidden lg:grid grid-rows-[auto_1fr_auto] border-r border-surface-500/30">
+		<div class="hidden card lg:grid grid-rows-[auto_1fr_auto] border-r border-surface-500/30">
 			<!-- Header -->
 			<header class="border-b border-surface-500/30 p-4">
 				<input class="input" type="search" placeholder="Search..." />
 			</header>
 			<!-- List -->
 			<div class="p-4 space-y-4 overflow-y-auto">
-				<small class="opacity-50">Contacts</small>
+				<small class="opacity-50">Chat History</small>
 				<ListBox active="variant-filled-primary">
-					<ListBoxItem  group="Person" name="people" value="Person">
-						<svelte:fragment slot="lead">
-							<Avatar src="https://i.pravatar.cc/?img={14}" width="w-8" />
-						</svelte:fragment>
-					"Person"
-					</ListBoxItem>
+					{#each questions as question}
+						<ListBoxItem bind:group={currentQuestion} name="questions" value={question.title}>
+							<svelte:fragment slot="lead">
+								<Avatar width="w-8" initials={question.timeElapsedInitials}/>
+							</svelte:fragment>
+							{question.title.slice(0, 50) + '...'}
+						</ListBoxItem>
+					{/each}
 				</ListBox>
 			</div>
 			<!-- Footer -->
@@ -52,9 +87,9 @@ import { Avatar, CodeBlock, ListBox, ListBoxItem } from '@skeletonlabs/skeleton'
 		</div>
 
 		<!-- Chat -->
-		<div class="grid grid-row-[1fr_auto]">
+		<div class="flex flex-col h-full">
 			<!-- Conversation -->
-			<section class="max-h-[500px] p-4 overflow-y-auto space-y-4">
+			<section class="p-4 overflow-y-auto flex-grow space-y-4">
 						<div class="grid grid-cols-[auto_1fr] gap-2">
 							<Avatar width="w-12" initials="MP"/>
 							<div class="card p-4 variant-soft rounded-tl-none space-y-2">
@@ -67,7 +102,7 @@ import { Avatar, CodeBlock, ListBox, ListBoxItem } from '@skeletonlabs/skeleton'
 						</div>
 				</section>
 				<!-- Prompt -->
-				<section class="border-t border-surface-500/30 p-4">
+				<section class="card border-t border-surface-500/30 p-4">
 					<div class="input-group input-group-divider grid-cols-[auto_1fr_auto] rounded-container-token">
 						<button class="input-group-shim">+</button>
 						<textarea
@@ -86,5 +121,3 @@ import { Avatar, CodeBlock, ListBox, ListBoxItem } from '@skeletonlabs/skeleton'
 			</div>
 		</div>
 	</section>
-
-
