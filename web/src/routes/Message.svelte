@@ -34,7 +34,9 @@
 
 
 
-<div class="flex gap-2 {user ? 'justify-end' : ''} items-center">
+{#if !data.content}
+{:else}
+<div class="flex gap-2 {user ? 'justify-end' : ''}">
 	<div>
 		<Avatar width="w-12" initials={user? "CH" :"MP"} class="{user ? 'order-2' : 'order-1'}"/>
 	</div>
@@ -45,6 +47,7 @@
 			{/if}
             <small class="opacity-50">{bubble.timestamp}</small>
         </header>
-        <p>{data.content}</p>
+		<pre class="whitespace-pre-wrap">{data.content}</pre>
     </div>
 </div>
+{/if}

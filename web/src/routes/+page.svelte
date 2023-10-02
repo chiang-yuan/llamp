@@ -9,29 +9,24 @@
 	interface Chat {
 		question: string;
 		title: string;
-		timeElapsedInitials: string;
 	};
 
 	const chats: Chat[] = [
 		{
 			question: 'How do I extract BCC Al crystal structure and print pymatgen dictionary?',
 			title: 'Extract BCC Al crystal structure and print pymatgen dictionary',
-			timeElapsedInitials: '2H',
 		},
 		{
 			question: 'Is YbCl3 magnetic or non-magnetic?',
 			title: 'Magnetic properties of YbCl3?',
-			timeElapsedInitials: '8H',
 		},
 		{
 			question: 'Can you summarize the properties of the two magnetic substances?',
 			title: 'Summary of two magnetic substances',
-			timeElapsedInitials: '1D',
 		},
 		{
 			question: 'What is the crystal structure of LiFePO4?',
 			title: 'Crystal structure of LiFePO4?',
-			timeElapsedInitials: '2W',
 		},
 	];
 
@@ -51,7 +46,7 @@
 	let processing = false;
 
 	async function askQuestion() {
-		if (!currentMessage) return;
+		if (!currentMessage || processing) return;
 		const newMessage: ChatMessage = {
 			"role": "user",
 			"content": currentMessage,
@@ -72,7 +67,9 @@
 		});
 
 		const result = await response.json();
-		console.log(result);
+		const responses: ChatMessage[] = result.responses;
+		console.log(responses);
+		appendResponse(responses);
 		// Handle the result here - e.g., append the response to your chat, etc.
 		} catch (error) {
 		console.error("Error while asking question:", error);
@@ -80,13 +77,21 @@
 			processing = false;
 		}
 	}
+
+	function appendResponse(responses: ChatMessage[]) {
+		messages = [...messages, ...responses.map(r => ({
+			...r,
+			type: "msg"
+		}))];
+
+	}
 </script>
 
 
 
 
 
-<div class="chat w-full h-full grid grid-cols-1 lg:grid-cols-[30%_1fr]">
+<div class="chat w-full h-full grid grid-cols-1 lg:grid-cols-[20%_1fr]">
 	<!-- Navigation -->
 	<div class="hidden card lg:grid grid-rows-[auto_1fr_auto] border-r border-surface-500/30">
 		<!-- Header -->
@@ -99,9 +104,6 @@
 			<ListBox active="variant-filled-primary">
 				{#each chats as chat}
 					<ListBoxItem bind:group={currentChat} name="questions" value={chat.title}>
-						<svelte:fragment slot="lead">
-							<Avatar width="w-8" initials={chat.timeElapsedInitials}/>
-						</svelte:fragment>
 						{chat.title.slice(0, 50) + '...'}
 					</ListBoxItem>
 				{/each}
@@ -118,6 +120,19 @@
 			{#each messages as msg}
 				<Message data={msg}/>
 			{/each}
+			{#if processing}
+				<div class="flex gap-2 ">
+					<div>
+						<Avatar width="w-12" initials="MP" />
+					</div>
+					<div class="card p-4 rounded-tl-none space-y">
+						<header class="flex justify-between items-center">
+							<p class="font-bold">LLaMP</p>
+						</header>
+						<div class="placeholder animate-pulse my-2 w-96" />
+					</div>
+				</div>
+				{/if}
 		</section>
 		<!-- Prompt -->
 		<section class="card border-t border-surface-500/30 p-4">
@@ -138,11 +153,11 @@
     <button
       class={currentMessage ? 'variant-filled-primary' : 'input-group-shim'} 
       on:click={askQuestion}
+	  disabled={processing}
     >
       <FontAwesomeIcon icon={faPaperPlane} />
     </button>
   </div>
 </section>
-		
 	</div>
 </div>
