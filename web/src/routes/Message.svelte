@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { Avatar } from '@skeletonlabs/skeleton';
-	export let user: boolean = false;
+	// TODO: move to lib
+	interface ChatMessage {
+		role: 'assistant' | 'user';
+		content: string;
+		type: 'info' | 'msg'; // information (eg. processing) or message
+	};
+	export let data: ChatMessage;
+	$: user = data.role === 'user';
 
 	interface MessageFeed {
 		id: number;
@@ -27,10 +34,10 @@
 
 
 
-
-
-<div class="grid grid-cols-[auto_1fr] gap-2 {user ? 'grid-cols-[1fr_auto]' : ''}">
-    <Avatar width="w-12" initials="MP" class="{user ? 'order-2' : 'order-1'}"/>
+<div class="flex gap-2 {user ? 'justify-end' : ''} items-center">
+	<div>
+		<Avatar width="w-12" initials={user? "CH" :"MP"} class="{user ? 'order-2' : 'order-1'}"/>
+	</div>
     <div class="card p-4 rounded-tl-none space-y-2 {user ? 'order-1' : 'order-2 variant-soft'}">
         <header class="flex justify-between items-center">
 			{#if !user}
@@ -38,6 +45,6 @@
 			{/if}
             <small class="opacity-50">{bubble.timestamp}</small>
         </header>
-        <p>{bubble.message}</p>
+        <p>{data.content}</p>
     </div>
 </div>

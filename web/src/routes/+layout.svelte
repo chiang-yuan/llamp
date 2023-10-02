@@ -8,6 +8,11 @@
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 </script>
 
+
+<svelte:head>
+    <title>LLaMP</title>
+</svelte:head>
+
 <!-- App Shell -->
 <AppShell class="flex flex-col h-screen">
 	<svelte:fragment slot="header">
