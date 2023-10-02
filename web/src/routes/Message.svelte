@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { Avatar } from '@skeletonlabs/skeleton';
+	export let user: boolean = false;
+
 	interface MessageFeed {
 		id: number;
 		host: boolean;
@@ -20,16 +22,22 @@
 		color: 'primary',
 	}
 
+
 </script>
 
-<div class="grid grid-cols-[auto_1fr] gap-2">
-<Avatar width="w-12" initials="MP"/>
-<div class="card p-4 variant-soft rounded-tl-none space-y-2">
-	<header class="flex justify-between items-center">
-		<p class="font-bold">{bubble.name}</p>
-		<small class="opacity-50">{bubble.timestamp}</small>
-	</header>
-	<p>{bubble.message}</p>
-</div>
-</div>
 
+
+
+
+<div class="grid grid-cols-[auto_1fr] gap-2 {user ? 'grid-cols-[1fr_auto]' : ''}">
+    <Avatar width="w-12" initials="MP" class="{user ? 'order-2' : 'order-1'}"/>
+    <div class="card p-4 rounded-tl-none space-y-2 {user ? 'order-1' : 'order-2 variant-soft'}">
+        <header class="flex justify-between items-center">
+			{#if !user}
+            <p class="font-bold">{bubble.name}</p>
+			{/if}
+            <small class="opacity-50">{bubble.timestamp}</small>
+        </header>
+        <p>{bubble.message}</p>
+    </div>
+</div>

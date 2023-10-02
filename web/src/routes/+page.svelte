@@ -21,17 +21,17 @@
 		{
 			question: 'Is YbCl3 magnetic or non-magnetic?',
 			title: 'Magnetic properties of YbCl3?',
-			timeElapsedInitials: '1H',
+			timeElapsedInitials: '8H',
 		},
 		{
 			question: 'Can you summarize the properties of the two magnetic substances?',
 			title: 'Summary of two magnetic substances',
-			timeElapsedInitials: '1.5H',
+			timeElapsedInitials: '1D',
 		},
 		{
 			question: 'What is the crystal structure of LiFePO4?',
 			title: 'Crystal structure of LiFePO4?',
-			timeElapsedInitials: '1H',
+			timeElapsedInitials: '2W',
 		},
 	];
 
@@ -74,7 +74,8 @@
 	<div class="flex flex-col h-full">
 		<!-- Conversation -->
 		<section class="p-4 overflow-y-auto flex-grow space-y-4">
-			<Message/>
+			<Message />
+			<Message user/>
 		</section>
 		<!-- Prompt -->
 		<section class="card border-t border-surface-500/30 p-4">
