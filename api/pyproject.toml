@@ -6,7 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "llamp"
 version = "0.1.0"
 description = ""
-authors = [{ name = "Yuan Chiang", email = "cyrusyc@lbl.gov" }]
+authors = [{ name = "Yuan Chiang", email = "cyrusyc@lbl.gov" },
+			{name ="Oliver Chou", email = "49494541+knhn1004@users.noreply.github.com"}
+		]
 license = { file = "LICENSE" }
 dependencies = [
     "mp-api",
