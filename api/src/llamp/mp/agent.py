@@ -21,7 +21,8 @@ from langchain.agents import BaseMultiActionAgent
 from langchain.llms import OpenAI
 
 from mp_api.client import MPRester
-from pydantic import BaseModel
+
+from pydantic_settings import BaseSettings
 
 from ..utils import MP_API_KEY, OPENAI_API_KEY
 

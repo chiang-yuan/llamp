@@ -1,0 +1,29 @@
+# for development
+
+version: "3"
+
+services:
+  web:
+    build:
+      context: web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5174:5174"
+    volumes:
+      - /src/app/node_modules
+      - ./web:/src/app
+    depends_on:
+      - api
+    env_file:
+      - .env.local
+
+  api:
+    build:
+      context: api
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api/src:/usr/src/app/src
+    env_file:
+      - .env.local

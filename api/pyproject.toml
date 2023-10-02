@@ -9,12 +9,12 @@ description = ""
 authors = [{ name = "Yuan Chiang", email = "cyrusyc@lbl.gov" }]
 license = { file = "LICENSE" }
 dependencies = [
-    "mp-api==0.33.3",
+    "mp-api",
     "openai",
     "langchain==0.0.301",
     "fastapi",
     "uvicorn",
-    "python-dotenv==1.0.0",
+    "python-dotenv",
 ]
 requires-python = ">=3.9"
 

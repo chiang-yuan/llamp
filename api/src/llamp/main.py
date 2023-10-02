@@ -13,6 +13,8 @@ from langchain.utilities import (
     SerpAPIWrapper,
     WikipediaAPIWrapper,
 )
+from pydantic import BaseModel
+from typing import List
 
 from llamp.mp.agent import MPLLM, MultiLLaMP
 
@@ -84,7 +86,6 @@ app.add_middleware(
 #     return {"message": "Hello World"}
 
 
-
 # @app.get("/")
 # async def root():
 #     return {"message": "Hello World"}
@@ -94,20 +95,34 @@ app.add_middleware(
 # async def read_item(item_id: int):
 #     return {"item_id": item_id}
 
+class MessageContent(BaseModel):
+    content: str
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
 
 @app.post("/ask/")
-async def ask(message: ChatMessage):
-    # ChatMessage(role="user", content=message.text)
+async def ask(messages: List[ChatMessage]):
+    # Now `messages` is a list of ChatMessage objects
 
-    response = mp.run(
-        message=message, 
-        model="gpt-3.5-turbo-16k",
-        debug=True
+    # ... your existing code here ...
+
+    # Example: iterate through messages and process them
+    responses = []
+    for message in messages:
+        response = mp.run(
+            message=message,
+            model="gpt-3.5-turbo-16k",
+            debug=True
         )
-    return {
-        "response": response,
-    }
+        responses.append(response)
 
+    return {
+        "responses": responses,
+    }
 
 # @app.post("/multi")
 # async def multi(message: ChatMessage):

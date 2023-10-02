@@ -74,3 +74,8 @@ streamlit app](https://alphasec.io/summarize-text-with-langchain-and-openai/)
 ### CyrstalToolkit, Dash, Plotly
 
 - [Dash ChatGPT App Challenge](https://community.plotly.com/t/dash-chatgpt-app-challenge/75763/26)
+
+### Environment Variables for development
+```
+cp .env.example .env.local
+```

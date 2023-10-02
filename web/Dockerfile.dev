@@ -1,0 +1,13 @@
+FROM node:16-slim
+
+EXPOSE 5174
+
+WORKDIR /srv/app
+
+COPY package.json .
+
+RUN npm install
+
+COPY . .
+
+CMD ["npm", "run", "dev"]
