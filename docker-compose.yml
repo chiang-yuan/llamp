@@ -8,10 +8,10 @@ services:
       context: web
       dockerfile: Dockerfile.dev
     ports:
-      - "5174:5174"
+      - "5173:5173"
     volumes:
-      - /src/app/node_modules
-      - ./web:/src/app
+      - /srv/app/node_modules
+      - ./web:/srv/app
     depends_on:
       - api
     env_file:
