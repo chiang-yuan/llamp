@@ -106,11 +106,6 @@ class ChatMessage(BaseModel):
 
 @app.post("/ask/")
 async def ask(messages: List[ChatMessage]):
-    # Now `messages` is a list of ChatMessage objects
-
-    # ... your existing code here ...
-
-    # Example: iterate through messages and process them
     responses = []
     for message in messages:
         response = mp.run(
