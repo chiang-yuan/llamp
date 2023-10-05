@@ -6,15 +6,17 @@ build-backend = "setuptools.build_meta"
 name = "llamp"
 version = "0.1.0"
 description = ""
-authors = [{ name = "Yuan Chiang", email = "cyrusyc@lbl.gov" }]
+authors = [{ name = "Yuan Chiang", email = "cyrusyc@lbl.gov" },
+			{name ="Oliver Chou", email = "49494541+knhn1004@users.noreply.github.com"}
+		]
 license = { file = "LICENSE" }
 dependencies = [
-    "mp-api==0.33.3",
+    "mp-api",
     "openai",
     "langchain==0.0.301",
     "fastapi",
     "uvicorn",
-    "python-dotenv==1.0.0",
+    "python-dotenv",
 ]
 requires-python = ">=3.9"
 

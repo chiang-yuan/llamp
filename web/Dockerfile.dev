@@ -1,0 +1,15 @@
+FROM node:16-slim
+
+EXPOSE 5173
+
+WORKDIR /srv/app
+
+COPY package*.json .
+
+RUN npm install --production=false
+
+RUN chown -R node /srv/app/node_modules
+
+USER node
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

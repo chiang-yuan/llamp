@@ -1,6 +1,4 @@
-
 # LLaMP - Large Language model Made Powerful :llama::crystal_ball:
-
 
 ### **Introducing LLaMP: Large Language model Made Powerful** :rocket:
 
@@ -12,7 +10,6 @@ Click [here](https://docs.google.com/presentation/d/e/2PACX-1vR1LjNO2gp_jVUkIX4q
 
 <img src="https://raw.githubusercontent.com/sveltejs/branding/master/svelte-horizontal.svg" height="30"/>
 <a href="https://elementari.janosh.dev/"><img src="https://raw.githubusercontent.com/janosh/elementari/main/static/favicon.svg" height="30"/></a>
-
 
 ## :crystal_ball: Introduction
 
@@ -57,6 +54,7 @@ Experience the future of materials exploration with LLaMP – your intelligent g
 ### Langchain
 
 https://python.langchain.com/docs/modules/chains/additional/openapi
+
 - https://python.langchain.com/docs/integrations/retrievers/arxiv
 - https://python.langchain.com/docs/integrations/toolkits/openapi
 
@@ -66,11 +64,25 @@ https://python.langchain.com/docs/modules/chains/additional/openapi
 
 ### Streamlit
 
-- [Text summerization with langchain openai and create a 
-streamlit app](https://alphasec.io/summarize-text-with-langchain-and-openai/)
+- [Text summerization with langchain openai and create a
+  streamlit app](https://alphasec.io/summarize-text-with-langchain-and-openai/)
 - [Twitter bot for arxiv summarization](https://levelup.gitconnected.com/build-a-twitter-bot-for-arxiv-paper-summarization-by-openai-and-langchain-in-10-minutes-e57de6b32e03)
 - [Langchaing: Build a Text Summarization app](https://blog.streamlit.io/langchain-tutorial-3-build-a-text-summarization-app/)
 
 ### CyrstalToolkit, Dash, Plotly
 
 - [Dash ChatGPT App Challenge](https://community.plotly.com/t/dash-chatgpt-app-challenge/75763/26)
+
+### Environment Variables for development
+
+```
+cp .env.example .env.local
+```
+
+### Spinning up Development Environment
+
+Please set the env vars using the above instructions before running
+
+```
+docker-compose up
+```

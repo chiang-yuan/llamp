@@ -1,20 +1,30 @@
 <script lang="ts">
-	import "../app.postcss";
-	import { AppShell, AppBar } from "@skeletonlabs/skeleton";
+	import '../app.postcss';
+	import { AppShell, AppBar } from '@skeletonlabs/skeleton';
+
+	// Floating UI for Popups
+	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
+	import { storePopup } from '@skeletonlabs/skeleton';
+	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 </script>
 
+
+<svelte:head>
+    <title>LLaMP</title>
+</svelte:head>
+
 <!-- App Shell -->
-<AppShell>
+<AppShell class="flex flex-col h-screen">
 	<svelte:fragment slot="header">
 		<!-- App Bar -->
 		<AppBar>
 			<svelte:fragment slot="lead">
-				<strong class="text-xl uppercase">Skeleton</strong>
+				<strong class="text-xl uppercase">LLaMP</strong>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<a
 					class="btn btn-sm variant-ghost-surface"
-					href="https://discord.gg/EXqV7W8MtY"
+					href="#"
 					target="_blank"
 					rel="noreferrer"
 				>
@@ -22,7 +32,7 @@
 				</a>
 				<a
 					class="btn btn-sm variant-ghost-surface"
-					href="https://twitter.com/SkeletonUI"
+					href="#"
 					target="_blank"
 					rel="noreferrer"
 				>
@@ -30,19 +40,11 @@
 				</a>
 				<a
 					class="btn btn-sm variant-ghost-surface"
-					href="https://github.com/skeletonlabs/skeleton"
+					href="#"
 					target="_blank"
 					rel="noreferrer"
 				>
 					GitHub
-				</a>
-				<a
-					class="btn btn-sm variant-ghost-surface"
-					href="https://materialsproject.org"
-					target="_blank"
-					rel="noreferrer"
-				>
-					Materials Project
 				</a>
 			</svelte:fragment>
 		</AppBar>
