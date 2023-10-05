@@ -6,12 +6,13 @@ build-backend = "setuptools.build_meta"
 name = "llamp"
 version = "0.1.0"
 description = ""
-authors = [{ name = "Yuan Chiang", email = "cyrusyc@lbl.gov" },
-			{name ="Oliver Chou", email = "49494541+knhn1004@users.noreply.github.com"}
-		]
+authors = [
+    {name = "Yuan Chiang", email = "cyrusyc@lbl.gov" },
+    {name ="Oliver Chou", email = "49494541+knhn1004@users.noreply.github.com"}
+]
 license = { file = "LICENSE" }
 dependencies = [
-    "mp-api",
+    "mp-api>=0.37.0",
     "openai",
     "langchain==0.0.301",
     "fastapi",
@@ -36,7 +37,19 @@ exclude = []
 # Enable the pycodestyle (`E`) and Pyflakes (`F`) rules by default.
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
-select = ["E", "F"]
+select = [
+    "E", 
+    "F",
+    "I",      # isort
+    "ICN",    # flake8-import-conventions
+    "ISC",    # flake8-implicit-str-concat
+    "PD",     # pandas-vet
+    "SIM",    # flake8-simplify
+    "SLOT",   # flake8-slots
+    "TCH",    # flake8-type-checking
+    "TID",    # flake8-tidy-imports
+    "UP",     # pyupgrade
+]
 ignore = []
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
