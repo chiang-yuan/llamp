@@ -97,17 +97,23 @@ class MessageContent(BaseModel):
 
 @app.post("/ask/")
 async def ask(messages: list[ChatMessage]):
-    responses = []
-    for message in messages:
-        response = mp.run(
-            message=message,
-            model="gpt-3.5-turbo-16k",
-            debug=True
-        )
-        responses.append(response)
+    # responses = []
+    # for message in messages:
+    #     response = mp.run(
+    #         message=message,
+    #         model="gpt-3.5-turbo-16k",
+    #         debug=True
+    #     )
+    #     responses.append(response)
+
+    response = mp.run(
+        messages=messages,
+        model="gpt-3.5-turbo-16k",
+        debug=True
+    )
 
     return {
-        "responses": responses,
+        "responses": response,
     }
 
 # @app.post("/multi")
