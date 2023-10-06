@@ -107,7 +107,7 @@ class MPLLM:
         self._messages: list[dict[str, str]] = []
 
     def clear_messages(self):
-        self._messages = []
+        self._messages.clear()
 
     @property
     def spec(self):
@@ -636,7 +636,7 @@ class MPLLM:
     def general_reponse(
         self, message: dict[str, str], model="gpt-3.5-turbo-0613", debug: bool = False
     ):
-        self.clear_messages()  # TODO: remove for notebook demos
+        # self.clear_messages()  # TODO: remove for notebook demos
         if message["role"] != "function":
             self._messages.append(message)
             self.trim_messages(debug=debug)
@@ -761,10 +761,14 @@ class MPLLM:
 
     def run(
         self,
-        message: ChatMessage,
+        messages: list[ChatMessage],
         model: str = "gpt-3.5-turbo-0613",
         debug: bool = False,
     ) -> ChatMessage:
+        message = messages[-1]
+        self._messages.clear()
+        self._messages.extend(messages)
+        self.trim_messages(debug=debug)
         gen_reponse = self.general_reponse(
             message.dict(include={"role", "content"}),
             model=model if model else "gpt-3.5-turbo-0613",
