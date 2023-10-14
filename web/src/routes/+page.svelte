@@ -4,6 +4,7 @@
 	import { Avatar, CodeBlock, ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+	// import { HumanMessage, AIMessage } from "langchain/schema";
 
 	// for display purposes only
 	interface Chat {
@@ -50,7 +51,6 @@
 		const newMessage: ChatMessage = {
 			"role": "user",
 			"content": currentMessage,
-			// "type": "msg",
 		}
 		messages = [...messages, newMessage];
 		const body = messages;
@@ -67,7 +67,7 @@
 		});
 
 		const result = await response.json();
-		const responses: ChatMessage[] = result.responses;
+		const responses: AIMessage[] = result.responses;
 		console.log(responses);
 		appendResponse(responses);
 		// Handle the result here - e.g., append the response to your chat, etc.
