@@ -63,12 +63,6 @@ mp = MPLLM()
 
 app = FastAPI()
 
-# origins = [
-#     "http://localhost.tiangolo.com",
-#     "https://localhost.tiangolo.com",
-#     "http://localhost",
-#     "http://localhost:8080",
-# ]
 
 origins = ["*"]
 
@@ -79,16 +73,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# @app.get("/")
-# async def main():
-#     return {"message": "Hello World"}
-
-
-# @app.get("/")
-# async def root():
-#     return {"message": "Hello World"}
 
 
 # @app.get("/items/{item_id}")
@@ -124,10 +108,6 @@ async def ask(messages: list[ChatMessage]):
     return {
         "responses": response,
     }
-
-# @app.post("/multi")
-# async def multi(message: ChatMessage):
-#     pass
 
 
 if __name__ == "__main__":

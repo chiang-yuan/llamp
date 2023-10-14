@@ -636,7 +636,6 @@ class MPLLM:
     def general_reponse(
         self, message: dict[str, str], model="gpt-3.5-turbo-0613", debug: bool = False
     ):
-        # self.clear_messages()  # TODO: remove for notebook demos
         if message["role"] != "function":
             self._messages.append(message)
             self.trim_messages(debug=debug)
