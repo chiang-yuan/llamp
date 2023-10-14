@@ -67,7 +67,7 @@
 		});
 
 		const result = await response.json();
-		const responses: AIMessage[] = result.responses;
+		const responses: ChatMessage[] = result.responses;
 		console.log(responses);
 		appendResponse(responses);
 		// Handle the result here - e.g., append the response to your chat, etc.
