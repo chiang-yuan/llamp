@@ -35,7 +35,7 @@
 	interface ChatMessage {
 		role: 'assistant' | 'user';
 		content: string;
-		type: 'info' | 'msg'; // information (eg. processing) or message
+		// type: 'info' | 'msg'; // information (eg. processing) or message
 	};
 
 	let messages: ChatMessage[] = []
@@ -50,7 +50,7 @@
 		const newMessage: ChatMessage = {
 			"role": "user",
 			"content": currentMessage,
-			"type": "msg",
+			// "type": "msg",
 		}
 		messages = [...messages, newMessage];
 		const body = messages;
@@ -81,7 +81,7 @@
 	function appendResponse(responses: ChatMessage[]) {
 		messages = [...messages, ...responses.map(r => ({
 			...r,
-			type: "msg"
+			// type: "msg"
 		}))];
 
 	}

@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import ChatMessage
-from pydantic import BaseModel
 
+# from langchain.schema import ( HumanMessage, AIMessage, SystemMessage, FunctionMessage )
 # from langchain.agents import AgentExecutor, Tool
 # from langchain.chains import ConversationalRetrievalChain
 # from langchain.retrievers import ArxivRetriever, WikipediaRetriever
@@ -95,8 +95,8 @@ app.add_middleware(
 # async def read_item(item_id: int):
 #     return {"item_id": item_id}
 
-class MessageContent(BaseModel):
-    content: str
+# class MessageContent(BaseModel):
+#     content: str
 
 
 # class ChatMessage(BaseModel):

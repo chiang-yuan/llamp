@@ -14,8 +14,9 @@ license = { file = "LICENSE" }
 dependencies = [
     "mp-api>=0.37.0",
     "openai",
+    "pydantic>=2.4.0",
     "langchain==0.0.301",
-    "fastapi",
+    "fastapi>=0.103.0",
     "uvicorn",
     "python-dotenv",
 ]
