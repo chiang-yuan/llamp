@@ -8,11 +8,7 @@ from typing import Any
 import openai
 from langchain.agents import BaseMultiActionAgent
 from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
-from langchain.schema import (
-    AgentAction,
-    AgentFinish,
-    ChatMessage,
-)
+from langchain.schema import AgentAction, AgentFinish, ChatMessage, SystemMessage
 
 # SystemMessage,
 # messages_to_dict,
@@ -660,6 +656,38 @@ class MPLLM:
                 print(f"remove message: {oldest_message}")
             total_tokens -= len(oldest_message["content"].split())
 
+    def summarize_response(
+        self, response: dict[str, str], model="gpt-3.5-turbo-0613", debug: bool = False
+    ):
+        messages = [
+            {
+                "role": "system",
+                "content": re.sub(
+                    r"\s+",
+                    " ",
+                    """You are a data-vigilant agent that summarize the response from 
+                    Materials Project API for expert-curated data, and answer user 
+                    requests based on the data retrieved and information in
+                    conversation history.""",
+                )
+                .strip()
+                .replace("\n", " "),
+            },
+            *self.messages,
+            response
+        ]
+
+        try:
+            response = openai.ChatCompletion.create(
+                model=model, messages=messages, temperature=0, top_p=1
+            )
+        except Exception as e:
+            print("Error:", e)
+            response = {}
+
+        return response
+
+
     def general_reponse(
         self, message: dict[str, str], model="gpt-3.5-turbo-0613", debug: bool = False
     ):
@@ -694,12 +722,12 @@ class MPLLM:
                         r"\s+",
                         " ",
                         f"""Now you need to decide, based on the last request above, whether 
-                    to call Materials Project API for data or answer user request 
-                    directly based on the information you have. If you decide to call 
-                    Materials Project, respond {self.call_mp_hint}.
-                    If the user request is ambiguous, respond 'Please clarify your
-                    request.' If user decide to end the conversation, respond 'Goodbye!'
-                    """,
+                        to call Materials Project API for data or answer user request 
+                        directly based on the information you have. If you decide to call 
+                        Materials Project, respond {self.call_mp_hint}.
+                        If the user request is ambiguous, respond 'Please clarify your
+                        request.' If user decide to end the conversation, respond 'Goodbye!'
+                        """,
                     )
                     .strip()
                     .replace("\n", " "),
@@ -725,8 +753,8 @@ class MPLLM:
         model="gpt-3.5-turbo-16k-0613",
         debug: bool = False,
     ):
-        self.messages.append(message)
-        self.trim_messages(debug=debug)
+        # self.messages.append(message)
+        # self.trim_messages(debug=debug)
 
         messages = [
             {
@@ -834,7 +862,18 @@ class MPLLM:
                 function_to_call = self.material_routes.get(function_name)
                 if function_to_call is None:
                     print(f"Function {function_name} is not supported yet.")
-                    return
+                    return SystemMessage(
+                        content=re.sub(
+                            r"\s+",
+                            " ",
+                            f"""
+                            I want to call {function_name} but it is not supported yet. 
+                            Please rephrase your request.
+                            """
+                        )
+                        .strip()
+                        .replace("\n", " ")                        
+                    )
 
                 function_args = json.loads(
                     mat_reponse_msg["function_call"]["arguments"]
@@ -844,13 +883,15 @@ class MPLLM:
                         query_params=function_args)
                 except Exception as e:
                     print("Error:", e)
-                    print("Please provide more information or try smaller request.")
-                    return
+                    # print("Please provide more information or try smaller request.")
+                    return SystemMessage(
+                        content="Please provide more information or try smaller request."
+                    )
 
                 if debug:
                     print("MP API response:", json.dumps(function_response))
 
-                gen_reponse = self.general_reponse(
+                gen_reponse = self.summarize_response(
                     # FunctionMessage(json.dumps(function_response))
                     {
                         "role": "function",
@@ -865,6 +906,8 @@ class MPLLM:
 
                 # type: ignore
                 gen_reponse_msg = gen_reponse["choices"][0]["message"]
+            else:
+                gen_reponse_msg = mat_reponse_msg
 
         self._messages.append(gen_reponse_msg)
         return gen_reponse_msg
