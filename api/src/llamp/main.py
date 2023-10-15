@@ -106,17 +106,14 @@ class ChatMessage(BaseModel):
 
 @app.post("/ask/")
 async def ask(messages: List[ChatMessage]):
-    responses = []
-    for message in messages:
-        response = mp.run(
-            message=message,
-            model="gpt-3.5-turbo-16k",
-            debug=True
-        )
-        responses.append(response)
+    response = mp.run(
+        messages=messages,
+        model="gpt-3.5-turbo-16k",
+        debug=True
+    )
 
     return {
-        "responses": responses,
+        "responses": [response],
     }
 
 # @app.post("/multi")
