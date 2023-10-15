@@ -25,25 +25,33 @@
 				<strong class="text-xl">LLaMP 🦙🔮 - Large-Language model for Materials Project</strong>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
-				<a
+				<!-- <a
 					class="btn btn-sm variant-ghost-surface"
 					href="#"
 					target="_blank"
 					rel="noreferrer"
 				>
 					Discord
-				</a>
-				<a
+				</a> -->
+				<!-- <a
 					class="btn btn-sm variant-ghost-surface"
 					href="#"
 					target="_blank"
 					rel="noreferrer"
 				>
 					Twitter
+				</a> -->
+				<a
+					class="btn btn-sm variant-ghost-surface"
+					href="https://materialsproject.org"
+					target="_blank"
+					rel="noreferrer"
+				>
+					Materials Project
 				</a>
 				<a
 					class="btn btn-sm variant-ghost-surface"
-					href="#"
+					href="https://github.com/chiang-yuan/llamp"
 					target="_blank"
 					rel="noreferrer"
 				>
