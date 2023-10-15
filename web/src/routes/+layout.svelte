@@ -2,6 +2,9 @@
 	import '../app.postcss';
 	import { AppShell, AppBar } from '@skeletonlabs/skeleton';
 
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+
 	// Floating UI for Popups
 	import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
 	import { storePopup } from '@skeletonlabs/skeleton';
@@ -19,7 +22,7 @@
 		<!-- App Bar -->
 		<AppBar>
 			<svelte:fragment slot="lead">
-				<strong class="text-xl uppercase">LLaMP</strong>
+				<strong class="text-xl">LLaMP 🦙🔮 - Large-Language model for Materials Project</strong>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<a

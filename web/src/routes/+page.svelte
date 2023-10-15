@@ -123,7 +123,7 @@
 			{#if processing}
 				<div class="flex gap-2 ">
 					<div>
-						<Avatar width="w-12" initials="MP" />
+						<Avatar width="w-12" initials="🔮" />
 					</div>
 					<div class="card p-4 rounded-tl-none space-y">
 						<header class="flex justify-between items-center">

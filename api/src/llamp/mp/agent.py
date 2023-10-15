@@ -572,6 +572,10 @@ class MPLLM:
                 "search_materials_core__get"
             )
             functions.pop(idx)
+            idx = list(map(lambda x: x["name"], functions)).index(
+                "search_materials_core_formula_autocomplete__get"
+            )
+            functions.pop(idx)
             return functions
 
     @property
