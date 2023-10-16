@@ -21,7 +21,8 @@
 		<!-- App Bar -->
 		<AppBar>
 			<svelte:fragment slot="lead">
-				<strong class="text-xl">LLaMP 🦙🔮 - Large-Language model for Materials Project</strong>
+				<span class="lg:inline hidden"><strong class="text-xl">LLaMP 🦙🔮 - Large-Language model for Materials Project</strong></span>
+				<span class="lg:hidden"><strong class="text-xl">LLaMP</strong></span>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<!-- <a

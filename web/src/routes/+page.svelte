@@ -1,16 +1,10 @@
 <script lang="ts">
 	import Message from './Message.svelte';
-	import { Avatar, CodeBlock, ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
+	import { Avatar, ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 	import { onMount } from 'svelte';
-
-	// for display purposes only
-	interface Chat {
-		question: string;
-		title: string;
-		messages: ChatMessage[];
-	}
+	import { type Chat, type ChatMessage, syncChats } from '$lib/chatUtils';
 
 	let chats: Chat[] = [];
 	let currentChatIndex = 0;
@@ -30,24 +24,10 @@
 		}
 	});
 
-	// TODO: move to lib
-	interface ChatMessage {
-		role: 'assistant' | 'user';
-		content: string;
-		type: 'info' | 'msg'; // information (eg. processing) or message
-	}
-
 	function addMessage(newMessage: ChatMessage) {
 		chats[currentChatIndex].messages.push(newMessage);
 		syncChats();
 	}
-
-	function syncChats() {
-		// Only sync chats that have content
-		const chatsToSync = chats.filter((chat) => chat.messages.length > 0);
-		localStorage.setItem('chats', JSON.stringify(chatsToSync));
-	}
-
 	$: messages = chats.length ? chats[currentChatIndex].messages : [];
 
 	$: currentChat = chats[currentChatIndex]?.title;

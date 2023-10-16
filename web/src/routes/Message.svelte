@@ -1,11 +1,6 @@
 <script lang="ts">
+	import type { ChatMessage } from '$lib/chatUtils';
 	import { Avatar } from '@skeletonlabs/skeleton';
-	// TODO: move to lib
-	interface ChatMessage {
-		role: 'assistant' | 'user';
-		content: string;
-		type: 'info' | 'msg'; // information (eg. processing) or message
-	}
 	export let data: ChatMessage;
 	$: user = data.role === 'user';
 
