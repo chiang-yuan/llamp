@@ -11,9 +11,8 @@
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 </script>
 
-
 <svelte:head>
-    <title>LLaMP</title>
+	<title>LLaMP</title>
 </svelte:head>
 
 <!-- App Shell -->
