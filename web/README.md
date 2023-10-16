@@ -5,6 +5,7 @@ This section is dedicated to explaining the structure and contents of the fronte
 ## Folders
 
 - `src/`: The source code of the frontend application.
+
   - `lib/`: Contains utility modules such as `chatUtils.ts`, which are reused across different parts of the application.
   - `routes/`: Includes the Svelte components and the logic related to different routes of the application, such as `Message.svelte`.
 
