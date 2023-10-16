@@ -649,7 +649,12 @@
                 },
                 "thermo_types": {
                     "type": "string",
-                    "description": "Comma-separated list of thermo_type values to query on. Valid values include: GGA_GGA_U, GGA_GGA_U_R2SCAN, R2SCAN"
+                    "description": "Comma-separated list of thermo_type values to query on.",
+                    "enum": [
+                        "GGA_GGA_U",
+                        "GGA_GGA_U_R2SCAN",
+                        "R2SCAN"
+                    ]
                 },
                 "formula": {
                     "type": "string",
@@ -822,6 +827,7 @@
             }
         },
         "required": [
+            "thermo_types",
             "_fields"
         ]
     },

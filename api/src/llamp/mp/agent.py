@@ -166,7 +166,7 @@ class MPLLM:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
 
-        return self.mpr.bonds._search(
+        return self.mpr.materials.bonds._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
@@ -179,7 +179,7 @@ class MPLLM:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
 
-        return self.mpr.chemenv._search(
+        return self.mpr.materials.chemenv._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
@@ -192,7 +192,7 @@ class MPLLM:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
 
-        return self.mpr.eos._search(
+        return self.mpr.materials.eos._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
@@ -212,14 +212,14 @@ class MPLLM:
         #             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         #         )
 
-        response = self.mpr.summary._search(
+        response = self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
         # TODO: move 5 to settings
         if len(response) < 5:
             return response
         else:
-            response = self.mpr.summary._search(
+            response = self.mpr.materials.summary._search(
                 num_chunks=None,
                 chunk_size=1000,
                 all_fields=[
@@ -303,7 +303,7 @@ class MPLLM:
         if _fields:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
-        return self.mpr.robocrys._search(
+        return self.mpr.materials.robocrys._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
 
@@ -336,7 +336,7 @@ class MPLLM:
             query_params["condition_mixing_media"] = condition_mixing_media.split(
                 ",")
 
-        doc = self.mpr.synthesis._search(**query_params)
+        doc = self.mpr.materials.synthesis._search(**query_params)
 
         if len(doc) < 5:
             return doc
@@ -356,7 +356,7 @@ class MPLLM:
         if "possible_species" not in query_params["fields"]:
             query_params["fields"].append("possible_species")
 
-        return self.mpr.oxidation_states._search(
+        return self.mpr.materials.oxidation_states._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
@@ -368,7 +368,7 @@ class MPLLM:
         if _fields:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
-        return self.mpr.provenance._search(
+        return self.mpr.materials.provenance._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
@@ -381,7 +381,7 @@ class MPLLM:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
 
-        return self.mpr.tasks._search(
+        return self.mpr.materials.tasks._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
@@ -396,8 +396,8 @@ class MPLLM:
 
         # FIXME: _limit is not a valid query parameter for thermo search
         query_params["_limit"] = query_params.pop("limit", None)
-
-        return self.mpr.thermo._search(
+        
+        return self.mpr.materials.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
@@ -410,7 +410,7 @@ class MPLLM:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
 
-        return self.mpr.dielectric._search(
+        return self.mpr.materials.dielectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
@@ -423,7 +423,7 @@ class MPLLM:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
 
-        return self.mpr.piezoelectric._search(
+        return self.mpr.materials.piezoelectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
@@ -449,7 +449,7 @@ class MPLLM:
             #     **query_params
             # )
 
-            return self.mpr.magnetism.search(
+            return self.mpr.materials.magnetism.search(
                 material_ids=material_ids,
                 fields=[
                     "material_id",
@@ -488,7 +488,7 @@ class MPLLM:
             elastic_docs = []
             for doc in material_docs:
                 try:
-                    elastic_doc = self.mpr.elasticity.get_data_by_id(
+                    elastic_doc = self.mpr.materials.elasticity.get_data_by_id(
                         document_id=doc["material_id"],
                         fields=["pretty_formula", "elasticity", "task_id"],
                     )
@@ -501,7 +501,7 @@ class MPLLM:
 
             return elastic_docs
 
-        return self.mpr.elasticity._search(
+        return self.mpr.materials.elasticity._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
@@ -514,7 +514,7 @@ class MPLLM:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
 
-        return self.mpr.electronic_structure._search(
+        return self.mpr.materials.electronic_structure._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 

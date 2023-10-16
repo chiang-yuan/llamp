@@ -32,13 +32,11 @@
 
 </script>
 
-
-
 {#if !data.content}
 {:else}
 <div class="flex gap-2 {user ? 'justify-end' : ''}">
 	<div>
-		<Avatar width="w-12" initials={user? "🦖" :"🔮"} class="{user ? 'order-2' : 'order-1'}"/>
+		<Avatar width="w-14" initials={user? "🦖" :"🔮"} class="{user ? 'order-2' : 'order-1'}"/>
 	</div>
     <div class="card p-4 rounded-tl-none space-y-2 {user ? 'order-1' : 'order-2 variant-soft'}">
         <header class="flex justify-between items-center">
