@@ -26,7 +26,7 @@
 
   function addMessage(newMessage: ChatMessage) {
     chats[currentChatIndex].messages.push(newMessage);
-    syncChats();
+    syncChats(chats);
   }
   $: messages = chats.length ? chats[currentChatIndex].messages : [];
 
@@ -69,7 +69,7 @@
       const responses: ChatMessage[] = result.responses;
       console.log(responses);
       appendResponse(responses);
-      syncChats(); // Syncing the chat after receiving the assistant’s response
+      syncChats(chats); // Syncing the chat after receiving the assistant’s response
     } catch (error) {
       console.error('Error while asking question:', error);
     } finally {

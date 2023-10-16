@@ -12,6 +12,7 @@ export interface ChatMessage {
 
 export function syncChats(chats: Chat[]): void {
   // Only sync chats that have content
+  if (!chats) return;
   const chatsToSync = chats.filter((chat) => chat.messages.length > 0);
   localStorage.setItem('chats', JSON.stringify(chatsToSync));
 }
