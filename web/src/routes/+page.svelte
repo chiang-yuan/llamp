@@ -3,7 +3,7 @@
   import { Avatar, ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { type Chat, type ChatMessage, syncChats } from '$lib/chatUtils';
 
   let chats: Chat[] = [];
@@ -46,6 +46,7 @@
     // Adding user's message to the chat immediately
     addMessage(newMessage);
     messages = chats[currentChatIndex].messages;
+    await scrollToBottom();
 
     if (chats[currentChatIndex].messages.length === 1) {
       chats[currentChatIndex].title = currentMessage;
@@ -57,6 +58,7 @@
 
     try {
       processing = true;
+      await scrollToBottom();
       const response = await fetch('http://localhost:8000/ask', {
         method: 'POST',
         headers: {
@@ -108,6 +110,12 @@
 
   $: isCurrentChatEmpty =
     chats[currentChatIndex]?.messages.length === 0 && !chats[currentChatIndex]?.title;
+
+  let chatContainer: HTMLElement;
+  async function scrollToBottom() {
+    await tick();
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
 </script>
 
 <div class="chat w-full h-full grid grid-cols-1 lg:grid-cols-[20%_1fr]">
@@ -142,7 +150,11 @@
   <!-- Chat -->
   <div class="flex flex-col h-full">
     <!-- Conversation -->
-    <section id="chat-conversation" class="p-4 overflow-y-auto flex-grow space-y-4">
+    <section
+      bind:this={chatContainer}
+      id="chat-conversation"
+      class="p-4 overflow-y-auto flex-grow space-y-4"
+    >
       {#each messages as msg}
         <Message data={msg} />
       {/each}
