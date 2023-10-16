@@ -86,3 +86,13 @@ Please set the env vars using the above instructions before running
 ```
 docker-compose up
 ```
+
+## Project Directories
+
+This project is structured into various directories, each serving a specific purpose in the application's architecture.
+
+### Frontend
+
+The frontend of this application is built using SvelteKit and is contained within the `web/` directory. Detailed documentation regarding the frontend architecture, file structure, and development guidelines can be found in the [frontend README](web/README.md).
+
+[📖 Read the frontend documentation](web/README.md)
