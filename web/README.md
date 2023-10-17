@@ -1,38 +1,34 @@
-# create-svelte
+# Frontend Documentation (web/)
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+This section is dedicated to explaining the structure and contents of the frontend part of the project, located in the `web/` directory. Here's a breakdown of the main files and folders:
 
-## Creating a project
+## Folders
 
-If you're seeing this, you've probably already done this step. Congrats!
+- `src/`: The source code of the frontend application.
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+  - `lib/`: Contains utility modules such as `chatUtils.ts`, which are reused across different parts of the application.
+  - `routes/`: Includes the Svelte components and the logic related to different routes of the application, such as `Message.svelte`.
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+- `static/`: Houses static files like images, which are not processed by Svelte.
 
-## Developing
+## Files
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+- `Dockerfile.dev`: A Dockerfile for creating a Docker image of the development version of the application.
 
-```bash
-npm run dev
+- `package.json` and `package-lock.json`: Define the project dependencies and other metadata.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+- `postcss.config.cjs` and `tailwind.config.ts`: Configuration files related to styling, TailwindCSS and PostCSS in this case.
 
-## Building
+- `svelte.config.js`: Configuration file for the Svelte application.
 
-To create a production version of your app:
+- `tsconfig.json`: Configuration file for TypeScript, defining compiler options and other settings.
 
-```bash
-npm run build
-```
+- `vite.config.ts`: Configuration file for Vite, which is used for building and development purposes.
 
-You can preview the production build with `npm run preview`.
+## Specific File and Folder Details
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+- `src/lib/`: In this directory, reusable logic and utility functions are defined. For example, `chatUtils.ts` contains functionalities related to chat operations.
+
+- `src/routes/`: This directory includes the UI components of the application. For instance, `Message.svelte` is a component representing a message in the chat application.
+
+- `Dockerfile.dev`: This is specifically used to dockerize the development environment, ensuring that the application runs consistently across different platforms.

@@ -39,6 +39,38 @@ Experience the future of materials exploration with LLaMP – your intelligent g
 
 ## :hammer_and_wrench: Installation
 
+### Build the app locally
+
+```shell
+docker-compose up --build
+```
+
+## 🤝 Contributing
+
+### Environment Variables for development
+
+```
+cp .env.example .env.local
+```
+
+### Spinning up Development Environment
+
+Please set the env vars using the above instructions before running
+
+```
+docker-compose up
+```
+
+## 📑 Documentation
+
+This project is structured into various directories, each serving a specific purpose in the application's architecture.
+
+### Frontend
+
+The frontend of this application is built using SvelteKit and is contained within the `web/` directory. Detailed documentation regarding the frontend architecture, file structure, and development guidelines can be found in the [frontend README](web/README.md).
+
+[📖 Read the frontend documentation](web/README.md)
+
 ## :rocket: Usage
 
 ## Resources
@@ -72,17 +104,3 @@ https://python.langchain.com/docs/modules/chains/additional/openapi
 ### CyrstalToolkit, Dash, Plotly
 
 - [Dash ChatGPT App Challenge](https://community.plotly.com/t/dash-chatgpt-app-challenge/75763/26)
-
-### Environment Variables for development
-
-```
-cp .env.example .env.local
-```
-
-### Spinning up Development Environment
-
-Please set the env vars using the above instructions before running
-
-```
-docker-compose up
-```
