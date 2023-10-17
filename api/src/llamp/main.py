@@ -1,20 +1,11 @@
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from langchain.agents import AgentExecutor, Tool
-from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
-from langchain.retrievers import ArxivRetriever, WikipediaRetriever
 from langchain.schema import ChatMessage
-from langchain.utilities import (
-    ArxivAPIWrapper,
-    GoogleSearchAPIWrapper,
-    SerpAPIWrapper,
-    WikipediaAPIWrapper,
-)
 from pydantic import BaseModel
-from typing import List
 
 from llamp.mp.agent import MPLLM, MultiLLaMP
 
@@ -105,10 +96,10 @@ class ChatMessage(BaseModel):
 
 
 @app.post("/ask/")
-async def ask(messages: List[ChatMessage]):
+async def ask(messages: list[ChatMessage]):
     response = mp.run(
         messages=messages,
-        model="gpt-3.5-turbo-16k",
+        model="gpt-3.5-turbo-16k-0613",
         debug=True
     )
 
