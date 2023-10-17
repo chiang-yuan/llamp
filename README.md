@@ -39,6 +39,14 @@ Experience the future of materials exploration with LLaMP – your intelligent g
 
 ## :hammer_and_wrench: Installation
 
+### Build docker image
+
+```shell
+docker image prune
+docker container prune
+docker-compose up --build
+```
+
 ## :rocket: Usage
 
 ## Resources
