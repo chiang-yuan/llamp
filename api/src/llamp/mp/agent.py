@@ -205,95 +205,96 @@ class MPLLM:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
 
-        # if query_params.get("material_ids"):
-        #     material_ids = query_params.get("material_ids").split(",")
-        #     if len(material_ids) < 5:  # TODO: move 5 to settings
-        #         return self.mpr.summary._search(
-        #             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
-        #         )
+        query_params["fields"] = query_params.get("fields", []) + [
+            "material_id", 
+            "formula_pretty", 
+            "task_ids"
+            ]
 
         response = self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-        # TODO: move 5 to settings
-        if len(response) < 5:
-            return response
-        else:
-            response = self.mpr.materials.summary._search(
-                num_chunks=None,
-                chunk_size=1000,
-                all_fields=[
-                    "nsites",
-                    "elements",
-                    # "nelements",
-                    "composition",
-                    "formula_pretty",
-                    # "formula_anonymous",
-                    # "chemsys",
-                    "volume",
-                    "density",
-                    "density_atomic",
-                    "symmetry",
-                    "property_name",
-                    "material_id",
-                    "deprecated",
-                    # "deprecation_reasons",
-                    "last_updated",
-                    "warnings",
-                    # "structure",
-                    "task_ids",
-                    "uncorrected_energy_per_atom",
-                    "energy_per_atom",
-                    "formation_energy_per_atom",
-                    "energy_above_hull",
-                    "is_stable",
-                    "equilibrium_reaction_energy_per_atom",
-                    "decomposes_to",
-                    "band_gap",
-                    "cbm",
-                    "vbm",
-                    "efermi",
-                    "is_gap_direct",
-                    "is_metal",
-                    "bandstructure",
-                    "dos",
-                    "dos_energy_up",
-                    "dos_energy_down",
-                    "is_magnetic",
-                    "ordering",
-                    "total_magnetization",
-                    "total_magnetization_normalized_vol",
-                    "total_magnetization_normalized_formula_units",
-                    "num_magnetic_sites",
-                    "num_unique_magnetic_sites",
-                    "types_of_magnetic_species",
-                    "k_voigt",
-                    "k_reuss",
-                    "k_vrh",
-                    "g_voigt",
-                    "g_reuss",
-                    "g_vrh",
-                    "universal_anisotropy",
-                    "homogeneous_poisson",
-                    "e_total",
-                    "e_ionic",
-                    "e_electronic",
-                    "n",
-                    "e_ij_max",
-                    "weighted_surface_energy_EV_PER_ANG2",
-                    "weighted_surface_energy",
-                    "weighted_work_function",
-                    "surface_anisotropy",
-                    "shape_factor",
-                    "has_reconstructed",
-                    "possible_species",
-                    "has_props",
-                    "theoretical",
-                    "database_IDs",
-                ],
-                **query_params,
-            )
-            return
+        return response
+    
+        # TODO: move 5 to settings, use tiktoken
+        # if len(response) < 100:
+        #     return response
+        # else:
+        #     response = self.mpr.materials.summary._search(
+        #         num_chunks=None,
+        #         chunk_size=1000,
+        #         all_fields=[
+        #             "nsites",
+        #             "elements",
+        #             # "nelements",
+        #             "composition",
+        #             "formula_pretty",
+        #             # "formula_anonymous",
+        #             # "chemsys",
+        #             "volume",
+        #             "density",
+        #             "density_atomic",
+        #             "symmetry",
+        #             "property_name",
+        #             "material_id",
+        #             "deprecated",
+        #             # "deprecation_reasons",
+        #             "last_updated",
+        #             "warnings",
+        #             # "structure",
+        #             "task_ids",
+        #             "uncorrected_energy_per_atom",
+        #             "energy_per_atom",
+        #             "formation_energy_per_atom",
+        #             "energy_above_hull",
+        #             "is_stable",
+        #             "equilibrium_reaction_energy_per_atom",
+        #             "decomposes_to",
+        #             "band_gap",
+        #             "cbm",
+        #             "vbm",
+        #             "efermi",
+        #             "is_gap_direct",
+        #             "is_metal",
+        #             "bandstructure",
+        #             "dos",
+        #             "dos_energy_up",
+        #             "dos_energy_down",
+        #             "is_magnetic",
+        #             "ordering",
+        #             "total_magnetization",
+        #             "total_magnetization_normalized_vol",
+        #             "total_magnetization_normalized_formula_units",
+        #             "num_magnetic_sites",
+        #             "num_unique_magnetic_sites",
+        #             "types_of_magnetic_species",
+        #             "k_voigt",
+        #             "k_reuss",
+        #             "k_vrh",
+        #             "g_voigt",
+        #             "g_reuss",
+        #             "g_vrh",
+        #             "universal_anisotropy",
+        #             "homogeneous_poisson",
+        #             "e_total",
+        #             "e_ionic",
+        #             "e_electronic",
+        #             "n",
+        #             "e_ij_max",
+        #             "weighted_surface_energy_EV_PER_ANG2",
+        #             "weighted_surface_energy",
+        #             "weighted_work_function",
+        #             "surface_anisotropy",
+        #             "shape_factor",
+        #             "has_reconstructed",
+        #             "possible_species",
+        #             "has_props",
+        #             "theoretical",
+        #             "database_IDs",
+        #         ],
+        #         **query_params,
+        #     )
+        #     return response
 
     def search_materials_robocrys(self, query_params: dict):
         fields = query_params.pop("fields", None)
