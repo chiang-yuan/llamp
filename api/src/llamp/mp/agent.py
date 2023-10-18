@@ -127,9 +127,9 @@ class MPLLM:
                 "https://api.materialsproject.org/openapi.json"
             ).json()
 
-
+        # raw_spec["servers"] = ["https://api.materialsproject.org"]
         raw_spec["servers"] = raw_spec.get(
-            "servers", ["https://api.materialsproject.org"]
+            "servers", [{"url": "https://api.materialsproject.org"}]
         )
 
         return reduce_openapi_spec(raw_spec)
