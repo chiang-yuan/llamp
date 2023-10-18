@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import openai
+import requests
 from langchain.agents import BaseMultiActionAgent
 from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
 from langchain.schema import AgentAction, AgentFinish, ChatMessage, SystemMessage
@@ -116,10 +117,16 @@ class MPLLM:
 
     @property
     def reduced_spec(self):
-        with open(self.spec_path) as f:
-            import json
+        if self.spec_path.exists():
+            with open(self.spec_path) as f:
+                import json
 
-            raw_spec = json.load(f)
+                raw_spec = json.load(f)
+        else:
+            raw_spec = requests.get(
+                "https://api.materialsproject.org/openapi.json"
+            ).json()
+
 
         raw_spec["servers"] = raw_spec.get(
             "servers", ["https://api.materialsproject.org"]
