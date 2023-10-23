@@ -882,7 +882,7 @@ class MPLLM:
                         mat_reponse_msg["function_call"]["arguments"],
                     )
 
-                function_to_call = self.material_routes.get(function_name)
+                function_to_call = self.material_routes.get(function_name, None)
                 if function_to_call is None:
                     print(f"Function {function_name} is not supported yet.")
                     return SystemMessage(
