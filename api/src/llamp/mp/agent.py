@@ -212,11 +212,11 @@ class MPLLM:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
 
-        query_params["fields"] = query_params.get("fields", []) + [
-            "material_id", 
-            "formula_pretty", 
-            "task_ids"
-            ]
+        # query_params["fields"] = query_params.get("fields", []) + [
+        #     "material_id", 
+        #     "formula_pretty", 
+        #     "task_ids"
+        #     ]
 
         response = self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
@@ -606,6 +606,10 @@ class MPLLM:
                 "search_materials_core_formula_autocomplete__get"
             )
             functions.pop(idx)
+            idx = list(map(lambda x: x["name"], functions)).index(
+                "search_materials_provenance__get"
+            )
+            functions.pop(idx)
             return functions
 
     @property
@@ -639,7 +643,7 @@ class MPLLM:
             "search_materials_synthesis__get": self.search_materials_synthesis,
             "search_materials_oxidation_states__get": self.search_materials_oxidation_states,
             "search_materials_alloys__get": None,
-            "search_materials_provenance__get": self.search_materials_provenance,
+            # "search_materials_provenance__get": self.search_materials_provenance,
             "search_materials_charge_density__get": None,
             "get_by_key_materials_charge_density__fs_id___get": None,
             "search_materials_summary_stats__get": None,
@@ -660,8 +664,14 @@ class MPLLM:
         return self._messages
 
     def trim_messages(self, debug: bool = False):
-        total_tokens = sum(len(message["content"].split())
-                           for message in self.messages)
+        total_tokens = 0
+        for message in self.messages:
+            for word in message["content"].split():
+                total_tokens += len(word)/4.0
+
+        # total_tokens = sum(len(message["content"].split())
+        #                    for message in self.messages)
+
         while total_tokens > self.max_tokens:
             oldest_message = self.messages.pop(0)
             if debug:
@@ -685,7 +695,7 @@ class MPLLM:
                 .strip()
                 .replace("\n", " "),
             },
-            *self.messages,
+            self.messages[-1],
             response
         ]
 
@@ -766,7 +776,7 @@ class MPLLM:
         debug: bool = False,
     ):
         # self.messages.append(message)
-        # self.trim_messages(debug=debug)
+        self.trim_messages(debug=debug)
 
         messages = [
             {
@@ -798,6 +808,7 @@ class MPLLM:
                 .replace("\n", " "),
             },
             *self.messages,
+            message
         ]
 
         try:
