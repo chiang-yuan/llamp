@@ -7,12 +7,24 @@ import re
 from pathlib import Path
 from typing import Any
 
+import requests
+from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
 from langchain.pydantic_v1 import BaseModel, root_validator
 from langchain.schema import (
     Document,
 )
+from langchain.tools.json.tool import JsonSpec
+from langchain.utils import get_from_dict_or_env
+
+# from pydantic import BaseModel
+from llamp.utils import MP_API_KEY, OPENAI_API_KEY
 
 logger = logging.getLogger(__name__)
+
+
+# NOTE: https://python.langchain.com/docs/modules/agents/tools/custom_tools
+
+
 
 
 class MPAPIWrapper(BaseModel):
@@ -43,6 +55,42 @@ class MPAPIWrapper(BaseModel):
     load_max_docs: int = 100
     load_all_available_meta: bool = False
     doc_content_chars_max: int | None = 4000
+
+    max_tokens: int = 2048
+    mp_api_key: str = MP_API_KEY
+    openai_api_key: str = OPENAI_API_KEY
+
+    spec_path = Path(__file__).parent.resolve() / "mp_openapi_selected.json"
+
+    mpr: Any
+
+    @property
+    def spec(self):
+        return self.json_spec
+
+    @property
+    def reduced_spec(self):
+        if self.spec_path.exists():
+            with open(self.spec_path) as f:
+                import json
+
+                raw_spec = json.load(f)
+        else:
+            raw_spec = requests.get(
+                "https://api.materialsproject.org/openapi.json"
+            ).json()
+
+        # raw_spec["servers"] = ["https://api.materialsproject.org"]
+        raw_spec["servers"] = raw_spec.get(
+            "servers", [{"url": "https://api.materialsproject.org"}]
+        )
+
+        return reduce_openapi_spec(raw_spec)
+
+    @property
+    def json_spec(self) -> JsonSpec:
+        return JsonSpec.from_file(self.spec_path)
+
 
     @property
     def material_functions(self):
@@ -472,25 +520,74 @@ class MPAPIWrapper(BaseModel):
     @root_validator()
     def validate_environment(cls, values: dict) -> dict:
         """Validate that the python package exists in environment."""
+
+        mp_api_key = get_from_dict_or_env(
+            values, "mp_api_key", "MP_API_KEY"
+        )
+
+        openai_api_key = get_from_dict_or_env(
+            values, "openai_api_key", "OPENAI_API_KEY"
+        )
+
+        try:
+            import openai
+            openai.api_key = openai_api_key 
+        except ImportError:
+            raise ImportError(
+                "Could not import `openai` python package. "
+                "Please install it with `pip install openai`."
+            )
         try:
             import mp_api
-            from mp_api.client import MPRester
+            os.environ["MP_API_KEY"] = mp_api_key
 
-            # import arxiv
-
-            # values["arxiv_search"] = arxiv.Search
-            # values["arxiv_exceptions"] = (
-            #     arxiv.ArxivError,
-            #     arxiv.UnexpectedEmptyPageError,
-            #     arxiv.HTTPError,
-            # )
-            # values["arxiv_result"] = arxiv.Result
+            values["mpr"] = mp_api.client.MPRester(
+                api_key=mp_api_key, monty_decode=False, use_document_model=False,
+                headers={"X-API-KEY": mp_api_key, 'accept': 'application/json'}
+            )
         except ImportError:
             raise ImportError(
                 "Could not import `mp_api` python package. "
                 "Please install it with `pip install mp_api`."
             )
         return values
+    
+    def run(self, query: str) -> str:
+        """
+        Performs an arxiv search and A single string
+        with the publish date, title, authors, and summary
+        for each article separated by two newlines.
+
+        If an error occurs or no documents found, error text
+        is returned instead. Wrapper for
+        https://lukasschwab.me/arxiv.py/index.html#Search
+
+        Args:
+            query: a plaintext search query
+        """  # noqa: E501
+        try:
+            if self.is_arxiv_identifier(query):
+                results = self.arxiv_search(
+                    id_list=query.split(),
+                    max_results=self.top_k_results,
+                ).results()
+            else:
+                results = self.arxiv_search(  # type: ignore
+                    query[: self.ARXIV_MAX_QUERY_LENGTH], max_results=self.top_k_results
+                ).results()
+        except self.arxiv_exceptions as ex:
+            return f"Arxiv exception: {ex}"
+        docs = [
+            f"Published: {result.updated.date()}\n"
+            f"Title: {result.title}\n"
+            f"Authors: {', '.join(a.name for a in result.authors)}\n"
+            f"Summary: {result.summary}"
+            for result in results
+        ]
+        if docs:
+            return "\n\n".join(docs)[: self.doc_content_chars_max]
+        else:
+            return "No good Arxiv Result was found"
     
     
     def run(self, function_name: str, function_args: str, debug: bool = False) -> str:

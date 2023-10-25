@@ -81,7 +81,8 @@ class MultiLLaMP(BaseMultiActionAgent):
 # TODO: change this a child of Pydantic BaseModel
 class MPLLM:
     # spec = JsonSpec.from_file(Path(__file__).parent.resolve() / "mp_openapi.json")
-    spec_path = Path(__file__).parent.resolve() / "mp_openapi.json"
+    spec_path = Path(__file__).parent.resolve() / "mp_openapi_selected.json"
+    # spec_path = Path(__file__).parent.resolve() / "material_functions.json"
 
     call_mp_hint = "Call MP"
     call_arxiv_hint = "Call arXiv"
@@ -100,7 +101,8 @@ class MPLLM:
         openai.api_key = openai_api_key
 
         self.mpr = MPRester(
-            api_key=mp_api_key, monty_decode=False, use_document_model=False
+            api_key=mp_api_key, monty_decode=False, use_document_model=False,
+            headers={"X-API-KEY": mp_api_key, 'accept': 'application/json'}
         )
         self.max_tokens = max_tokens
         self._messages: list[dict[str, str]] = []
