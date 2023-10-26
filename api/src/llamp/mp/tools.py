@@ -10,20 +10,8 @@ from langchain.tools import BaseTool, Tool
 from langchain.utilities import SerpAPIWrapper
 from pydantic import BaseModel, Field
 
+from llamp.utilities import MPAPIWrapper
 
-class CalculatorInput(BaseModel):
-    question: str = Field()
-
-
-tools.append(
-    Tool.from_function(
-        func=llm_math_chain.run,
-        name="Calculator",
-        description="useful for when you need to answer questions about math",
-        args_schema=CalculatorInput
-        # coroutine= ... <- you can specify an async method if desired as well
-    )
-)
 
 class SummarySchema(BaseModel):
     """Schema for the search_materials_summary__get endpoint"""
@@ -140,6 +128,10 @@ class SummarySchema(BaseModel):
     _fields: str = Field(description="Comma-delimited list of fields to return in results")
     _all_fields: bool = Field(description="Whether to return all fields in results")
 
+class ElasticitySchema(BaseModel):
+    chemsys: str = Field(description="A comma delimited string list of chemical systems. Wildcards for unknown elements only supported for single chemsys queries")
+    
+
 
 class MaterialSummary(BaseTool):
     name = "search_materials_summary__get"
@@ -154,23 +146,17 @@ class MaterialSummary(BaseTool):
 
     def _run(
         self,
-        query: str,
-        engine: str = "google",
-        gl: str = "us",
-        hl: str = "en",
-        run_manager: Optional[CallbackManagerForToolRun] = None,
+        function_name: str,
+        function_args: str
     ) -> str:
-        """Use the tool."""
-        search_wrapper = SerpAPIWrapper(params={"engine": engine, "gl": gl, "hl": hl})
-        return search_wrapper.run(query)
+        mpapi_wrapper = MPAPIWrapper()
+
+        return mpapi_wrapper.run(function_name=function_name, function_args=function_args)
 
     async def _arun(
         self,
-        query: str,
-        engine: str = "google",
-        gl: str = "us",
-        hl: str = "en",
-        run_manager: Optional[AsyncCallbackManagerForToolRun] = None,
+        function_name: str,
+        function_args: str
     ) -> str:
         """Use the tool asynchronously."""
         raise NotImplementedError("custom_search does not support async")
@@ -178,11 +164,11 @@ class MaterialSummary(BaseTool):
 
 
 tools = [
-    Tool.from_function(
-        func=search.run,
-        name="Search",
-        description="useful for when you need to answer questions about current events"
-        # coroutine= ... <- you can specify an async method if desired as well
-    ),
+    # Tool.from_function(
+    #     func=search.run,
+    #     name="Search",
+    #     description="useful for when you need to answer questions about current events"
+    #     # coroutine= ... <- you can specify an async method if desired as well
+    # ),
     MaterialSummary()
 ]
