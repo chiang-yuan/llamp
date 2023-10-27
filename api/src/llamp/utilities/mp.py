@@ -71,8 +71,10 @@ class MPAPIWrapper(BaseModel):
             )
         try:
             import mp_api
+            import mp_api.client
             os.environ["MP_API_KEY"] = mp_api_key
 
+            values["client"] = mp_api.client
             values["mpr"] = mp_api.client.MPRester(
                 api_key=mp_api_key, monty_decode=False, use_document_model=False,
                 headers={"X-API-KEY": mp_api_key, 'accept': 'application/json'}
@@ -84,7 +86,7 @@ class MPAPIWrapper(BaseModel):
             )
         return values
     
-    def run(self, function_name: str, function_args: str, debug: bool = False,) -> str:
+    def run(self, function_name: str, function_args: str, debug: bool = False) -> str:
         """
         Performs an mp-api call and returns the result.
 
@@ -214,7 +216,7 @@ class MPAPIWrapper(BaseModel):
             functions.pop(idx)
             return functions
         
-    def search_materials_core(self, query_params: dict):
+    def _process_query_params(self, query_params: dict):
         fields = query_params.pop("fields", None)
         if fields:
             query_params["fields"] = fields.split(",")
@@ -222,90 +224,61 @@ class MPAPIWrapper(BaseModel):
         if _fields:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
-
+        limit = query_params.pop("limit", None)
+        if limit:
+            query_params["_limit"] = limit
+        all_fields = query_params.pop("all_fields", None)
+        if all_fields:
+            query_params["_all_fields"] = all_fields
+        sort_fields = query_params.pop("sort_fields", None)
+        if sort_fields:
+            query_params["_sort_fields"] = all_fields
+        return query_params
+        
+    def search_materials_core(self, query_params: dict):
+        query_params = self._process_query_params(query_params)
         return self.mpr.materials._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def fetch_materials_similarity(self, material_id: str, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
+        query_params = self._process_query_params(query_params)
         return self.mpr.materials.get_data_by_id(
             document_id=material_id, **query_params
         )
 
     def search_materials_bonds(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
+        query_params = self._process_query_params(query_params)
         return self.mpr.materials.bonds._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_chemenv(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
+        query_params = self._process_query_params(query_params)
         return self.mpr.materials.chemenv._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_eos(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
+        query_params = self._process_query_params(query_params)
         return self.mpr.materials.eos._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_summary(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
-        response = self.mpr.materials.summary._search(
+        query_params = self._process_query_params(query_params)
+        return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-        return response
 
     def search_materials_robocrys(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
         return self.mpr.materials.robocrys._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
 
     def search_materials_synthesis(self, query_params: dict):
+        query_params = self._process_query_params(query_params)
         keywords = query_params.pop("keywords", None)
         if keywords:
             query_params["keywords"] = keywords.split(",")
@@ -334,22 +307,10 @@ class MPAPIWrapper(BaseModel):
             query_params["condition_mixing_media"] = condition_mixing_media.split(
                 ",")
 
-        doc = self.mpr.materials.synthesis._search(**query_params)
-
-        if len(doc) < 5:
-            return doc
-        else:
-            return doc[:5]
+        return self.mpr.materials.synthesis._search(**query_params)
 
     def search_materials_oxidation_states(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
+        query_params = self._process_query_params(query_params)
         # FIXME
         if "possible_species" not in query_params["fields"]:
             query_params["fields"].append("possible_species")
@@ -359,81 +320,44 @@ class MPAPIWrapper(BaseModel):
         )
 
     def search_materials_provenance(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
         return self.mpr.materials.provenance._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_tasks(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
+        query_params = self._process_query_params(query_params)
         return self.mpr.materials.tasks._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_thermo(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
+        query_params = self._process_query_params(query_params)
         # FIXME: _limit is not a valid query parameter for thermo search
         query_params["_limit"] = query_params.pop("limit", None)
+
+        thermo_types = query_params.pop("thermo_types", None)
+        if thermo_types:
+            query_params.update({"thermo_types": ",".join(thermo_types)})
         
         return self.mpr.materials.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_dielectric(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
+        query_params = self._process_query_params(query_params)
         return self.mpr.materials.dielectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_piezoelectric(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
+        query_params = self._process_query_params(query_params)
         return self.mpr.materials.piezoelectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_magnetism(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
-
+        query_params = self._process_query_params(query_params)
         if "formula" in query_params:
             material_docs = self.mpr.materials.search(
                 formula=query_params.pop("formula").split(","), fields=["material_id"]
@@ -464,13 +388,7 @@ class MPAPIWrapper(BaseModel):
         )
 
     def search_materials_elasticity(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         if "formula" in query_params:
             material_docs = self.mpr.materials.search(
@@ -498,13 +416,7 @@ class MPAPIWrapper(BaseModel):
         )
 
     def search_materials_electronic_structure(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         return self.mpr.materials.electronic_structure._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params

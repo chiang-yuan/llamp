@@ -38,6 +38,7 @@ exclude = []
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
 select = [
+    "E",      # pycodestyle
     "I",      # isort
     "ICN",    # flake8-import-conventions
     "ISC",    # flake8-implicit-str-concat

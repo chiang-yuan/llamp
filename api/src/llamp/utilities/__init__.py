@@ -8,3 +8,13 @@ def _import_mp() -> Any:
 
     return MPAPIWrapper
 
+def __getattr__(name: str) -> Any:
+    if name == "MPAPIWrapper":
+        return _import_mp()
+    else:
+        raise AttributeError(f"Could not find: {name}")
+
+
+__all__ = [
+    "MPAPIWrapper",
+]
