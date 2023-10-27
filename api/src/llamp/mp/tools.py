@@ -37,7 +37,8 @@ class MPTool(BaseTool):
     ):
         return self.api_wrapper.run(
             function_name=self.name,
-            function_args=json.dumps(query_params)
+            function_args=json.dumps(query_params),
+            debug=False
         )
         
     
