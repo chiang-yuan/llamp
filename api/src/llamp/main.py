@@ -4,11 +4,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import ChatMessage
-from langchain.agents import AgentExecutor, initialize_agent
-from langchain.agents.format_scratchpad import format_to_openai_functions
-from langchain.tools.render import format_tool_to_openai_function
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
+from langchain.agents import initialize_agent, AgentType
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain.prompts import MessagesPlaceholder
 from langchain.memory import ConversationBufferMemory
 from pydantic import BaseModel
 
@@ -29,36 +27,29 @@ tools = [
 
 # MEMORY_KEY = "chat_history"
 
-'''
-agent = {
-    "input": lambda x: x["input"],
-    "chat_history": lambda x: x["chat_history"],
-    "agent": AgentType.OPENAI_MULTI_FUNCTIONS,
-}
-'''
-
 llm = ChatOpenAI(temperature=0, model='gpt-4')
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are very powerful assistant, but bad at calculating lengths of words."),
-    ("user", "{input}"),
-    MessagesPlaceholder(variable_name="agent_scratchpad"),
-])
-
-llm_with_tools = llm.bind(
-    functions=[format_tool_to_openai_function(t) for t in tools]
-)
 
 memory = ConversationBufferMemory(memory_key="chat_history")
 
-agent = {
-    "input": lambda x: x["input"],
-    "agent_scratchpad": lambda x: format_to_openai_functions(x['intermediate_steps'])
-} | prompt | llm_with_tools | OpenAIFunctionsAgentOutputParser()
+conversational_memory = ConversationBufferWindowMemory(
+    memory_key='memory',
+    k=5,
+    return_messages=True
+)
+agent_kwargs = {
+    "extra_prompt_messages": [MessagesPlaceholder(variable_name="memory")],
+}
 
-agent_executor = AgentExecutor.from_agent_and_tools(
-    agent=agent, tools=tools, verbose=True)
-
-initialize_agent(agent_executor, memory=memory)
+agent_executor = initialize_agent(
+    agent=AgentType.OPENAI_MULTI_FUNCTIONS,
+    tools=tools,
+    llm=llm,
+    verbose=True,
+    max_iterations=3,
+    early_stopping_method='generate',
+    memory=conversational_memory,
+    agent_kwargs=agent_kwargs,
+)
 
 app = FastAPI()
 
@@ -98,15 +89,19 @@ async def ask(messages: list[ChatMessage]):
         } for x in messages[:-1]
     ]
 
+    '''
     output = agent_executor.invoke({
         "input": messages[-1].content,
         'chat_history': chat_history,
     })
+    '''
+    output = agent_executor.run(input=messages[-1].content)
+
     print(output)
     return {
         "responses": [{
             'role': 'assistant',
-            'content': output['output']
+            'content': output,
         }],
     }
 
