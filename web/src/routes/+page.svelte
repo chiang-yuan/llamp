@@ -72,7 +72,9 @@
       console.log(responses);
       appendResponse(responses);
 	  const structures = result.structures;
-	  appendStructures(structures);
+	  if (structures.length > 0) {
+		appendStructures(structures);
+	  }
 	  console.log(structures);
 
       syncChats(chats); // Syncing the chat after receiving the assistant’s response

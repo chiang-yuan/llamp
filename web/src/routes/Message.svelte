@@ -61,8 +61,8 @@
       </header>
 	  <div class="max-w-xl">
 		<Carousel
-			particlesToShow={3}
-			particlesToScroll={3}
+			particlesToShow={1}
+			particlesToScroll={1}
 			autoplay
 			pauseOnFocus
 		>

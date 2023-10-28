@@ -11,7 +11,7 @@ from llamp.mp.tools import (
     MaterialsOxidation,
     MaterialsBonds,
     MaterialsSimilarity,
-    # MaterialsStructure,
+    MaterialsStructure,
 )
 import json
 from typing import Any
@@ -48,14 +48,14 @@ tools = [
     MaterialsOxidation(),
     MaterialsBonds(),
     MaterialsSimilarity(),
-    # MaterialsStructure(),
+    MaterialsStructure(return_direct=True),
     # StructureVis(),
 ]
 
 # MEMORY_KEY = "chat_history"
 
-# llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k-0613')
-llm = ChatOpenAI(temperature=0, model='gpt-4')
+llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k-0613')
+# llm = ChatOpenAI(temperature=0, model='gpt-4')
 
 memory = ConversationBufferMemory(memory_key="chat_history")
 
@@ -69,7 +69,7 @@ agent_kwargs = {
 }
 
 agent_executor = initialize_agent(
-    agent=AgentType.OPENAI_MULTI_FUNCTIONS,
+    agent=AgentType.OPENAI_FUNCTIONS,
     tools=tools,
     llm=llm,
     verbose=True,
@@ -109,6 +109,15 @@ def load_test_structure():
     return load_json(file_path)
 
 
+def load_structures(str: str) -> list[Any]:
+    str = str.replace('[structures]', '')
+    mp_list = str.split(',')
+    res = []
+    for mp in mp_list:
+        res.append(load_json(BASE_DIR / f'mp/.tmp/{mp}.json'))
+    return res
+
+
 @app.post("/ask/")
 async def ask(messages: list[ChatMessage]):
     print(messages)
@@ -132,14 +141,17 @@ async def ask(messages: list[ChatMessage]):
     })
     '''
     output = agent_executor.run(input=messages[-1].content)
+    structures = []
+    if (output.startswith('[structures]')):
+        structures = [*load_structures(output)]
+        output = ""
 
-    print(output)
     return {
         "responses": [{
             'role': 'assistant',
             'content': output,
         }],
-        "structures": [load_test_structure()]
+        "structures": structures,
     }
 
 if __name__ == "__main__":
