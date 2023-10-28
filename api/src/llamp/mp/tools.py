@@ -24,7 +24,6 @@ from llamp.utilities import MPAPIWrapper
 # NOTE: https://python.langchain.com/docs/modules/agents/tools/custom_tools
 
 
-
 class MPTool(BaseTool):
     name: str
     api_wrapper: MPAPIWrapper = Field(default_factory=MPAPIWrapper)
@@ -72,7 +71,7 @@ class MaterialsElasticity(MPTool):
     args_schema: type[ElasticitySchema] = ElasticitySchema
 
 
-class MaterialsSynthsis(MPTool):
+class MaterialsSynthesis(MPTool):
     name: str = "search_materials_synthesis__get"
     description: str = (
         re.sub(
@@ -156,8 +155,8 @@ class MaterialsDielectric(MPTool):
     args_schema: type[DielectricSchema] = DielectricSchema
 
 
-class MaterialsPiezo(MPTool):
-    name: str = "search_materials_piezo__get"
+class MaterialsPiezoelectric(MPTool):
+    name: str = "search_materials_piezoelectric__get"
     description: str = (
         re.sub(
             r"\s+",
@@ -201,7 +200,7 @@ class MaterialsRobocrystallographer(MPTool):
 
 
 class MaterialsOxidation(MPTool):
-    name: str = "search_materials_oxidation__get"
+    name: str = "search_materials_oxidation_states__get"
     description: str = (
         re.sub(
             r"\s+",
