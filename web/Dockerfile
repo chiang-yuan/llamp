@@ -12,7 +12,8 @@ COPY . .
 
 RUN chown -R node /srv/app
 
-USER node
+RUN usermod -u 99580 node && \ 
+    groupmod -g 99580 node 
 
 RUN npm run build
 
