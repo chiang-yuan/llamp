@@ -16,6 +16,7 @@ from llamp.mp.schemas import (
     PiezoSchema,
     RobocrysSchema,
     SimilaritySchema,
+    StructureSchema,
     SummarySchema,
     SynthesisSchema,
     ThermoSchema,
@@ -65,13 +66,28 @@ class MaterialsSummary(MPTool):
             " ",
             """useful when you need calulated or derived materials properties, also useful 
         when you need to perform filtering on chemical systems or sorting on materials 
-        properties""",
+        properties, also useful when you need high-level information about materials 
+        (such as material_id, pymatgen structure) and use the results to perform 
+        further queries using other tools""",
         )
         .strip()
         .replace("\n", " ")[0]
     )
     args_schema: type[SummarySchema] = SummarySchema
 
+class MaterialsStructure(MPTool):
+    name: str = "search_materials_structure__get"
+    description: str = (
+        re.sub(
+            r"\s+",
+            " ",
+            """useful when you need to get the pymatgen structures on Materials 
+            Project, can be used with filters like chemical system, formula, etc."""
+        )
+        .strip()
+        .replace("\n", " ")[0]
+    )
+    args_schema: type[StructureSchema] = StructureSchema
 
 class MaterialsElasticity(MPTool):
     name: str = "search_materials_elasticity__get"

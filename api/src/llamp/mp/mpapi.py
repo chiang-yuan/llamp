@@ -167,10 +167,20 @@ class MPAPIWrapper(BaseModel):
     def search_materials_summary(self, query_params: dict):
         query_params = self._process_query_params(query_params)
 
-        response = self.mpr.materials.summary._search(
+        return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-        return response
+    
+    def search_materials_structure(self, query_params: dict):
+        # NOTE: this is a convenient function to retrieve pymatgen structure in JSON 
+        # but not a real mp-api endpoint
+
+        query_params = self._process_query_params(query_params)
+        query_params["fields"] = query_params.get("fields", []) + ["structure"]
+        
+        return self.mpr.materials.summary._search(
+            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+        )
 
     def search_materials_robocrys(self, query_params: dict):
         query_params = self._process_query_params(query_params)
@@ -431,6 +441,7 @@ class MPAPIWrapper(BaseModel):
             "get_by_key_materials_charge_density__fs_id___get": None,
             "search_materials_summary_stats__get": None,
             "search_materials_summary__get": self.search_materials_summary,
+            "search_materials_structure__get": self.search_materials_structure,
             "search_materials_electronic_structure_bandstructure__get": None,
             "search_materials_electronic_structure_dos__get": None,
             "search_materials_electronic_structure__get": self.search_materials_electronic_structure,
