@@ -2,64 +2,65 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import ChatMessage
+from langchain.agents import AgentExecutor, initialize_agent
+from langchain.agents.format_scratchpad import format_to_openai_functions
+from langchain.tools.render import format_tool_to_openai_function
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
+from langchain.memory import ConversationBufferMemory
 from pydantic import BaseModel
 
-from llamp.mp.agent import MPLLM, MultiLLaMP
 
-llm = ChatOpenAI(
-    temperature=0.0,
-)  # Grabs the API Key from os.environ
-qa_chain = load_qa_chain(llm, chain_type="stuff")
+from llamp.mp.tools import (
+    MaterialsSummary,
+    MaterialsSynthsis,
+    MaterialsThermo,
+    MaterialsElasticity
+)
+
+tools = [
+    MaterialsSummary(),
+    MaterialsSynthsis(),
+    MaterialsThermo(),
+    MaterialsElasticity()
+]
+
+# MEMORY_KEY = "chat_history"
+
+'''
+agent = {
+    "input": lambda x: x["input"],
+    "chat_history": lambda x: x["chat_history"],
+    "agent": AgentType.OPENAI_MULTI_FUNCTIONS,
+}
+'''
+
+llm = ChatOpenAI(temperature=0, model='gpt-4')
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are very powerful assistant, but bad at calculating lengths of words."),
+    ("user", "{input}"),
+    MessagesPlaceholder(variable_name="agent_scratchpad"),
+])
+
+llm_with_tools = llm.bind(
+    functions=[format_tool_to_openai_function(t) for t in tools]
+)
+
+memory = ConversationBufferMemory(memory_key="chat_history")
+
+agent = {
+    "input": lambda x: x["input"],
+    "agent_scratchpad": lambda x: format_to_openai_functions(x['intermediate_steps'])
+} | prompt | llm_with_tools | OpenAIFunctionsAgentOutputParser()
+
+agent_executor = AgentExecutor.from_agent_and_tools(
+    agent=agent, tools=tools, verbose=True)
+
+initialize_agent(agent_executor, memory=memory)
 
 app = FastAPI()
-multiagent = MultiLLaMP()
-
-mp = MPLLM()
-# # search = SerpAPIWrapper()  # get SERPAPI_API_KEY from .env
-# search = GoogleSearchAPIWrapper()
-# wiki = WikipediaAPIWrapper()
-# arxiv = ArxivAPIWrapper()
-
-# tools = [
-#     Tool(
-#         name="Search",
-#         func=search.run,
-#         description="useful when you need general but unreliable information about a topic on the web",
-#     ),
-#     Tool(
-#         name="Wikipedia",
-#         func=wiki.run,
-#         description="useful when you need foundational knowldge about a topic on Wikipedia",
-#     ),
-#     Tool(
-#         name="ArXiv",
-#         func=arxiv.run,
-#         description="useful when you need to search literature or compare Materials Project database with literature data.",
-#     ),
-#     Tool(
-#         name="MP",
-#         func=mp.run,
-#         description="useful when you need rich, reliable, and expert-curated materials science data.",
-#     ),
-# ]
-
-
-# agent_executor = AgentExecutor.from_agent_and_tools(
-#     agent=multiagent, tools=tools, verbose=True
-# )
-
-
-app = FastAPI()
-
-# origins = [
-#     "http://localhost.tiangolo.com",
-#     "https://localhost.tiangolo.com",
-#     "http://localhost",
-#     "http://localhost:8080",
-# ]
 
 origins = ["*"]
 
@@ -72,20 +73,6 @@ app.add_middleware(
 )
 
 
-# @app.get("/")
-# async def main():
-#     return {"message": "Hello World"}
-
-
-# @app.get("/")
-# async def root():
-#     return {"message": "Hello World"}
-
-
-# @app.get("/items/{item_id}")
-# async def read_item(item_id: int):
-#     return {"item_id": item_id}
-
 class MessageContent(BaseModel):
     content: str
 
@@ -97,20 +84,31 @@ class ChatMessage(BaseModel):
 
 @app.post("/ask/")
 async def ask(messages: list[ChatMessage]):
-    response = mp.run(
-        messages=messages,
-        model="gpt-3.5-turbo-16k-0613",
-        debug=True
-    )
+    print(messages)
+    '''
+    chat_history = [lambda x:
+                    HumanMessage(content=x.content) if x.role == "user" else AIMessage(
+                        content=x.content)
+                    for x in messages[:-1]]
+    '''
+    chat_history = [
+        {
+            "role": x.role,
+            "content": x.content
+        } for x in messages[:-1]
+    ]
 
+    output = agent_executor.invoke({
+        "input": messages[-1].content,
+        'chat_history': chat_history,
+    })
+    print(output)
     return {
-        "responses": [response],
+        "responses": [{
+            'role': 'assistant',
+            'content': output['output']
+        }],
     }
-
-# @app.post("/multi")
-# async def multi(message: ChatMessage):
-#     pass
-
 
 if __name__ == "__main__":
     uvicorn.run(app="app", host="127.0.0.1", port=8000, reload=True)

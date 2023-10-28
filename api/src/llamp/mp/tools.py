@@ -17,6 +17,7 @@ from llamp.utilities import MPAPIWrapper
 
 # NOTE: https://python.langchain.com/docs/modules/agents/tools/custom_tools
 
+
 class MPTool(BaseTool):
     name: str
     api_wrapper: MPAPIWrapper = Field(default_factory=MPAPIWrapper)
@@ -27,10 +28,10 @@ class MPTool(BaseTool):
     #     run_manager: CallbackManagerForToolRun | None = None,
     # ) -> str:
     #     return self.api_wrapper.run(
-    #         function_name=self.name, 
+    #         function_name=self.name,
     #         function_args=query
     #     )
-    
+
     def _run(
             self,
             **query_params
@@ -39,8 +40,7 @@ class MPTool(BaseTool):
             function_name=self.name,
             function_args=json.dumps(query_params)
         )
-        
-    
+
     async def _arun(
         self,
         function_name: str,
@@ -48,7 +48,8 @@ class MPTool(BaseTool):
     ) -> str:
         """Use the tool asynchronously."""
         raise NotImplementedError("async is not supported yet")
-    
+
+
 class MaterialsSummary(MPTool):
     name: str = "search_materials_summary__get"
     description: str = re.sub(
@@ -59,6 +60,7 @@ class MaterialsSummary(MPTool):
         properties"""
     ).strip().replace("\n", " ")[0]
     args_schema: type[SummarySchema] = SummarySchema
+
 
 class MaterialsElasticity(MPTool):
     name: str = "search_materials_elasticity__get"
@@ -72,6 +74,7 @@ class MaterialsElasticity(MPTool):
     ).strip().replace("\n", " ")[0]
     args_schema: type[ElasticitySchema] = ElasticitySchema
 
+
 class MaterialsSynthsis(MPTool):
     name: str = "search_materials_synthesis__get"
     description: str = re.sub(
@@ -81,6 +84,7 @@ class MaterialsSynthsis(MPTool):
         precursors, targets, operations, conditions, required devices and references."""
     ).strip().replace("\n", " ")[0]
     args_schema: type[SynthesisSchema] = SynthesisSchema
+
 
 class MaterialsThermo(MPTool):
     name: str = "search_materials_thermo__get"
@@ -94,8 +98,6 @@ class MaterialsThermo(MPTool):
         material_ids."""
     ).strip().replace("\n", " ")[0]
     args_schema: type[ThermoSchema] = ThermoSchema
-
-
 
 
 # tools = [
