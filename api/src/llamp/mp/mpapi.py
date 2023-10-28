@@ -36,7 +36,7 @@ class MPAPIWrapper(BaseModel):
 
     Example:
         .. code-block:: python
-
+            # TODO: modify this example
             from langchain.utilities.arxiv import ArxivAPIWrapper
             arxiv = ArxivAPIWrapper(
                 top_k_results = 3,
@@ -47,14 +47,6 @@ class MPAPIWrapper(BaseModel):
             )
             arxiv.run("tree of thought llm)
     """
-
-    arxiv_search: Any  #: :meta private:
-    arxiv_exceptions: Any  # :meta private:
-    top_k_results: int = 3
-    ARXIV_MAX_QUERY_LENGTH: int = 300
-    load_max_docs: int = 100
-    load_all_available_meta: bool = False
-    doc_content_chars_max: int | None = 4000
 
     max_tokens: int = 2048
     mp_api_key: str = MP_API_KEY
@@ -116,7 +108,7 @@ class MPAPIWrapper(BaseModel):
             functions.pop(idx)
             return functions
         
-    def search_materials_core(self, query_params: dict):
+    def _process_query_params(self, query_params: dict):
         fields = query_params.pop("fields", None)
         if fields:
             query_params["fields"] = fields.split(",")
@@ -124,71 +116,56 @@ class MPAPIWrapper(BaseModel):
         if _fields:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
+            
+        limit = query_params.pop("limit", None)
+        if limit:
+            query_params["_limit"] = limit
+        sort_fields = query_params.pop("sort_fields", None)
+        if sort_fields:
+            query_params["_sort_fields"] = sort_fields.split(",")
+        
+        return query_params
+
+        
+    def search_materials_core(self, query_params: dict):
+        query_params = self._process_query_params(query_params)
 
         return self.mpr.materials._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def fetch_materials_similarity(self, material_id: str, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
-        return self.mpr.materials.get_data_by_id(
+        # TODO: add support for query by formula
+
+        return self.mpr.materials.similarity.get_data_by_id(
             document_id=material_id, **query_params
         )
 
     def search_materials_bonds(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         return self.mpr.materials.bonds._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_chemenv(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         return self.mpr.materials.chemenv._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_eos(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         return self.mpr.materials.eos._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_summary(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         response = self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
@@ -196,18 +173,15 @@ class MPAPIWrapper(BaseModel):
         return response
 
     def search_materials_robocrys(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
+
         return self.mpr.materials.robocrys._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
 
     def search_materials_synthesis(self, query_params: dict):
+        query_params = self._process_query_params(query_params)
+
         keywords = query_params.pop("keywords", None)
         if keywords:
             query_params["keywords"] = keywords.split(",")
@@ -244,13 +218,7 @@ class MPAPIWrapper(BaseModel):
             return doc[:5]
 
     def search_materials_oxidation_states(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         # FIXME
         if "possible_species" not in query_params["fields"]:
@@ -261,38 +229,21 @@ class MPAPIWrapper(BaseModel):
         )
 
     def search_materials_provenance(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
+
         return self.mpr.materials.provenance._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_tasks(self, query_params: dict):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         return self.mpr.materials.tasks._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_thermo(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         # FIXME: _limit is not a valid query parameter for thermo search
         query_params["_limit"] = query_params.pop("limit", None)
@@ -302,39 +253,21 @@ class MPAPIWrapper(BaseModel):
         )
 
     def search_materials_dielectric(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         return self.mpr.materials.dielectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_piezoelectric(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         return self.mpr.materials.piezoelectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_magnetism(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         if "formula" in query_params:
             material_docs = self.mpr.materials.search(
@@ -366,13 +299,7 @@ class MPAPIWrapper(BaseModel):
         )
 
     def search_materials_elasticity(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         if "formula" in query_params:
             material_docs = self.mpr.materials.search(
@@ -400,13 +327,7 @@ class MPAPIWrapper(BaseModel):
         )
 
     def search_materials_electronic_structure(self, query_params):
-        fields = query_params.pop("fields", None)
-        if fields:
-            query_params["fields"] = fields.split(",")
-        _fields = query_params.pop("_fields", None)
-        if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+        query_params = self._process_query_params(query_params)
 
         return self.mpr.materials.electronic_structure._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -539,8 +460,10 @@ class MPAPIWrapper(BaseModel):
             )
         try:
             import mp_api
+            import mp_api.client
             os.environ["MP_API_KEY"] = mp_api_key
 
+            values["client"] = mp_api.client
             values["mpr"] = mp_api.client.MPRester(
                 api_key=mp_api_key, monty_decode=False, use_document_model=False,
                 headers={"X-API-KEY": mp_api_key, 'accept': 'application/json'}
@@ -551,44 +474,6 @@ class MPAPIWrapper(BaseModel):
                 "Please install it with `pip install mp_api`."
             )
         return values
-    
-    def run(self, query: str) -> str:
-        """
-        Performs an arxiv search and A single string
-        with the publish date, title, authors, and summary
-        for each article separated by two newlines.
-
-        If an error occurs or no documents found, error text
-        is returned instead. Wrapper for
-        https://lukasschwab.me/arxiv.py/index.html#Search
-
-        Args:
-            query: a plaintext search query
-        """  # noqa: E501
-        try:
-            if self.is_arxiv_identifier(query):
-                results = self.arxiv_search(
-                    id_list=query.split(),
-                    max_results=self.top_k_results,
-                ).results()
-            else:
-                results = self.arxiv_search(  # type: ignore
-                    query[: self.ARXIV_MAX_QUERY_LENGTH], max_results=self.top_k_results
-                ).results()
-        except self.arxiv_exceptions as ex:
-            return f"Arxiv exception: {ex}"
-        docs = [
-            f"Published: {result.updated.date()}\n"
-            f"Title: {result.title}\n"
-            f"Authors: {', '.join(a.name for a in result.authors)}\n"
-            f"Summary: {result.summary}"
-            for result in results
-        ]
-        if docs:
-            return "\n\n".join(docs)[: self.doc_content_chars_max]
-        else:
-            return "No good Arxiv Result was found"
-    
     
     def run(self, function_name: str, function_args: str, debug: bool = False) -> str:
         """
@@ -624,76 +509,3 @@ class MPAPIWrapper(BaseModel):
             print("MP API response:", json.dumps(function_response))
 
         return function_response
-
-    def load(self, query: str) -> list[Document]:
-        """
-        Run Arxiv search and get the article texts plus the article meta information.
-        See https://lukasschwab.me/arxiv.py/index.html#Search
-
-        Returns: a list of documents with the document.page_content in text format
-
-        Performs an arxiv search, downloads the top k results as PDFs, loads
-        them as Documents, and returns them in a List.
-
-        Args:
-            query: a plaintext search query
-        """  # noqa: E501
-        try:
-            import fitz
-        except ImportError:
-            raise ImportError(
-                "PyMuPDF package not found, please install it with "
-                "`pip install pymupdf`"
-            )
-
-        try:
-            # Remove the ":" and "-" from the query, as they can cause search problems
-            query = query.replace(":", "").replace("-", "")
-            if self.is_arxiv_identifier(query):
-                results = self.arxiv_search(
-                    id_list=query[: self.ARXIV_MAX_QUERY_LENGTH].split(),
-                    max_results=self.load_max_docs,
-                ).results()
-            else:
-                results = self.arxiv_search(  # type: ignore
-                    query[: self.ARXIV_MAX_QUERY_LENGTH], max_results=self.load_max_docs
-                ).results()
-        except self.arxiv_exceptions as ex:
-            logger.debug("Error on arxiv: %s", ex)
-            return []
-
-        docs: list[Document] = []
-        for result in results:
-            try:
-                doc_file_name: str = result.download_pdf()
-                with fitz.open(doc_file_name) as doc_file:
-                    text: str = "".join(page.get_text() for page in doc_file)
-            except (FileNotFoundError, fitz.fitz.FileDataError) as f_ex:
-                logger.debug(f_ex)
-                continue
-            if self.load_all_available_meta:
-                extra_metadata = {
-                    "entry_id": result.entry_id,
-                    "published_first_time": str(result.published.date()),
-                    "comment": result.comment,
-                    "journal_ref": result.journal_ref,
-                    "doi": result.doi,
-                    "primary_category": result.primary_category,
-                    "categories": result.categories,
-                    "links": [link.href for link in result.links],
-                }
-            else:
-                extra_metadata = {}
-            metadata = {
-                "Published": str(result.updated.date()),
-                "Title": result.title,
-                "Authors": ", ".join(a.name for a in result.authors),
-                "Summary": result.summary,
-                **extra_metadata,
-            }
-            doc = Document(
-                page_content=text[: self.doc_content_chars_max], metadata=metadata
-            )
-            docs.append(doc)
-            os.remove(doc_file_name)
-        return docs

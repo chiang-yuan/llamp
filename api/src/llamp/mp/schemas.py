@@ -96,8 +96,8 @@ class SummarySchema(BaseModel):
     e_ionic_min: float | None = Field(None, description="Minimum ionic energy in eV")
     e_electronic_max: float | None = Field(None, description="Maximum electronic energy in eV")
     e_electronic_min: float | None = Field(None, description="Minimum electronic energy in eV")
-    n_max: int | None = Field(None, description="Maximum number of atoms") # TODO: check if this is correct
-    n_min: int | None = Field(None, description="Minimum number of atoms") # TODO: check if this is correct
+    n_max: int | None = Field(None, description="Maximum value for the refractive index")
+    n_min: int | None = Field(None, description="Minimum value for the refractive index")
     e_ij_max_max: float | None = Field(None, description="Maximum maximum pairwise energy in eV")
     e_ij_max_min: float | None = Field(None, description="Minimum maximum pairwise energy in eV")
     weighted_surface_energy_EV_PER_ANG2_max: float | None = Field(None, description="Maximum weighted surface energy in eV/Å^2")
@@ -117,7 +117,7 @@ class SummarySchema(BaseModel):
     # _page
     # _per_page
     # _skip
-    limit: int = Field(description="Maximum number of results to return")
+    limit: int = Field(description="Maximum number of entries to return")
     fields: str = Field(
         description="Comma-delimited list of fields to return in results. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `property_name` `material_id` `deprecated` `deprecation_reasons` `last_updated` `origins` `warnings` `structure` `task_ids` `uncorrected_energy_per_atom` `energy_per_atom` `formation_energy_per_atom` `energy_above_hull` `is_stable` `equilibrium_reaction_energy_per_atom` `decomposes_to` `xas` `grain_boundaries` `band_gap` `cbm` `vbm` `efermi` `is_gap_direct` `is_metal` `es_source_calc_id` `bandstructure` `dos` `dos_energy_up` `dos_energy_down` `is_magnetic` `ordering` `total_magnetization` `total_magnetization_normalized_vol` `total_magnetization_normalized_formula_units` `num_magnetic_sites` `num_unique_magnetic_sites` `types_of_magnetic_species` `k_voigt` `k_reuss` `k_vrh` `g_voigt` `g_reuss` `g_vrh` `universal_anisotropy` `homogeneous_poisson` `e_total` `e_ionic` `e_electronic` `n` `e_ij_max` `weighted_surface_energy_EV_PER_ANG2` `weighted_surface_energy` `weighted_work_function` `surface_anisotropy` `shape_factor` `has_reconstructed` `possible_species` `has_props` `theoretical` `database_IDs`",
         )
@@ -175,7 +175,7 @@ class SynthesisSchema(BaseModel):
         description="Comma-delimited list of required mixing media",
         examples=["alcohol", "water"]
     )
-    limit: int = Field(5, description="Maximum number of results to return")
+    limit: int = Field(5, description="Maximum number of entries to return")
 
 class ThermoSchema(BaseModel):
     thermo_ids: str | None = Field(None, description="Comma-separated list of thermo_ids to query on")
@@ -218,13 +218,13 @@ class ThermoSchema(BaseModel):
     # _page: int = Field(description="Page number to request (takes precedent over _limit and _skip)")
     # _per_page: int = Field(description="Number of entries to show per page (takes precedent over _limit and _skip). Limited to 1000")
     # _skip: int = Field(description="Number of entries to skip")
-    limit: int = Field(description="Maximum number of results to return")
+    limit: int = Field(description="Maximum number of entries to return")
     fields: str = Field(description="Fields to project from ThermoDoc as a list of comma separated strings. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `property_name` `material_id` `deprecated` `deprecation_reasons` `last_updated` `origins` `warnings` `thermo_type` `thermo_id` `uncorrected_energy_per_atom` `energy_per_atom` `energy_uncertainy_per_atom` `formation_energy_per_atom` `energy_above_hull` `is_stable` `equilibrium_reaction_energy_per_atom` `decomposes_to` `decomposition_enthalpy` `decomposition_enthalpy_decomposes_to` `energy_type` `entry_types` `entries`")
     all_fields: bool | None = Field(False, description="Whether to return all fields in results")
 
 class MagnetismSchema(BaseModel):
     formula: str | None = Field(None, description="Query by formula including anonymized formula or by including wild cards. A comma delimited string list of anonymous formulas or regular formulas can also be provided.")
-    materials_ids: str | None = Field(None, description="Comma-separated list of material_ids to query on")
+    material_ids: str | None = Field(None, description="Comma-separated list of material_ids to query on")
     total_magnetization_max: float | None = Field(None, description="Maximum total magnetization in Bohr magnetons")
     total_magnetization_min: float | None = Field(None, description="Minimum total magnetization in Bohr magnetons")
     total_magnetization_normalized_vol_max: float | None = Field(None, description="Maximum normalized total magnetization in Bohr magnetons/Å^3")
@@ -239,6 +239,89 @@ class MagnetismSchema(BaseModel):
     # _page: int = Field(description="Page number to request (takes precedent over _limit and _skip)")
     # _per_page: int = Field(description="Number of entries to show per page (takes precedent over _limit and _skip). Limited to 1000")
     # _skip: int = Field(description="Number of entries to skip")
-    limit: int = Field(description="Maximum number of results to return")
+    limit: int = Field(description="Maximum number of entries to return")
     fields: str = Field(description="Fields to project from MagnetismDoc as a list of comma separated strings. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `property_name` `material_id` `deprecated` `deprecation_reasons` `last_updated` `origins` `warnings` `ordering` `is_magnetic` `exchange_symmetry` `num_magnetic_sites` `num_unique_magnetic_sites` `types_of_magnetic_species` `magmoms` `total_magnetization` `total_magnetization_normalized_vol` `total_magnetization_normalized_formula_units`")
     all_fields: bool | None = Field(False, description="Whether to return all fields in results")
+
+class DielectricSchema(BaseModel):
+    material_ids: str | None = Field(None, description="Comma-separated list of material_ids to query on")
+    e_total_max: float | None = Field(None, description="Maximum total dielectric constant")
+    e_total_min: float | None = Field(None, description="Minimum total dielectric constant")
+    e_ionic_max: float | None = Field(None, description="Maximum ionic dielectric constant")
+    e_ionic_min: float | None = Field(None, description="Minimum ionic dielectric constant")
+    e_electronic_max: float | None = Field(None, description="Maximum electronic dielectric constant")
+    e_electronic_min: float | None = Field(None, description="Minimum electronic dielectric constant")
+    n_max: int | None = Field(None, description="Maximum value for the refractive index")
+    n_min: int | None = Field(None, description="Minimum value for the refractive index")
+    sort_fields: str | None = Field(None, description="Comma-delimited list of fields to sort on. Prefix with - for descending order.")
+    # _page: int = Field(description="Page number to request (takes precedent over _limit and _skip)")
+    # _per_page: int = Field(description="Number of entries to show per page (takes precedent over _limit and _skip). Limited to 1000")
+    # _skip: int = Field(description="Number of entries to skip")
+    limit: int = Field(description="Maximum number of entries to return")
+    fields: str = Field(description="Fields to project from DielectricDoc as a list of comma separated strings. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `property_name` `material_id` `deprecated` `deprecation_reasons` `last_updated` `origins` `warnings` `total` `ionic` `electronic` `e_total` `e_ionic` `e_electronic` `n`")
+    all_fields: bool | None = Field(False, description="Whether to return all fields in results")
+
+class PiezoSchema(BaseModel):
+    material_ids: str | None = Field(None, description="Comma-separated list of material_ids to query on")
+    piezo_modulus_max: str | None = Field(None, description="Maximum piezoelectric modulus in C/m^2")
+    piezo_modulus_min: str | None = Field(None, description="Minimum piezoelectric modulus in C/m^2")
+    sort_fields: str | None = Field(None, description="Comma-delimited list of fields to sort on. Prefix with - for descending order.")
+    # _page: int = Field(description="Page number to request (takes precedent over _limit and _skip)")
+    # _per_page: int = Field(description="Number of entries to show per page (takes precedent over _limit and _skip). Limited to 1000")
+    # _skip: int = Field(description="Number of entries to skip")
+    limit: int = Field(description="Maximum number of entries to return")
+    fields: str = Field(
+        description="Fields to project from PiezoDoc as a list of comma separated strings. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `property_name` `material_id` `deprecated` `deprecation_reasons` `last_updated` `origins` `warnings` `total` `ionic` `electronic` `e_ij_max` `max_direction` `strain_for_max`"
+        )
+    all_fields: bool | None = Field(False, description="Whether to return all fields in results")
+
+class SimilaritySchema(BaseModel):
+    material_id: str = Field(description="Material ID to find similar materials to")
+    fields: str = Field(
+        default="sim,material_id",
+        description="Fields to project from SimilarityDoc as a list of comma-delimited strings. Field include: `sim` `material_id`"
+        )
+    all_fields: bool | None = Field(False, description="Whether to return all fields in results")
+
+class RobocrysSchema(BaseModel):
+    keywords: str | None = Field(None, description="Comma-delimited list of keywords to search robocrystallographer description text with")
+    # _skip: int = Field(description="Number of entries to skip")
+    limit: int = Field(description="Maximum number of entries to return")
+
+class OxidationSchema(BaseModel):
+    material_ids: str | None = Field(None, description="Comma-separated list of material_ids to query on")
+    formual: str | None = Field(None, description="Query by formula including anonymized formula or by including wild cards. A comma delimited string list of anonymous formulas or regular formulas can also be provided.")
+    chemsys: str | None = Field(None, description="A comma delimited string list of chemical systems. Wildcards for unknown elements only supported for single chemsys queries")
+    possible_species: str | None = Field(None, description="Comma-delimited list of possible oxidation states to query on")
+    sort_fields: str | None = Field(None, description="Comma-delimited list of fields to sort on. Prefix with - for descending order.")
+    # _page: int = Field(description="Page number to request (takes precedent over _limit and _skip)")
+    # _per_page: int = Field(description="Number of entries to show per page (takes precedent over _limit and _skip). Limited to 1000")
+    # _skip: int = Field(description="Number of entries to skip")
+    limit: int = Field(description="Maximum number of entries to return")
+    fields: str = Field(description="Fields to project from OxidationStateDoc as a list of comma separated strings. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `property_name` `material_id` `deprecated` `deprecation_reasons` `last_updated` `origins` `warnings` `structure` `possible_species` `possible_valences` `average_oxidation_states` `method`")
+    all_fields: bool | None = Field(False, description="Whether to return all fields in results")
+
+class BondsSchema(BaseModel):
+    material_ids: str | None = Field(None, description="Comma-separated list of material_ids to query on")
+    max_bond_length_max: float | None = Field(None, description="Maximum value for the maximum bond length in Å")
+    max_bond_length_min: float | None = Field(None, description="Minimum value for the maximum bond length in Å")
+    min_bond_length_max: float | None = Field(None, description="Maximum value for the minimum bond length in Å")
+    min_bond_length_min: float | None = Field(None, description="Minimum value for the minimum bond length in Å")
+    mean_bond_length_max: float | None = Field(None, description="Maximum value for the mean bond length in Å")
+    mean_bond_length_min: float | None = Field(None, description="Minimum value for the mean bond length in Å")
+    coordination_envs: str | None = Field(None, description="Comma-delimited list of coordination environments to query on")
+    coordination_envs_anonymous: str | None = Field(None, description="Comma-delimited list of anonymous coordination environments to query on")
+    sort_fields: str | None = Field(None, description="Comma-delimited list of fields to sort on. Prefix with - for descending order.")
+    # _page: int = Field(description="Page number to request (takes precedent over _limit and _skip)")
+    # _per_page: int = Field(description="Number of entries to show per page (takes precedent over _limit and _skip). Limited to 1000")
+    # _skip: int = Field(description="Number of entries to skip")
+    limit: int = Field(description="Maximum number of entries to return")
+    fields: str = Field(description="Fields to project from BondDoc as a list of comma separated strings. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `property_name` `material_id` `deprecated` `deprecation_reasons` `last_updated` `origins` `warnings` `structure` `max_bond_length` `min_bond_length` `mean_bond_length` `coordination_envs` `coordination_envs_anonymous`")
+    all_fields: bool | None = Field(False, description="Whether to return all fields in results")
+
+class TasksSchema(BaseModel):
+    formula: str | None = Field(None, description="Query by formula including anonymized formula or by including wild cards. A comma delimited string list of anonymous formulas or regular formulas can also be provided.")
+    chemsys: str | None = Field(None, description="A comma delimited string list of chemical systems. Wildcards for unknown elements only supported for single chemsys queries")
+    elements: str | None = Field(None, description="A comma delimited string list of elements to query on")
+    exclude_elements: str | None = Field(None, description="A comma delimited string list of elements to exclude")
+
