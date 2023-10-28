@@ -9,6 +9,7 @@ from langchain.tools import BaseTool, Tool
 
 from llamp.mp.schemas import (
     ElasticitySchema,
+    MagnetismSchema,
     SummarySchema,
     SynthesisSchema,
     ThermoSchema,
@@ -38,7 +39,8 @@ class MPTool(BaseTool):
     ):
         return self.api_wrapper.run(
             function_name=self.name,
-            function_args=json.dumps(query_params)
+            function_args=json.dumps(query_params),
+            debug=False
         )
 
     async def _arun(
@@ -99,6 +101,18 @@ class MaterialsThermo(MPTool):
     ).strip().replace("\n", " ")[0]
     args_schema: type[ThermoSchema] = ThermoSchema
 
+
+class MaterialsMagnetism(MPTool):
+    name: str = "search_materials_magnetism__get"
+    description: str = re.sub(
+        r"\s+",
+        " ",
+        """useful when you need magnetic properties like magnetic moment (magmoms), 
+        magnetic ordering and symmetry, magnetic sites, magnetic type, also useful when 
+        you need to perform filtering and sorting magnetic properties and retrieve the 
+        qualified materials."""
+    ).strip().replace("\n", " ")[0]
+    args_schema: type[MagnetismSchema] = MagnetismSchema
 
 # tools = [
 #     # Tool.from_function(
