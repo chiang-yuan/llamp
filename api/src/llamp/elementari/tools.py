@@ -31,7 +31,7 @@ class StructureVis(BaseTool):
 
         for entry in _res:
             yield entry['structure']
-        
+
         '''
         while self._too_large(_res):
             _res = self._summarize(_res)
@@ -42,7 +42,3 @@ class StructureVis(BaseTool):
     async def _arun(self, function_name: str, function_args: str) -> str:
         """Use the tool asynchronously."""
         raise NotImplementedError("async is not supported yet")
-    
-
-    
-

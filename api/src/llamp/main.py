@@ -1,16 +1,4 @@
 
-import uvicorn
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import ChatMessage
-from langchain.agents import initialize_agent, AgentType
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain.prompts import MessagesPlaceholder
-from langchain.memory import ConversationBufferMemory
-from pydantic import BaseModel
-
-
 from llamp.mp.tools import (
     MaterialsSummary,
     MaterialsSynthesis,
@@ -23,7 +11,30 @@ from llamp.mp.tools import (
     MaterialsOxidation,
     MaterialsBonds,
     MaterialsSimilarity,
+    # MaterialsStructure,
 )
+import json
+from typing import Any
+from pathlib import Path
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import ChatMessage
+from langchain.agents import initialize_agent, AgentType
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain.prompts import MessagesPlaceholder
+from langchain.memory import ConversationBufferMemory
+from pydantic import BaseModel
+
+
+def load_json(file_path: Path) -> Any:
+    with file_path.open('r') as file:
+        data = json.load(file)
+    return data
+
+
+# from llamp.elementari.tools import StructureVis
 
 tools = [
     MaterialsSummary(),
@@ -37,11 +48,14 @@ tools = [
     MaterialsOxidation(),
     MaterialsBonds(),
     MaterialsSimilarity(),
+    # MaterialsStructure(),
+    # StructureVis(),
 ]
 
 # MEMORY_KEY = "chat_history"
 
-llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k-0613')
+# llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k-0613')
+llm = ChatOpenAI(temperature=0, model='gpt-4')
 
 memory = ConversationBufferMemory(memory_key="chat_history")
 
@@ -87,6 +101,14 @@ class ChatMessage(BaseModel):
     content: str
 
 
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def load_test_structure():
+    file_path = BASE_DIR / 'elementari/test_structures/1234.json'
+    return load_json(file_path)
+
+
 @app.post("/ask/")
 async def ask(messages: list[ChatMessage]):
     print(messages)
@@ -117,6 +139,7 @@ async def ask(messages: list[ChatMessage]):
             'role': 'assistant',
             'content': output,
         }],
+        "structures": [load_test_structure()]
     }
 
 if __name__ == "__main__":
