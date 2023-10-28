@@ -138,7 +138,7 @@ class MPAPIWrapper(BaseModel):
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
 
-        return self.mpr.materials.get_data_by_id(
+        return self.mpr.materials.similarity.get_data_by_id(
             document_id=material_id, **query_params
         )
 

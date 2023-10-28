@@ -15,6 +15,7 @@ from llamp.mp.schemas import (
     OxidationSchema,
     PiezoSchema,
     RobocrysSchema,
+    SimilaritySchema,
     SummarySchema,
     SynthesisSchema,
     ThermoSchema,
@@ -230,3 +231,18 @@ class MaterialsBonds(MPTool):
         .replace("\n", " ")[0]
     )
     args_schema: type[BondsSchema] = BondsSchema
+
+class MaterialsSimilarity(MPTool):
+    name: str = "search_materials_similarity__get"
+    description: str = (
+        re.sub(
+            r"\s+",
+            " ",
+            """useful when you need to find similar materials based on a given material 
+            id or formula, also useful when you need to perform filtering and sorting 
+            on similarity scores and retrieve the qualified materials""",
+        )
+        .strip()
+        .replace("\n", " ")[0]
+    )
+    args_schema: type[SimilaritySchema] = SimilaritySchema
