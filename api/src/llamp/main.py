@@ -27,7 +27,7 @@ tools = [
 
 # MEMORY_KEY = "chat_history"
 
-llm = ChatOpenAI(temperature=0, model='gpt-4')
+llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k-0613')
 
 memory = ConversationBufferMemory(memory_key="chat_history")
 

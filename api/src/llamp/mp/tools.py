@@ -33,15 +33,33 @@ class MPTool(BaseTool):
     #         function_args=query
     #     )
 
+    def _count_token(self, response) -> int:
+        '''TODO'''
+        pass
+
+    def _too_large(self, response) -> bool:
+        '''TODO'''
+        return self._count_token(response) > 200
+
+    def _summarize(self, response) -> str:
+        '''summarize w/ anthropic'''
+        pass
+
     def _run(
             self,
             **query_params
     ):
-        return self.api_wrapper.run(
+        _res = self.api_wrapper.run(
             function_name=self.name,
             function_args=json.dumps(query_params),
             debug=False
         )
+        '''
+        while self._too_large(_res):
+            _res = self._summarize(_res)
+        return _res
+        '''
+        return _res
 
     async def _arun(
         self,
