@@ -13,16 +13,30 @@ from pydantic import BaseModel
 
 from llamp.mp.tools import (
     MaterialsSummary,
-    MaterialsSynthsis,
+    MaterialsSynthesis,
     MaterialsThermo,
-    MaterialsElasticity
+    MaterialsElasticity,
+    MaterialsMagnetism,
+    MaterialsDielectric,
+    MaterialsPiezoelectric,
+    MaterialsRobocrystallographer,
+    MaterialsOxidation,
+    MaterialsBonds,
+    MaterialsSimilarity,
 )
 
 tools = [
     MaterialsSummary(),
-    MaterialsSynthsis(),
+    MaterialsSynthesis(),
     MaterialsThermo(),
-    MaterialsElasticity()
+    MaterialsElasticity(),
+    MaterialsMagnetism(),
+    MaterialsDielectric(),
+    MaterialsPiezoelectric(),
+    MaterialsRobocrystallographer(),
+    MaterialsOxidation(),
+    MaterialsBonds(),
+    MaterialsSimilarity(),
 ]
 
 # MEMORY_KEY = "chat_history"
