@@ -172,7 +172,8 @@ class MPAPIWrapper(BaseModel):
         # but not a real mp-api endpoint
 
         query_params = self._process_query_params(query_params)
-        query_params["fields"] = query_params.get("fields", []) + ["structure"]
+        query_params["fields"] = query_params.get(
+            "fields", []) + ["structure", "material_id"]
 
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params

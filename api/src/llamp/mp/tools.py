@@ -1,5 +1,7 @@
 import json
+import os
 import re
+from pathlib import Path
 from typing import Optional
 
 from emmet.core.summary import HasProps
@@ -88,6 +90,24 @@ class MaterialsStructure(MPTool):
         .replace("\n", " ")[0]
     )
     args_schema: type[StructureSchema] = StructureSchema
+
+    def _run(self, **query_params):
+        _response =  super()._run(**query_params)
+
+        print(_response)
+
+        for entry in _response:
+            material_id = entry['material_id']
+            structure = entry['structure']
+
+            out_dir = Path(__file__).parent.absolute() / '.tmp'
+            os.makedirs(out_dir, exist_ok=True)
+            fpath = out_dir / f'{material_id}.json'
+
+            with open(fpath, 'w') as f:
+                f.write(json.dumps(structure))
+
+        return '[structures]' + ','.join(list(map(lambda x: x['material_id'], _response)))
 
 class MaterialsElasticity(MPTool):
     name: str = "search_materials_elasticity__get"
