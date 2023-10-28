@@ -24,6 +24,7 @@ from llamp.utilities import MPAPIWrapper
 # NOTE: https://python.langchain.com/docs/modules/agents/tools/custom_tools
 
 
+
 class MPTool(BaseTool):
     name: str
     api_wrapper: MPAPIWrapper = Field(default_factory=MPAPIWrapper)
