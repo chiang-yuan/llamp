@@ -1,16 +1,4 @@
 
-import uvicorn
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import ChatMessage
-from langchain.agents import initialize_agent, AgentType
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain.prompts import MessagesPlaceholder
-from langchain.memory import ConversationBufferMemory
-from pydantic import BaseModel
-
-
 from llamp.mp.tools import (
     MaterialsSummary,
     MaterialsSynthesis,
@@ -23,7 +11,30 @@ from llamp.mp.tools import (
     MaterialsOxidation,
     MaterialsBonds,
     MaterialsSimilarity,
+    MaterialsStructure,
 )
+import json
+from typing import Any
+from pathlib import Path
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import ChatMessage
+from langchain.agents import initialize_agent, AgentType
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain.prompts import MessagesPlaceholder
+from langchain.memory import ConversationBufferMemory
+from pydantic import BaseModel
+
+
+def load_json(file_path: Path) -> Any:
+    with file_path.open('r') as file:
+        data = json.load(file)
+    return data
+
+
+# from llamp.elementari.tools import StructureVis
 
 tools = [
     MaterialsSummary(),
@@ -37,11 +48,14 @@ tools = [
     MaterialsOxidation(),
     MaterialsBonds(),
     MaterialsSimilarity(),
+    MaterialsStructure(return_direct=True),
+    # StructureVis(),
 ]
 
 # MEMORY_KEY = "chat_history"
 
 llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k-0613')
+# llm = ChatOpenAI(temperature=0, model='gpt-4')
 
 memory = ConversationBufferMemory(memory_key="chat_history")
 
@@ -55,7 +69,7 @@ agent_kwargs = {
 }
 
 agent_executor = initialize_agent(
-    agent=AgentType.OPENAI_MULTI_FUNCTIONS,
+    agent=AgentType.OPENAI_FUNCTIONS,
     tools=tools,
     llm=llm,
     verbose=True,
@@ -87,6 +101,18 @@ class ChatMessage(BaseModel):
     content: str
 
 
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def load_structures(str: str) -> list[Any]:
+    str = str.replace('[structures]', '')
+    mp_list = str.split(',')
+    res = []
+    for mp in mp_list:
+        res.append(load_json(BASE_DIR / f'mp/.tmp/{mp}.json'))
+    return res
+
+
 @app.post("/ask/")
 async def ask(messages: list[ChatMessage]):
     print(messages)
@@ -110,13 +136,17 @@ async def ask(messages: list[ChatMessage]):
     })
     '''
     output = agent_executor.run(input=messages[-1].content)
+    structures = []
+    if (output.startswith('[structures]')):
+        structures = [*load_structures(output)]
+        output = ""
 
-    print(output)
     return {
         "responses": [{
             'role': 'assistant',
             'content': output,
         }],
+        "structures": structures,
     }
 
 if __name__ == "__main__":

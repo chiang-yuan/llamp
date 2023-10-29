@@ -25,8 +25,6 @@ logger = logging.getLogger(__name__)
 # NOTE: https://python.langchain.com/docs/modules/agents/tools/custom_tools
 
 
-
-
 class MPAPIWrapper(BaseModel):
     """Wrapper around mp-api.
 
@@ -83,7 +81,6 @@ class MPAPIWrapper(BaseModel):
     def json_spec(self) -> JsonSpec:
         return JsonSpec.from_file(self.spec_path)
 
-
     @property
     def material_functions(self):
         with open(
@@ -107,7 +104,7 @@ class MPAPIWrapper(BaseModel):
             )
             functions.pop(idx)
             return functions
-        
+
     def _process_query_params(self, query_params: dict):
         fields = query_params.pop("fields", None)
         if fields:
@@ -116,17 +113,16 @@ class MPAPIWrapper(BaseModel):
         if _fields:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
-            
+
         limit = query_params.pop("limit", None)
         if limit:
             query_params["_limit"] = limit
         sort_fields = query_params.pop("sort_fields", None)
         if sort_fields:
             query_params["_sort_fields"] = sort_fields.split(",")
-        
+
         return query_params
 
-        
     def search_materials_core(self, query_params: dict):
         query_params = self._process_query_params(query_params)
 
@@ -167,10 +163,21 @@ class MPAPIWrapper(BaseModel):
     def search_materials_summary(self, query_params: dict):
         query_params = self._process_query_params(query_params)
 
-        response = self.mpr.materials.summary._search(
+        return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-        return response
+
+    def search_materials_structure(self, query_params: dict):
+        # NOTE: this is a convenient function to retrieve pymatgen structure in JSON
+        # but not a real mp-api endpoint
+
+        query_params = self._process_query_params(query_params)
+        query_params["fields"] = query_params.get(
+            "fields", []) + ["structure", "material_id"]
+
+        return self.mpr.materials.summary._search(
+            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+        )
 
     def search_materials_robocrys(self, query_params: dict):
         query_params = self._process_query_params(query_params)
@@ -247,7 +254,7 @@ class MPAPIWrapper(BaseModel):
 
         # FIXME: _limit is not a valid query parameter for thermo search
         query_params["_limit"] = query_params.pop("limit", None)
-        
+
         return self.mpr.materials.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
@@ -431,6 +438,7 @@ class MPAPIWrapper(BaseModel):
             "get_by_key_materials_charge_density__fs_id___get": None,
             "search_materials_summary_stats__get": None,
             "search_materials_summary__get": self.search_materials_summary,
+            "search_materials_structure__get": self.search_materials_structure,
             "search_materials_electronic_structure_bandstructure__get": None,
             "search_materials_electronic_structure_dos__get": None,
             "search_materials_electronic_structure__get": self.search_materials_electronic_structure,
@@ -452,7 +460,7 @@ class MPAPIWrapper(BaseModel):
 
         try:
             import openai
-            openai.api_key = openai_api_key 
+            openai.api_key = openai_api_key
         except ImportError:
             raise ImportError(
                 "Could not import `openai` python package. "
@@ -474,7 +482,7 @@ class MPAPIWrapper(BaseModel):
                 "Please install it with `pip install mp_api`."
             )
         return values
-    
+
     def run(self, function_name: str, function_args: str, debug: bool = False) -> str:
         """
         Performs an mp-api call and returns the result.
@@ -498,14 +506,16 @@ class MPAPIWrapper(BaseModel):
                 Please rephrase or confine your request.
                 """
             ).strip().replace("\n", " ")
-        
+
         try:
             function_response = function_to_call(
                 query_params=json.loads(function_args))
         except Exception as e:
-            raise ValueError(f"Error on {function_name}: {e}. Please provide more information or try smaller request.")
-        
+            raise ValueError(
+                f"Error on {function_name}: {e}. Please provide more information or try smaller request.")
+
         if debug:
-            print("MP API response:", json.dumps(function_response))
+            # print("MP API response:", json.dumps(function_response))
+            pass
 
         return function_response

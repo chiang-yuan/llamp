@@ -7,7 +7,8 @@ export interface Chat {
 export interface ChatMessage {
   role: 'assistant' | 'user';
   content: string;
-  type: 'info' | 'msg';
+  type: 'info' | 'msg' | 'structures';
+  structures?: [];
 }
 
 export function syncChats(chats: Chat[]): void {

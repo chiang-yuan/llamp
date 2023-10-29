@@ -20,6 +20,7 @@
     "@tailwindcss/typography": "0.5.10",
     "@types/node": "20.8.0",
     "autoprefixer": "10.4.16",
+    "elementari": "^0.2.2",
     "postcss": "8.4.31",
     "prettier": "^2.8.0",
     "prettier-plugin-svelte": "^2.10.1",
@@ -35,8 +36,10 @@
   "dependencies": {
     "@floating-ui/dom": "1.5.3",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
-    "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@fortawesome/free-brands-svg-icons": "^6.4.2",
-    "@fortawesome/svelte-fontawesome": "^0.2.0"
+    "@fortawesome/free-solid-svg-icons": "^6.4.2",
+    "@fortawesome/svelte-fontawesome": "^0.2.0",
+    "svelte-carousel": "^1.0.25",
+    "svelte-zoo": "^0.4.9"
   }
 }

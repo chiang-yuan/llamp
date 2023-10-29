@@ -71,6 +71,12 @@
       const responses: ChatMessage[] = result.responses;
       console.log(responses);
       appendResponse(responses);
+	  const structures = result.structures;
+	  if (structures.length > 0) {
+		appendStructures(structures);
+	  }
+	  console.log(structures);
+
       syncChats(chats); // Syncing the chat after receiving the assistant’s response
     } catch (error) {
       console.error('Error while asking question:', error);
@@ -79,6 +85,19 @@
     }
   }
 
+  function appendStructures(structures: any[]) {
+	const msg = {
+			role:'assistant',
+			content: "",
+			type: 'structures',
+			structures: structures
+		}
+	messages = [
+		...messages,
+		msg
+	]
+	addMessage(msg);
+  }
   function appendResponse(responses: ChatMessage[]) {
     messages = [
       ...messages,
