@@ -25,6 +25,11 @@
         }
       ];
     }
+	const loadedKey = localStorage.getItem('openaiKey');
+	if (loadedKey) {
+		OpenAIKey = loadedKey;
+	}
+
 	loading = false;
   });
 
@@ -154,6 +159,12 @@
 	event: 'click',
 	target: 'popOpenAIKey',
 	placement: 'top',
+	state: (e: Record<string ,boolean>) => {
+		if (!e.state) {
+			// store openaiKey in localstorage
+			localStorage.setItem('openaiKey', OpenAIKey);
+		}
+	},
   };
 
   let OpenAIKey = '';
