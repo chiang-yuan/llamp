@@ -23,11 +23,12 @@
     host: true,
     avatar: 1,
     name: 'LLaMP',
-    timestamp: '2 hours ago',
+    timestamp: new Date(data.timestamp).toLocaleTimeString(),
     message:
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla euismod, nisl eget ultricies aliquam, quam libero ultricies nunc, nec aliquet nisl nunc eu nunc. Nulla facil',
     color: 'primary'
   };
+  console.log('data: ', data)
 </script>
 
 {#if data.content}

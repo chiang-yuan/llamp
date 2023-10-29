@@ -9,6 +9,7 @@ export interface ChatMessage {
   content: string;
   type: 'info' | 'msg' | 'structures';
   structures?: [];
+  timestamp: Date;
 }
 
 export function syncChats(chats: Chat[]): void {

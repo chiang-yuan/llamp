@@ -25,7 +25,10 @@
   });
 
   function addMessage(newMessage: ChatMessage) {
-    chats[currentChatIndex].messages.push(newMessage);
+    chats[currentChatIndex].messages.push({
+		...newMessage,
+		timestamp: new Date(),
+	});
     syncChats(chats);
   }
   $: messages = chats.length ? chats[currentChatIndex].messages : [];
@@ -40,7 +43,7 @@
     const newMessage: ChatMessage = {
       role: 'user',
       content: currentMessage,
-      type: 'msg'
+      type: 'msg',
     };
 
     // Adding user's message to the chat immediately
@@ -68,7 +71,9 @@
       });
 
       const result = await response.json();
-      const responses: ChatMessage[] = result.responses;
+      const responses: ChatMessage[] = result.responses.map((r) => ({
+		...r,
+	  }));
       console.log(responses);
       appendResponse(responses);
 	  const structures = result.structures;
@@ -90,7 +95,8 @@
 			role:'assistant',
 			content: "",
 			type: 'structures',
-			structures: structures
+			structures: structures,
+			timestamp: new Date(),
 		}
 	messages = [
 		...messages,
@@ -103,7 +109,8 @@
       ...messages,
       ...responses.map((r) => ({
         ...r,
-        type: 'msg'
+        type: 'msg',
+		timestamp: new Date(),
       }))
     ];
 
