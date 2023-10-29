@@ -14,7 +14,8 @@ from llamp.mp.tools import (
     MaterialsStructure,
 )
 import json
-from typing import Any
+import openai
+from typing import Any, List
 from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
@@ -54,7 +55,8 @@ tools = [
 
 # MEMORY_KEY = "chat_history"
 
-llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k-0613')
+llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k-0613',
+                 openai_api_key="sk-xxxxxx")
 # llm = ChatOpenAI(temperature=0, model='gpt-4')
 
 memory = ConversationBufferMemory(memory_key="chat_history")
@@ -113,9 +115,16 @@ def load_structures(str: str) -> list[Any]:
     return res
 
 
+class MessageInput(BaseModel):
+    messages: List[ChatMessage]
+    key: str
+
+
 @app.post("/ask/")
-async def ask(messages: list[ChatMessage]):
-    print(messages)
+async def ask(data: MessageInput):
+    messages = data.messages
+    key = data.key
+    print(key)
     '''
     chat_history = [lambda x:
                     HumanMessage(content=x.content) if x.role == "user" else AIMessage(
@@ -135,11 +144,18 @@ async def ask(messages: list[ChatMessage]):
         'chat_history': chat_history,
     })
     '''
-    output = agent_executor.run(input=messages[-1].content)
+    # update the agent's key
+    agent_executor.agent.llm.openai_api_key = key
+
+    output = None
     structures = []
-    if (output.startswith('[structures]')):
-        structures = [*load_structures(output)]
-        output = ""
+    try:
+        output = agent_executor.run(input=messages[-1].content)
+        if (output.startswith('[structures]')):
+            structures = [*load_structures(output)]
+            output = ""
+    except openai.error.AuthenticationError:
+        output = "[Error] Invalid API key"
 
     return {
         "responses": [{

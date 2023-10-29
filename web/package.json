@@ -9,7 +9,8 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --plugin-search-dir . --check .",
-    "format": "prettier --plugin-search-dir . --write ."
+    "format": "prettier --plugin-search-dir . --write .",
+	"serve": "vite build && NODE_ENV=production vite --port 5984 --host 0.0.0.0"
   },
   "devDependencies": {
     "@skeletonlabs/skeleton": "2.2.0",

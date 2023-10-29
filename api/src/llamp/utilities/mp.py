@@ -13,7 +13,7 @@ from langchain.pydantic_v1 import BaseModel, root_validator
 from langchain.tools.json.tool import JsonSpec
 from langchain.utils import get_from_dict_or_env
 
-from llamp.utils import MP_API_KEY, OPENAI_API_KEY
+from llamp.utils import MP_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ class MPAPIWrapper(BaseModel):
 
     mpr: Any
     mp_api_key: str = MP_API_KEY
-    openai_api_key: str = OPENAI_API_KEY
 
     max_tokens: int | None = 4096
     spec_path = Path(__file__).parent.resolve() / "mp_openapi_selected.json"
@@ -57,18 +56,6 @@ class MPAPIWrapper(BaseModel):
             values, "mp_api_key", "MP_API_KEY"
         )
 
-        openai_api_key = get_from_dict_or_env(
-            values, "openai_api_key", "OPENAI_API_KEY"
-        )
-
-        try:
-            import openai
-            openai.api_key = openai_api_key 
-        except ImportError:
-            raise ImportError(
-                "Could not import `openai` python package. "
-                "Please install it with `pip install openai`."
-            )
         try:
             import mp_api
             import mp_api.client
@@ -85,7 +72,7 @@ class MPAPIWrapper(BaseModel):
                 "Please install it with `pip install mp_api`."
             )
         return values
-    
+
     def run(self, function_name: str, function_args: str, debug: bool = False) -> str:
         """
         Performs an mp-api call and returns the result.
@@ -109,14 +96,15 @@ class MPAPIWrapper(BaseModel):
                 Please rephrase or confine your request.
                 """
             ).strip().replace("\n", " ")
-        
+
         try:
             function_response = function_to_call(
                 query_params=json.loads(function_args)
             )
         except Exception as e:
-            raise ValueError(f"Error on {function_name}: {e}. Please provide more information or try smaller request.")
-        
+            raise ValueError(
+                f"Error on {function_name}: {e}. Please provide more information or try smaller request.")
+
         if debug:
             print("MP API response:", json.dumps(function_response))
 
@@ -216,7 +204,7 @@ class MPAPIWrapper(BaseModel):
             )
             functions.pop(idx)
             return functions
-        
+
     def _process_query_params(self, query_params: dict):
         fields = query_params.pop("fields", None)
         if fields:
@@ -235,7 +223,7 @@ class MPAPIWrapper(BaseModel):
         if sort_fields:
             query_params["_sort_fields"] = all_fields
         return query_params
-        
+
     def search_materials_core(self, query_params: dict):
         query_params = self._process_query_params(query_params)
         return self.mpr.materials._search(
@@ -271,14 +259,15 @@ class MPAPIWrapper(BaseModel):
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
-    
+
     def search_materials_structure(self, query_params: dict):
-        # NOTE: this is a convenient function to retrieve pymatgen structure in JSON 
+        # NOTE: this is a convenient function to retrieve pymatgen structure in JSON
         # but not a real mp-api endpoint
 
         query_params = self._process_query_params(query_params)
-        query_params["fields"] = query_params.get("fields", []) + ["structure", "material_id"]
-        
+        query_params["fields"] = query_params.get(
+            "fields", []) + ["structure", "material_id"]
+
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
@@ -318,7 +307,7 @@ class MPAPIWrapper(BaseModel):
         if condition_mixing_media:
             query_params["condition_mixing_media"] = condition_mixing_media.split(
                 ",")
-            
+
         response = self.mpr.materials.synthesis._search(**query_params)
 
         if len(response) > 5:
@@ -355,7 +344,7 @@ class MPAPIWrapper(BaseModel):
         thermo_types = query_params.pop("thermo_types", None)
         if thermo_types:
             query_params.update({"thermo_types": ",".join(thermo_types)})
-        
+
         return self.mpr.materials.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
