@@ -26,5 +26,5 @@ class TrajectoryWriter(IOContext):
 
         structure = AseAtomsAdaptor().get_structure(self.atoms)
         with open(f'{self.extxyzfpath}.{self.dyn.get_number_of_steps()}.json', 'w') as f:
-            f.write(structure.to_json()) 
+            f.write(structure.to_json())
         

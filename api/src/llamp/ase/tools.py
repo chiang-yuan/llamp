@@ -1,5 +1,6 @@
 
 import datetime
+import glob
 import json
 import os
 import re
@@ -123,11 +124,17 @@ class NoseHooverMD(BaseTool):
                     format='extxyz', mode='a'),
                 interval=interval
                 )
-            npt.get_time()
-            npt.get_number_of_steps()
             npt.run(kwargs.get("nsteps", 1000))
 
-        return '[simulation]' + json.dumps({"log": logfile, "extxyz": xyzfile, "interval": interval})
+            fpattern = str(out_dir / f'{atoms.get_chemical_formula()}_{tstring}.*.json')
+            jsons = sorted(
+                glob.glob(fpattern), 
+                key=lambda x: int(x.split('.')[-2])
+                )
+
+        # NOTE: logfile for xyz plot, jsons for simulation animation
+        # NOTE: absolute file paths are returned for all the files
+        return '[simulation]' + json.dumps({"log": str(out_dir / logfile), "jsons": jsons})
         
 
     async def _arun(self, **kwargs):

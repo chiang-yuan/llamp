@@ -256,6 +256,10 @@ class MPAPIWrapper(BaseModel):
 
     def search_materials_summary(self, query_params: dict):
         query_params = self._process_query_params(query_params)
+        
+        if "material_id" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get("fields", []) + ["material_id"]
+
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
@@ -265,8 +269,15 @@ class MPAPIWrapper(BaseModel):
         # but not a real mp-api endpoint
 
         query_params = self._process_query_params(query_params)
-        query_params["fields"] = query_params.get(
-            "fields", []) + ["structure", "material_id"]
+
+        if "material_id" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get("fields", []) + ["material_id"]
+
+        if "structure" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get("fields", []) + ["structure"]
+
+        # query_params["fields"] = query_params.get(
+        #     "fields", []) + ["structure", "material_id"]
 
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params

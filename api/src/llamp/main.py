@@ -1,41 +1,42 @@
 
-from llamp.mp.tools import (
-    MaterialsSummary,
-    MaterialsSynthesis,
-    MaterialsThermo,
-    MaterialsElasticity,
-    MaterialsMagnetism,
-    MaterialsDielectric,
-    MaterialsPiezoelectric,
-    MaterialsRobocrystallographer,
-    MaterialsOxidation,
-    MaterialsBonds,
-    MaterialsSimilarity,
-    MaterialsStructure,
-)
 import json
-import openai
-from typing import Any, List
 from pathlib import Path
+from typing import Any, List
+
+import openai
+import pandas as pd
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import ChatMessage
-from langchain.agents import initialize_agent, AgentType
+from langchain.agents import AgentType, initialize_agent, load_tools
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain.prompts import MessagesPlaceholder
+from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
+from langchain.prompts import MessagesPlaceholder
+from langchain.schema import ChatMessage
+from langchain.tools import ArxivQueryRun, WikipediaQueryRun
+from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from pydantic import BaseModel
 
+from llamp.ase.tools import NoseHooverMD
+from llamp.mp.tools import (
+    MaterialsBonds,
+    MaterialsDielectric,
+    MaterialsElasticity,
+    MaterialsMagnetism,
+    MaterialsOxidation,
+    MaterialsPiezoelectric,
+    MaterialsRobocrystallographer,
+    MaterialsSimilarity,
+    MaterialsStructure,
+    MaterialsSummary,
+    MaterialsSynthesis,
+    MaterialsTasks,
+    MaterialsThermo,
+)
 
-def load_json(file_path: Path) -> Any:
-    with file_path.open('r') as file:
-        data = json.load(file)
-    return data
-
-
-# from llamp.elementari.tools import StructureVis
+wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
+arxiv = ArxivQueryRun(api_wrapper=ArxivAPIWrapper())
 
 tools = [
     MaterialsSummary(),
@@ -49,9 +50,13 @@ tools = [
     MaterialsOxidation(),
     MaterialsBonds(),
     MaterialsSimilarity(),
+    MaterialsTasks(),
     MaterialsStructure(return_direct=True),
+    NoseHooverMD(return_direct=True),
     # StructureVis(),
-]
+    arxiv,
+    wikipedia
+] 
 
 # MEMORY_KEY = "chat_history"
 
@@ -105,6 +110,10 @@ class ChatMessage(BaseModel):
 
 BASE_DIR = Path(__file__).resolve().parent
 
+def load_json(file_path: Path) -> Any:
+    with file_path.open('r') as file:
+        data = json.load(file)
+    return data
 
 def load_structures(str: str) -> list[Any]:
     str = str.replace('[structures]', '')
@@ -114,9 +123,27 @@ def load_structures(str: str) -> list[Any]:
         res.append(load_json(BASE_DIR / f'mp/.tmp/{mp}.json'))
     return res
 
+def load_simulations(str: str) -> list[Any]:
+    str = str.replace('[simulations]', '')
+    d = json.loads(str)
+
+    df = pd.read_csv(  # noqa: PD901
+        d['log'], 
+        delim_whitespace=True, skiprows=1, header=None, 
+        names=['Time[ps]', 'Etot/N[eV]', 'Epot/N[eV]', 'Ekin/N[eV]', 'T[K]', 'stress_xx', 'stress_yy', 'stress_zz', 'stress_yz', 'stress_xz', 'stress_xy']
+        )
+    
+    log_json = df.to_json(orient='records', date_format='iso')
+
+    res = []
+    for j in d['jsons']:
+        res.append(load_json(j))
+
+    return res, log_json
+
 
 class MessageInput(BaseModel):
-    messages: List[ChatMessage]
+    messages: list[ChatMessage]
     key: str
 
 
