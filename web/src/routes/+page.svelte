@@ -1,13 +1,14 @@
 <script lang="ts">
   import Message from './Message.svelte';
-  import { Avatar, ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
+  import { Avatar, ListBox, ListBoxItem, popup, type PopupSettings} from '@skeletonlabs/skeleton';
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-  import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+  import { faPaperPlane, faKey } from '@fortawesome/free-solid-svg-icons';
   import { onMount, tick } from 'svelte';
   import { type Chat, type ChatMessage, syncChats } from '$lib/chatUtils';
 
   let chats: Chat[] = [];
   let currentChatIndex = 0;
+  let loading = true;
   onMount(() => {
     const loadedChats = localStorage.getItem('chats');
     if (loadedChats) {
@@ -22,6 +23,7 @@
         }
       ];
     }
+	loading = false;
   });
 
   function addMessage(newMessage: ChatMessage) {
@@ -56,7 +58,10 @@
       chats[currentChatIndex].question = currentMessage;
     }
 
-    const body = messages;
+    const body = {
+		messages,
+		key: OpenAIKey,
+	};
     currentMessage = '';
 
     try {
@@ -142,8 +147,22 @@
     await tick();
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
+
+  const popOpenAIKey: PopupSettings = {
+	event: 'click',
+	target: 'popOpenAIKey',
+	placement: 'top',
+  };
+
+  let OpenAIKey = '';
+
 </script>
 
+{#if loading}
+	<div class="flex justify-center items-center h-screen">
+		<h1>Loading...</h1>
+	</div>
+{:else}
 <div class="chat w-full h-full grid grid-cols-1 lg:grid-cols-[20%_1fr]">
   <!-- Navigation -->
   <div class="hidden card lg:grid grid-rows-[auto_1fr_auto] border-r border-surface-500/30">
@@ -168,6 +187,23 @@
       </ListBox>
     </div>
     <!-- Footer -->
+	<button type="button" class="btn variant-filled mx-1" use:popup={popOpenAIKey}>
+		<FontAwesomeIcon icon={faKey} />
+		<span>OpenAI API KEY</span>
+	</button>
+
+	<div class="card p-4 w-96 shadow-xl " data-popup="popOpenAIKey">
+        <textarea
+          bind:value={OpenAIKey}
+          class="bg-slate-50 text-black border-0 ring-0 w-full border-t border-surface-500/30 rounded-md"
+          name="openai-token"
+          id="openai-token"
+          placeholder="Put your OpenAI token here"
+          rows="1"
+        />
+		<div class="arrow bg-surface-100-800-token" />
+	</div>
+
     <footer class="border-t border-surface-500/30 p-4 opacity-50">
       LLaMP Project All Rights Reserved.
     </footer>
@@ -239,3 +275,5 @@
     height: calc(100vh - 200px); /* Adjust the height based on your header and footer */
   }
 </style>
+
+{/if}
