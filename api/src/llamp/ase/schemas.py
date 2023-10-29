@@ -1,7 +1,9 @@
 
 
 from ase import units
-from pydantic import BaseModel, Field
+
+# from pydantic import BaseModel, Field
+from langchain.pydantic_v1 import BaseModel, Field
 
 
 class OptimizationSchema(BaseModel):
@@ -20,7 +22,7 @@ class NoseHooverSchema(BaseModel):
         description='XYZ file to run molecular dynamics (MD) simulation'
         )
     # MD settings
-    temperature: float | None = Field(
+    temperature: float = Field(
         default=300.0, 
         description='Temperature for MD simulation'
         )
@@ -28,16 +30,16 @@ class NoseHooverSchema(BaseModel):
         default=5.0, 
         description='Timestep for MD simulation in femtoseconds'
         )
-    ttime: float | None = Field(
+    ttime: float = Field(
         default=25 * units.fs, 
         description='Characteristic timescale of the thermostat. Set to None to disable the thermostat.'
         )
-    pressure: float | None = Field(
+    pressure: float = Field(
         default=0.0, 
         description='Pressure for MD simulation in GPa'
         )
-    pfactor: float | None = Field(
-        default=(75 * units.fs)**2 * units.GPa, 
+    pfactor: float = Field(
+        default=None, 
         description='A constant in the barostat differential equation. If a characteristic barostat timescale of ptime is desired, set pfactor to ptime^2 * B (where ptime is in units matching eV, Å, u; and B is the Bulk Modulus, given in eV/Å^3). Set to None to disable the barostat. Typical metallic bulk moduli are of the order of 100 GPa or 0.6 eV/A^3.'
         )
     nsteps: int | None = Field(
