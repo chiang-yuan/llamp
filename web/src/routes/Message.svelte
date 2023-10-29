@@ -31,7 +31,7 @@
   console.log('data: ', data)
 </script>
 
-{#if data.content}
+{#if data.type == 'msg' && data.content.length > 0}
 
   <div class="flex gap-2 {user ? 'justify-end' : ''}">
     <div>
@@ -86,6 +86,7 @@
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
 	  <div class="max-w-lg">
+      <pre class="whitespace-pre-wrap">{data.content}</pre>
 		<Carousel
 			autoplay
 			duration={500}
@@ -100,6 +101,24 @@
 		</div>
 		{/each}
 		</Carousel>
+	  </div>
+    </div>
+  </div>
+{:else if data.type == 'simulation_chart'}
+  <div class="flex gap-2 {user ? 'justify-end' : ''}">
+    <div>
+      <Avatar width="w-14" initials={user ? '🦖' : '🔮'} class={user ? 'order-2' : 'order-1'} />
+    </div>
+    <div class="card p-4 rounded-tl-none space-y-2 {user ? 'order-1' : 'order-2 variant-soft'}">
+      <header class="flex justify-between items-center">
+        {#if !user}
+          <p class="font-bold">{bubble.name}</p>
+        {/if}
+        <small class="opacity-50">{bubble.timestamp}</small>
+      </header>
+	  <div class="max-w-lg">
+      <pre class="whitespace-pre-wrap">{data.content}</pre>
+		
 	  </div>
     </div>
   </div>

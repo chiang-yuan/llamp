@@ -120,26 +120,14 @@ import type{ ChatMessage } from 'lib/chatUtils.ts';
 		...messages,
 		{
 			role:'assistant',
-			content: "Simulation:",
-			type: 'msg',
-			timestamp: new Date(),
-		},
-		{
-			role:'assistant',
-			content: "",
+			content: "Simulation:\n",
 			type: 'simulation',
 			structures: structures,
 			timestamp: new Date(),
 		},
 		{
 			role:'assistant',
-			content: "Chart:",
-			type: 'msg',
-			timestamp: new Date(),
-		},
-		{
-			role:'assistant',
-			content: "",
+			content: "Chart: ",
 			type: 'simulation_chart',
 			timestamp: new Date(),
 			simulation_data,
