@@ -1,5 +1,7 @@
 FROM node:16-slim
 
+ENV NODE_ENV=production
+
 EXPOSE 5984
 
 WORKDIR /srv/app

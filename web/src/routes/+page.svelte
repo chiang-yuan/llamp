@@ -6,6 +6,8 @@
   import { onMount, tick } from 'svelte';
   import { type Chat, type ChatMessage, syncChats } from '$lib/chatUtils';
 
+  const API_ENDPOINT = process.env.NODE_ENV === 'production' ? 'http://165.232.143.186:8000' : 'http://localhost:8000';
+
   let chats: Chat[] = [];
   let currentChatIndex = 0;
   let loading = true;
@@ -67,7 +69,7 @@
     try {
       processing = true;
       await scrollToBottom();
-      const response = await fetch('http://localhost:8000/ask', {
+      const response = await fetch(`${API_ENDPOINT}/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

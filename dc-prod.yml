@@ -12,16 +12,14 @@ services:
       - ./web:/srv/app
     depends_on:
       - api
-    env_file:
-      - .env.local
 
   api:
     build:
       context: api
       dockerfile: Dockerfile
-    ports:
-      - '8000:8000'
     volumes:
       - ./api/src:/usr/src/app/src
+    ports:
+      - '8000:8000'
     env_file:
       - .env.local
