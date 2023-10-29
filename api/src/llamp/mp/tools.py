@@ -21,6 +21,7 @@ from llamp.mp.schemas import (
     StructureSchema,
     SummarySchema,
     SynthesisSchema,
+    TasksSchema,
     ThermoSchema,
 )
 from llamp.utilities import MPAPIWrapper
@@ -69,8 +70,9 @@ class MaterialsSummary(MPTool):
             """useful when you need calulated or derived materials properties, also useful 
         when you need to perform filtering on chemical systems or sorting on materials 
         properties, also useful when you need high-level information about materials 
-        (such as material_id, pymatgen structure) and use the results to perform 
-        further queries using other tools""",
+        (such as material_id) and use the results to perform further queries using 
+        other tools. There is `MaterialsStructure` tool that is more suitable for 
+        pymatgen structures retrieval and visualization""",
         )
         .strip()
         .replace("\n", " ")[0]
@@ -286,16 +288,29 @@ class MaterialsBonds(MPTool):
     )
     args_schema: type[BondsSchema] = BondsSchema
 
+class MaterialsTasks(MPTool):
+    name: str = "search_materials_tasks__get"
+    description: str = (
+        re.sub(
+            r"\s+",
+            " ",
+            """useful when you need task_ids of materials and detailed DFT calculation 
+            results""",
+        )
+        .strip()
+        .replace("\n", " ")[0]
+    )
+    args_schema: type[TasksSchema] = TasksSchema
 
 class MaterialsSimilarity(MPTool):
-    name: str = "search_materials_similarity__get"
+    name: str = "get_by_key_materials_similarity__material_id___get"
     description: str = (
         re.sub(
             r"\s+",
             " ",
             """useful when you need to find similar materials based on a given material 
-            id or formula, also useful when you need to perform filtering and sorting 
-            on similarity scores and retrieve the qualified materials""",
+            id. If you don't have relevant material_id, you should use 
+            `MaterialsSummary` tool first""",
         )
         .strip()
         .replace("\n", " ")[0]
