@@ -18,6 +18,10 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "python-dotenv",
+    "mace @ git+https://github.com/chiang-yuan/mace.git@uip",
+    "arxiv",
+    "wikipedia",
+    "pandas"
 ]
 requires-python = ">=3.9"
 

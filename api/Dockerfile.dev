@@ -1,10 +1,11 @@
+# FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 FROM python:3.11-slim
 
 EXPOSE 8000
 
 WORKDIR /usr/src/app
 
-RUN apt-get update && apt-get install -y build-essential
+RUN apt-get update && apt-get install -y build-essential git
 
 COPY . .
 
