@@ -44,12 +44,12 @@ class NoseHooverMD(BaseTool):
     )
     args_schema: type[NoseHooverSchema] = NoseHooverSchema
     api_wrapper: MPAPIWrapper = Field(default_factory=MPAPIWrapper)
-    
+
     def _process_args(self, **kwargs):
         kwargs["pressure"] = kwargs.get("pressure", 0.0)
-        kwargs["pfactor"] = kwargs.get("pfactor", (75 * units.fs)**2 * units.GPa)
+        kwargs["pfactor"] = kwargs.get(
+            "pfactor", (75 * units.fs)**2 * units.GPa)
         kwargs["ttime"] = kwargs.get("ttime", 25 * units.fs)
-        
 
     def _run(self, **kwargs):
         """Run Nose-Hoover MD."""
@@ -73,7 +73,8 @@ class NoseHooverMD(BaseTool):
                     }
                 )
             )
-            structure = json.loads(json.dumps(_response[0]["structure"]), cls=MontyDecoder)
+            structure = json.loads(json.dumps(
+                _response[0]["structure"]), cls=MontyDecoder)
             atoms = AseAtomsAdaptor.get_atoms(structure)
             atoms = sort(atoms)
 
@@ -85,13 +86,15 @@ class NoseHooverMD(BaseTool):
             atoms.set_scaled_positions(scaled_pos)
 
             print('after triu', atoms)
-        
+
         # run md
         with ScratchDir("."):
 
             calculator = MACECalculator(
-                model_paths=[Path(__file__).parent.absolute() / "2023-09-01-mace-universal.model"],
-                device="cpu" #FIXME: torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                model_paths=[Path(__file__).parent.absolute() /
+                             "2023-09-01-mace-universal.model"],
+                # FIXME: torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                device="cpu"
             )
 
             atoms.calc = calculator
@@ -112,30 +115,30 @@ class NoseHooverMD(BaseTool):
             interval = kwargs.get("interval", 10)
             npt.attach(
                 MDLogger(
-                    npt, atoms, 
-                    out_dir / logfile, 
-                    header=True, stress=True, peratom=True, mode="a"), 
+                    npt, atoms,
+                    out_dir / logfile,
+                    header=True, stress=True, peratom=True, mode="a"),
                 interval=interval
-                )
+            )
             npt.attach(
                 TrajectoryWriter(
-                    npt, atoms, 
-                    out_dir / xyzfile, 
+                    npt, atoms,
+                    out_dir / xyzfile,
                     format='extxyz', mode='a'),
                 interval=interval
-                )
+            )
             npt.run(kwargs.get("nsteps", 1000))
 
-            fpattern = str(out_dir / f'{atoms.get_chemical_formula()}_{tstring}.*.json')
+            fpattern = str(
+                out_dir / f'{atoms.get_chemical_formula()}_{tstring}.*.json')
             jsons = sorted(
-                glob.glob(fpattern), 
+                glob.glob(fpattern),
                 key=lambda x: int(x.split('.')[-2])
-                )
+            )
 
         # NOTE: logfile for xyz plot, jsons for simulation animation
         # NOTE: absolute file paths are returned for all the files
         return '[simulation]' + json.dumps({"log": str(out_dir / logfile), "jsons": jsons})
-        
 
     async def _arun(self, **kwargs):
         """Run Nose-Hoover MD asynchronously."""

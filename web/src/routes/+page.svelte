@@ -1,4 +1,5 @@
 <script lang="ts">
+import type{ ChatMessage } from 'lib/chatUtils.ts';
   import Message from './Message.svelte';
   import { Avatar, ListBox, ListBoxItem, popup, type PopupSettings} from '@skeletonlabs/skeleton';
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -89,7 +90,19 @@
       console.log(responses);
       appendResponse(responses);
 	  const structures = result.structures;
-	  if (structures.length > 0) {
+
+	  let simulation_data = result.simulation_data;
+	  if (simulation_data?.length > 0) {
+		simulation_data = JSON.parse(simulation_data);
+		simulation_data = simulation_data.map((r) => ({
+			time: r["Time[ps]"],
+			Etot: r["Etot\/N[eV]"],
+		})).slice(0, 10);
+
+		appendSimulation(simulation_data, structures);
+	  }
+
+	  else if (structures.length > 0) {
 		appendStructures(structures);
 	  }
 	  console.log(structures);
@@ -101,9 +114,42 @@
       processing = false;
     }
   }
+  function appendSimulation(simulation_data: any[], structures: any[]) {
+	const msg: ChatMessage = 
+	messages = [
+		...messages,
+		{
+			role:'assistant',
+			content: "Simulation:",
+			type: 'msg',
+			timestamp: new Date(),
+		},
+		{
+			role:'assistant',
+			content: "",
+			type: 'simulation',
+			structures: structures,
+			timestamp: new Date(),
+		},
+		{
+			role:'assistant',
+			content: "Chart:",
+			type: 'msg',
+			timestamp: new Date(),
+		},
+		{
+			role:'assistant',
+			content: "",
+			type: 'simulation_chart',
+			timestamp: new Date(),
+			simulation_data,
+		},
+	]
+	addMessage(msg);
+  }
 
   function appendStructures(structures: any[]) {
-	const msg = {
+	const msg: ChatMessage = {
 			role:'assistant',
 			content: "",
 			type: 'structures',
@@ -123,6 +169,7 @@
         ...r,
         type: 'msg',
 		timestamp: new Date(),
+		content: r.content ? r.content : "",
       }))
     ];
 
