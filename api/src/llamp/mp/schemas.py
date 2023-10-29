@@ -317,10 +317,6 @@ class PiezoSchema(BaseModel):
 
 class SimilaritySchema(BaseModel):
     material_id: str = Field(description="Material ID to find similar materials to")
-    limit: int = Field(
-        default=10,
-        description="Maximum number of entries to return"
-        )
     fields: str = Field(
         default="sim,material_id",
         description="Fields to project from SimilarityDoc as a list of comma-delimited strings. Field include: `sim` `material_id`"
@@ -381,4 +377,16 @@ class TasksSchema(BaseModel):
     chemsys: str | None = Field(None, description="A comma delimited string list of chemical systems. Wildcards for unknown elements only supported for single chemsys queries")
     elements: str | None = Field(None, description="A comma delimited string list of elements to query on")
     exclude_elements: str | None = Field(None, description="A comma delimited string list of elements to exclude")
+    task_ids: str | None = Field(None, description="Comma-separated list of task_ids to query on")
+    sort_fields: str | None = Field(None, description="Comma-delimited list of fields to sort on. Prefix with - for descending order.")
+    # _page: int = Field(description="Page number to request (takes precedent over _limit and _skip)")
+    # _per_page: int = Field(description="Number of entries to show per page (takes precedent over _limit and _skip). Limited to 1000")
+    # _skip: int = Field(description="Number of entries to skip")
+    limit: int = Field(
+        default=3,
+        description="Maximum number of entries to return"
+        )
+    fields: str = Field(description="Fields to project from TaskDoc as comma separated strings. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `tags` `dir_name` `state` `calcs_reversed` `structure` `task_type` `task_id` `orig_inputs` `input` `output` `included_objects` `vasp_objects` `entry` `task_label` `author` `icsd_id` `transformations` `additional_json` `custodian` `analysis` `last_updated`")
+    all_fields: bool | None = Field(False, description="Whether to return all fields in results")
+    
 

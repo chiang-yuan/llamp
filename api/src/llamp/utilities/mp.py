@@ -242,10 +242,10 @@ class MPAPIWrapper(BaseModel):
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
-    def fetch_materials_similarity(self, material_id: str, query_params: dict):
+    def fetch_materials_similarity(self, query_params: dict):
         query_params = self._process_query_params(query_params)
         return self.mpr.materials.get_data_by_id(
-            document_id=material_id, **query_params
+            document_id=query_params.pop('material_id'), **query_params
         )
 
     def search_materials_bonds(self, query_params: dict):
