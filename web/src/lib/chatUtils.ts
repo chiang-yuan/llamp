@@ -10,6 +10,7 @@ export interface ChatMessage {
   type: 'info' | 'msg' | 'structures' | 'simulation' | 'simulation_chart';
   structures?: [];
   timestamp: Date;
+  simulationData?: [];
 }
 
 export function syncChats(chats: Chat[]): void {

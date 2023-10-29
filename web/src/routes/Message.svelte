@@ -1,12 +1,11 @@
 <script lang="ts">
   import type { ChatMessage } from '$lib/chatUtils';
   import { Avatar } from '@skeletonlabs/skeleton';
-  import { Structure, StructureCard } from 'elementari'
-  import Carousel from 'svelte-carousel'
+  import { Structure, StructureCard } from 'elementari';
+  import Carousel from 'svelte-carousel';
   export let data: ChatMessage;
-  $: user = data.role === 'user';
 
-  let width,height;
+  $: user = data.role === 'user';
 
   interface MessageFeed {
     id: number;
@@ -118,7 +117,12 @@
       </header>
 	  <div class="max-w-lg">
       <pre class="whitespace-pre-wrap">{data.content}</pre>
-		
+		<path
+        stroke="none"
+        fill-opacity="0"
+        class="voronoi-cell"
+        d={data.similation_data}
+		></path>
 	  </div>
     </div>
   </div>
