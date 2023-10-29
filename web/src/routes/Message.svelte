@@ -60,20 +60,15 @@
         {/if}
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
-	  <div class="max-w-xl">
-		<Carousel
-			particlesToShow={1}
-			particlesToScroll={1}
-			autoplay
-			pauseOnFocus
-		>
+	  <div class="max-w-5xl">
+		<div class="snap-x scroll-px-4 snap-mandatory scroll-smooth flex gap-4 overflow-x-auto px-4 py-10">
 			{#each data?.structures as stc }
 			<div>
 				<Structure structure={stc} --struct-height="500px" --struct-width="500px" camera_position={{x: 3,y:3, z:3}}/>
 				<StructureCard structure={stc} />
 			</div>
 			{/each}
-	  </Carousel>
+		</div>
 	  </div>
 	  
     </div>
