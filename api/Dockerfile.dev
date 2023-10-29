@@ -4,7 +4,7 @@ EXPOSE 8000
 
 WORKDIR /usr/src/app
 
-RUN apt-get update && apt-get install -y build-essential
+RUN apt-get update && apt-get install -y build-essential git
 
 COPY . .
 
