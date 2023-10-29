@@ -29,6 +29,17 @@
     color: 'primary'
   };
   console.log('data: ', data)
+
+  const materialPattern = /mp-\d+/g;
+
+  // Function to replace material IDs with hyperlinks
+  function replaceWithLinks(text: string) {
+    return text.replace(materialPattern, (match) => {
+      const materialID = match;
+      const materialLink = `https://next-gen.materialsproject.org/materials/${materialID}`;
+      return `<a href="${materialLink}" target="_blank">${materialID}</a>`;
+    });
+  }
 </script>
 
 {#if data.content}
@@ -44,7 +55,9 @@
         {/if}
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
-      <pre class="whitespace-pre-wrap">{data.content}</pre>
+      <pre class="whitespace-pre-wrap">
+        {@html replaceWithLinks(data.content)}
+      </pre>
     </div>
   </div>
 {:else if data.type == 'structures'}
