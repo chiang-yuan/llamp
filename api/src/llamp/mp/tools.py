@@ -79,6 +79,7 @@ class MaterialsSummary(MPTool):
     )
     args_schema: type[SummarySchema] = SummarySchema
 
+
 class MaterialsStructure(MPTool):
     name: str = "search_materials_structure__get"
     description: str = (
@@ -94,7 +95,7 @@ class MaterialsStructure(MPTool):
     args_schema: type[StructureSchema] = StructureSchema
 
     def _run(self, **query_params):
-        _response =  super()._run(**query_params)
+        _response = super()._run(**query_params)
 
         print(_response)
 
@@ -110,6 +111,7 @@ class MaterialsStructure(MPTool):
                 f.write(json.dumps(structure))
 
         return '[structures]' + ','.join(list(map(lambda x: x['material_id'], _response)))
+
 
 class MaterialsElasticity(MPTool):
     name: str = "search_materials_elasticity__get"
@@ -288,6 +290,7 @@ class MaterialsBonds(MPTool):
     )
     args_schema: type[BondsSchema] = BondsSchema
 
+
 class MaterialsTasks(MPTool):
     name: str = "search_materials_tasks__get"
     description: str = (
@@ -301,6 +304,7 @@ class MaterialsTasks(MPTool):
         .replace("\n", " ")[0]
     )
     args_schema: type[TasksSchema] = TasksSchema
+
 
 class MaterialsSimilarity(MPTool):
     name: str = "get_by_key_materials_similarity__material_id___get"

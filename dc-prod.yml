@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: web
+      dockerfile: Dockerfile
+    ports:
+      - '5984:5984'
+    volumes:
+      - /srv/app/node_modules
+      - ./web:/srv/app
+    depends_on:
+      - api
+    env_file:
+      - .env.local
+
+  api:
+    build:
+      context: api
+      dockerfile: Dockerfile
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./api/src:/usr/src/app/src
+    env_file:
+      - .env.local
