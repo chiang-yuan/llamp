@@ -96,8 +96,6 @@ class MaterialsStructure(MPTool):
     def _run(self, **query_params):
         _response =  super()._run(**query_params)
 
-        print(_response)
-
         for entry in _response:
             material_id = entry['material_id']
             structure = entry['structure']
