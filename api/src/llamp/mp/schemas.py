@@ -271,7 +271,9 @@ class MagnetismSchema(BaseModel):
         description="Maximum number of entries to return"
         )
     fields: str = Field(
+        default="material_id,formula_pretty,ordering,total_magnetization,exchange_symmetry,types_of_magnetic_species,magmoms",
         description="Fields to project from MagnetismDoc as a list of comma separated strings. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `property_name` `material_id` `deprecated` `deprecation_reasons` `last_updated` `origins` `warnings` `ordering` `is_magnetic` `exchange_symmetry` `num_magnetic_sites` `num_unique_magnetic_sites` `types_of_magnetic_species` `magmoms` `total_magnetization` `total_magnetization_normalized_vol` `total_magnetization_normalized_formula_units`",
+        examples=["material_id,formula_pretty,ordering,total_magnetization,exchange_symmetry,types_of_magnetic_species,magmoms"]
         )
     all_fields: bool | None = Field(False, description="Whether to return all fields in results")
 
