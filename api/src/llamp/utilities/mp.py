@@ -318,8 +318,12 @@ class MPAPIWrapper(BaseModel):
         if condition_mixing_media:
             query_params["condition_mixing_media"] = condition_mixing_media.split(
                 ",")
+            
+        response = self.mpr.materials.synthesis._search(**query_params)
 
-        return self.mpr.materials.synthesis._search(**query_params)
+        if len(response) > 5:
+            return response[:5]
+        return response
 
     def search_materials_oxidation_states(self, query_params: dict):
         query_params = self._process_query_params(query_params)

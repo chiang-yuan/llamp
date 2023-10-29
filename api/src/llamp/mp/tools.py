@@ -69,8 +69,9 @@ class MaterialsSummary(MPTool):
             """useful when you need calulated or derived materials properties, also useful 
         when you need to perform filtering on chemical systems or sorting on materials 
         properties, also useful when you need high-level information about materials 
-        (such as material_id, pymatgen structure) and use the results to perform 
-        further queries using other tools""",
+        (such as material_id) and use the results to perform further queries using 
+        other tools. There is `MaterialsStructure` tool that is more suitable for 
+        pymatgen structures retrieval and visualization""",
         )
         .strip()
         .replace("\n", " ")[0]
