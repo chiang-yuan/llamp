@@ -104,11 +104,6 @@ class ChatMessage(BaseModel):
 BASE_DIR = Path(__file__).resolve().parent
 
 
-def load_test_structure():
-    file_path = BASE_DIR / 'elementari/test_structures/1234.json'
-    return load_json(file_path)
-
-
 def load_structures(str: str) -> list[Any]:
     str = str.replace('[structures]', '')
     mp_list = str.split(',')
