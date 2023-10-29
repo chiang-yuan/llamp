@@ -1,8 +1,8 @@
 <script lang="ts">
   import Message from './Message.svelte';
-  import { Avatar, ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
+  import { Avatar, ListBox, ListBoxItem, popup, type PopupSettings} from '@skeletonlabs/skeleton';
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-  import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+  import { faPaperPlane, faKey } from '@fortawesome/free-solid-svg-icons';
   import { onMount, tick } from 'svelte';
   import { type Chat, type ChatMessage, syncChats } from '$lib/chatUtils';
 
@@ -142,6 +142,15 @@
     await tick();
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
+
+  const popOpenAIKey: PopupSettings = {
+	event: 'click',
+	target: 'popOpenAIKey',
+	placement: 'top',
+  };
+
+  let OpenAIKey = '';
+
 </script>
 
 <div class="chat w-full h-full grid grid-cols-1 lg:grid-cols-[20%_1fr]">
@@ -168,6 +177,23 @@
       </ListBox>
     </div>
     <!-- Footer -->
+	<button type="button" class="btn variant-filled mx-1" use:popup={popOpenAIKey}>
+		<FontAwesomeIcon icon={faKey} />
+		<span>OpenAI API KEY</span>
+	</button>
+
+	<div class="card p-4 w-96 shadow-xl " data-popup="popOpenAIKey">
+        <textarea
+          bind:value={OpenAIKey}
+          class="bg-slate-50 text-black border-0 ring-0 w-full border-t border-surface-500/30 rounded-md"
+          name="openai-token"
+          id="openai-token"
+          placeholder="Put your OpenAI token here"
+          rows="1"
+        />
+		<div class="arrow bg-surface-100-800-token" />
+	</div>
+
     <footer class="border-t border-surface-500/30 p-4 opacity-50">
       LLaMP Project All Rights Reserved.
     </footer>
