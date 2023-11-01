@@ -362,12 +362,38 @@ class MPAPIWrapper(BaseModel):
 
     def search_materials_dielectric(self, query_params):
         query_params = self._process_query_params(query_params)
+
+        if "formula" in query_params:
+            material_docs = self.mpr.materials.search(
+                formula=query_params.pop("formula").split(","), fields=["material_id"]
+            )
+
+            material_ids = [doc["material_id"] for doc in material_docs]
+
+            return self.mpr.materials.dielectric.search(
+                material_ids=material_ids,
+                fields=query_params.get("fields", "material_id,formula_pretty,total,n,symmetry").split(",")
+            )
+
         return self.mpr.materials.dielectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
 
     def search_materials_piezoelectric(self, query_params):
         query_params = self._process_query_params(query_params)
+        
+        if "formula" in query_params:
+            material_docs = self.mpr.materials.search(
+                formula=query_params.pop("formula").split(","), fields=["material_id"]
+            )
+
+            material_ids = [doc["material_id"] for doc in material_docs]
+
+            return self.mpr.materials.piezoelectric.search(
+                material_ids=material_ids,
+                fields=query_params.get("fields", "material_id,formula_pretty,total,ionic,electronic,e_ij_max,max_direction,strain_for_max").split(",")
+            )
+        
         return self.mpr.materials.piezoelectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
@@ -383,20 +409,7 @@ class MPAPIWrapper(BaseModel):
 
             return self.mpr.materials.magnetism.search(
                 material_ids=material_ids,
-                fields=[
-                    "material_id",
-                    "formula_pretty",
-                    "ordering",
-                    "is_magnetic",
-                    "exchange_symmetry",
-                    "num_magnetic_sites",
-                    "num_unique_magnetic_sites",
-                    "types_of_magnetic_species",
-                    "magmoms",
-                    "total_magnetization",
-                    "total_magnetization_normalized_vol",
-                    "total_magnetization_normalized_formula_units",
-                ],
+                fields=query_params.get("fields", "material_id,formula_pretty,ordering,is_magnetic,exchange_symmetry,magmoms,types_of_magnetic_species,total_magnetization").split(",")
             )
 
         return self.mpr.magnetism._search(
