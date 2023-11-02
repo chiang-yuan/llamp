@@ -1,13 +1,17 @@
 <script lang="ts">
+import type{ ChatMessage } from 'lib/chatUtils.ts';
   import Message from './Message.svelte';
-  import { Avatar, ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
+  import { Avatar, ListBox, ListBoxItem, popup, type PopupSettings} from '@skeletonlabs/skeleton';
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-  import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+  import { faPaperPlane, faKey } from '@fortawesome/free-solid-svg-icons';
   import { onMount, tick } from 'svelte';
   import { type Chat, type ChatMessage, syncChats } from '$lib/chatUtils';
 
+  const API_ENDPOINT = process.env.NODE_ENV === 'production' ? 'http://165.232.143.186:8000' : 'http://localhost:8000';
+
   let chats: Chat[] = [];
   let currentChatIndex = 0;
+  let loading = true;
   onMount(() => {
     const loadedChats = localStorage.getItem('chats');
     if (loadedChats) {
@@ -22,10 +26,19 @@
         }
       ];
     }
+	const loadedKey = localStorage.getItem('openaiKey');
+	if (loadedKey) {
+		OpenAIKey = loadedKey;
+	}
+
+	loading = false;
   });
 
   function addMessage(newMessage: ChatMessage) {
-    chats[currentChatIndex].messages.push(newMessage);
+    chats[currentChatIndex].messages.push({
+		...newMessage,
+		timestamp: new Date(),
+	});
     syncChats(chats);
   }
   $: messages = chats.length ? chats[currentChatIndex].messages : [];
@@ -40,7 +53,7 @@
     const newMessage: ChatMessage = {
       role: 'user',
       content: currentMessage,
-      type: 'msg'
+      type: 'msg',
     };
 
     // Adding user's message to the chat immediately
@@ -53,13 +66,16 @@
       chats[currentChatIndex].question = currentMessage;
     }
 
-    const body = messages;
+    const body = {
+		messages,
+		key: OpenAIKey,
+	};
     currentMessage = '';
 
     try {
       processing = true;
       await scrollToBottom();
-      const response = await fetch('http://localhost:8000/ask', {
+      const response = await fetch(`${API_ENDPOINT}/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -68,9 +84,29 @@
       });
 
       const result = await response.json();
-      const responses: ChatMessage[] = result.responses;
+      const responses: ChatMessage[] = result.responses.map((r) => ({
+		...r,
+	  }));
       console.log(responses);
       appendResponse(responses);
+	  const structures = result.structures;
+
+	  let simulation_data = result.simulation_data;
+	  if (simulation_data?.length > 0) {
+		simulation_data = JSON.parse(simulation_data);
+		simulation_data = simulation_data.map((r) => ({
+			time: r["Time[ps]"],
+			Etot: r["Etot\/N[eV]"],
+		})).slice(0, 10);
+
+		appendSimulation(simulation_data, structures);
+	  }
+
+	  else if (structures.length > 0) {
+		appendStructures(structures);
+	  }
+	  console.log(structures);
+
       syncChats(chats); // Syncing the chat after receiving the assistant’s response
     } catch (error) {
       console.error('Error while asking question:', error);
@@ -78,13 +114,50 @@
       processing = false;
     }
   }
+  function appendSimulation(simulation_data: any[], structures: any[]) {
+	const msg: ChatMessage = 
+	messages = [
+		...messages,
+		{
+			role:'assistant',
+			content: "Simulation:\n",
+			type: 'simulation',
+			structures: structures,
+			timestamp: new Date(),
+		},
+		{
+			role:'assistant',
+			content: "Chart: ",
+			type: 'simulation_chart',
+			timestamp: new Date(),
+			simulation_data,
+		},
+	]
+	addMessage(msg);
+  }
 
+  function appendStructures(structures: any[]) {
+	const msg: ChatMessage = {
+			role:'assistant',
+			content: "",
+			type: 'structures',
+			structures: structures,
+			timestamp: new Date(),
+		}
+	messages = [
+		...messages,
+		msg
+	]
+	addMessage(msg);
+  }
   function appendResponse(responses: ChatMessage[]) {
     messages = [
       ...messages,
       ...responses.map((r) => ({
         ...r,
-        type: 'msg'
+        type: 'msg',
+		timestamp: new Date(),
+		content: r.content ? r.content : "",
       }))
     ];
 
@@ -116,8 +189,28 @@
     await tick();
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
+
+  const popOpenAIKey: PopupSettings = {
+	event: 'click',
+	target: 'popOpenAIKey',
+	placement: 'top',
+	state: (e: Record<string ,boolean>) => {
+		if (!e.state) {
+			// store openaiKey in localstorage
+			localStorage.setItem('openaiKey', OpenAIKey);
+		}
+	},
+  };
+
+  let OpenAIKey = '';
+
 </script>
 
+{#if loading}
+	<div class="flex justify-center items-center h-screen">
+		<h1>Loading...</h1>
+	</div>
+{:else}
 <div class="chat w-full h-full grid grid-cols-1 lg:grid-cols-[20%_1fr]">
   <!-- Navigation -->
   <div class="hidden card lg:grid grid-rows-[auto_1fr_auto] border-r border-surface-500/30">
@@ -142,6 +235,23 @@
       </ListBox>
     </div>
     <!-- Footer -->
+	<button type="button" class="btn variant-filled mx-1" use:popup={popOpenAIKey}>
+		<FontAwesomeIcon icon={faKey} />
+		<span>OpenAI API KEY</span>
+	</button>
+
+	<div class="card p-4 w-96 shadow-xl " data-popup="popOpenAIKey">
+        <textarea
+          bind:value={OpenAIKey}
+          class="bg-slate-50 text-black border-0 ring-0 w-full border-t border-surface-500/30 rounded-md"
+          name="openai-token"
+          id="openai-token"
+          placeholder="Put your OpenAI token here"
+          rows="1"
+        />
+		<div class="arrow bg-surface-100-800-token" />
+	</div>
+
     <footer class="border-t border-surface-500/30 p-4 opacity-50">
       LLaMP Project All Rights Reserved.
     </footer>
@@ -213,3 +323,5 @@
     height: calc(100vh - 200px); /* Adjust the height based on your header and footer */
   }
 </style>
+
+{/if}

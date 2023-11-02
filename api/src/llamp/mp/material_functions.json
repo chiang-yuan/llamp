@@ -1,25 +1,5 @@
 [
     {
-        "name": "search_materials_core_formula_autocomplete__get",
-        "description": "Get FormulaAutocomplete documents",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "formula": {
-                    "type": "string",
-                    "description": "Human readable chemical formula."
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "Maximum number of matches to show. Defaults to 10."
-                }
-            }
-        },
-        "required": [
-            "formula"
-        ]
-    },
-    {
         "name": "search_materials_core__get",
         "description": "Get MaterialsDoc documents",
         "parameters": {

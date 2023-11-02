@@ -14,10 +14,14 @@ license = { file = "LICENSE" }
 dependencies = [
     "mp-api>=0.37.0",
     "openai",
-    "langchain==0.0.301",
+    "langchain>=0.0.325",
     "fastapi",
     "uvicorn",
     "python-dotenv",
+    "mace @ git+https://github.com/chiang-yuan/mace.git@uip",
+    "arxiv",
+    "wikipedia",
+    "pandas"
 ]
 requires-python = ">=3.9"
 
@@ -38,8 +42,7 @@ exclude = []
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
 select = [
-    "E", 
-    "F",
+    "E",      # pycodestyle
     "I",      # isort
     "ICN",    # flake8-import-conventions
     "ISC",    # flake8-implicit-str-concat

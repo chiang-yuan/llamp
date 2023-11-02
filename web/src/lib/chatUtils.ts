@@ -7,7 +7,10 @@ export interface Chat {
 export interface ChatMessage {
   role: 'assistant' | 'user';
   content: string;
-  type: 'info' | 'msg';
+  type: 'info' | 'msg' | 'structures' | 'simulation' | 'simulation_chart';
+  structures?: [];
+  timestamp: Date;
+  simulationData?: [];
 }
 
 export function syncChats(chats: Chat[]): void {
