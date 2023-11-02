@@ -5,13 +5,15 @@ import os
 import os.path as osp
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import requests
 from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
-from langchain.pydantic_v1 import BaseModel, root_validator
 from langchain.tools.json.tool import JsonSpec
 from langchain.utils import get_from_dict_or_env
+
+# from langchain.pydantic_v1 import BaseModel, root_validator
+from pydantic import BaseModel, root_validator
 
 from llamp.utils import MP_API_KEY
 
@@ -46,9 +48,9 @@ class MPAPIWrapper(BaseModel):
     mp_api_key: str = MP_API_KEY
 
     max_tokens: int | None = 4096
-    spec_path = Path(__file__).parent.resolve() / "mp_openapi_selected.json"
+    spec_path: Path | str = Path(__file__).parent.resolve() / "mp_openapi_selected.json"
 
-    @root_validator()
+    @root_validator(pre=True)
     def validate_environment(cls, values: dict) -> dict:
         """Validate that the python package exists in environment."""
 
