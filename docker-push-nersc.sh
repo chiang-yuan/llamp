@@ -1,10 +1,10 @@
 #!/bin/bash
 
-docker build -t llamp-api-prod:test ./api
-docker tag llamp-api-prod:test registry.nersc.gov/matgen/llamp/llamp-api-prod:test
+docker build --no-cache -t llamp-api:test ./api
+docker tag llamp-api:test registry.nersc.gov/matgen/llamp/llamp-api:test
 
-docker build -t llamp-web-prod:test ./web
-docker tag llamp-web-prod:test registry.nersc.gov/matgen/llamp/llamp-web-prod:test
+docker build --no-cache -t llamp-web:test ./web
+docker tag llamp-web:test registry.nersc.gov/matgen/llamp/llamp-web:test
 
-docker push registry.nersc.gov/matgen/llamp/llamp-api-prod:test
-docker push registry.nersc.gov/matgen/llamp/llamp-web-prod:test
+docker push registry.nersc.gov/matgen/llamp/llamp-api:test
+docker push registry.nersc.gov/matgen/llamp/llamp-web:test
