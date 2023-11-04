@@ -1,9 +1,10 @@
 <script lang="ts">
   import '../app.postcss';
-  import { AppShell, AppBar } from '@skeletonlabs/skeleton';
+  import { AppShell, AppBar, LightSwitch } from '@skeletonlabs/skeleton';
 
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+  import { faGithub } from '@fortawesome/free-brands-svg-icons';
 
   // Floating UI for Popups
   import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
@@ -15,6 +16,7 @@
   <title>LLaMP</title>
 </svelte:head>
 
+
 <!-- App Shell -->
 <AppShell class="flex flex-col h-screen">
   <svelte:fragment slot="header">
@@ -22,7 +24,7 @@
     <AppBar>
       <svelte:fragment slot="lead">
         <span class="lg:inline hidden"
-          ><strong class="text-xl">LLaMP 🦙🔮 - Large-Language model for Materials Project</strong
+          ><strong class="text-xl">LLaMP 🦙🔮 - Large Language model for Materials Project</strong
           ></span
         >
         <span class="lg:hidden"><strong class="text-xl">LLaMP</strong></span>
@@ -45,7 +47,7 @@
 					Twitter
 				</a> -->
         <a
-          class="btn btn-sm variant-ghost-surface"
+          class="btn bg-gradient-to-br variant-gradient-primary-secondary"
           href="https://materialsproject.org"
           target="_blank"
           rel="noreferrer"
@@ -53,13 +55,18 @@
           Materials Project
         </a>
         <a
-          class="btn btn-sm variant-ghost-surface"
+          class="btn-icon variant-ghost"
           href="https://github.com/chiang-yuan/llamp"
           target="_blank"
           rel="noreferrer"
+          style="font-size: 1.75rem;"
         >
-          GitHub
+          <FontAwesomeIcon icon={faGithub} />
         </a>
+        <LightSwitch 
+          height="h-8"
+          width="w-16"
+        />
       </svelte:fragment>
     </AppBar>
   </svelte:fragment>

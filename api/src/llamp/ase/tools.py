@@ -88,53 +88,53 @@ class NoseHooverMD(BaseTool):
             print('after triu', atoms)
 
         # run md
-        with ScratchDir("."):
+        # with ScratchDir("."):
 
-            calculator = MACECalculator(
-                model_paths=[Path(__file__).parent.absolute() /
-                             "2023-09-01-mace-universal.model"],
-                # FIXME: torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                device="cpu"
-            )
+        calculator = MACECalculator(
+            model_paths=[Path(__file__).parent.absolute() /
+                            "2023-09-01-mace-universal.model"],
+            # FIXME: torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            device="cpu"
+        )
 
-            atoms.calc = calculator
+        atoms.calc = calculator
 
-            npt = NPT(
-                atoms=atoms,
-                timestep=kwargs.get("timestep", 5.0) * units.fs,
-                temperature_K=kwargs.get("temperature", 300.0),
-                externalstress=kwargs.get("pressure", 0.0) * units.GPa,
-                ttime=kwargs.get("ttime", 25 * units.fs),
-                pfactor=kwargs.get("pfactor", (75 * units.fs)**2 * units.GPa),
-            )
-            out_dir = Path(__file__).parent.absolute() / ".tmp"
-            os.makedirs(out_dir, exist_ok=True)
+        npt = NPT(
+            atoms=atoms,
+            timestep=kwargs.get("timestep", 5.0) * units.fs,
+            temperature_K=kwargs.get("temperature", 300.0),
+            externalstress=kwargs.get("pressure", 0.0) * units.GPa,
+            ttime=kwargs.get("ttime", 25 * units.fs),
+            pfactor=kwargs.get("pfactor", (75 * units.fs)**2 * units.GPa),
+        )
+        out_dir = Path(__file__).parent.absolute() / ".tmp"
+        os.makedirs(out_dir, exist_ok=True)
 
-            logfile = f'{atoms.get_chemical_formula()}_{tstring}.log'
-            xyzfile = f'{atoms.get_chemical_formula()}_{tstring}.extxyz'
-            interval = kwargs.get("interval", 10)
-            npt.attach(
-                MDLogger(
-                    npt, atoms,
-                    out_dir / logfile,
-                    header=True, stress=True, peratom=True, mode="a"),
-                interval=interval
-            )
-            npt.attach(
-                TrajectoryWriter(
-                    npt, atoms,
-                    out_dir / xyzfile,
-                    format='extxyz', mode='a'),
-                interval=interval
-            )
-            npt.run(kwargs.get("nsteps", 1000))
+        logfile = f'{atoms.get_chemical_formula()}_{tstring}.log'
+        xyzfile = f'{atoms.get_chemical_formula()}_{tstring}.extxyz'
+        interval = kwargs.get("interval", 10)
+        npt.attach(
+            MDLogger(
+                npt, atoms,
+                out_dir / logfile,
+                header=True, stress=True, peratom=True, mode="a"),
+            interval=interval
+        )
+        npt.attach(
+            TrajectoryWriter(
+                npt, atoms,
+                out_dir / xyzfile,
+                format='extxyz', mode='a'),
+            interval=interval
+        )
+        npt.run(kwargs.get("nsteps", 1000))
 
-            fpattern = str(
-                out_dir / f'{atoms.get_chemical_formula()}_{tstring}.*.json')
-            jsons = sorted(
-                glob.glob(fpattern),
-                key=lambda x: int(x.split('.')[-2])
-            )
+        fpattern = str(
+            out_dir / f'{atoms.get_chemical_formula()}_{tstring}.*.json')
+        jsons = sorted(
+            glob.glob(fpattern),
+            key=lambda x: int(x.split('.')[-2])
+        )
 
         # NOTE: logfile for xyz plot, jsons for simulation animation
         # NOTE: absolute file paths are returned for all the files
