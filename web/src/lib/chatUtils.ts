@@ -19,3 +19,9 @@ export function syncChats(chats: Chat[]): void {
   const chatsToSync = chats.filter((chat) => chat.messages.length > 0);
   localStorage.setItem('chats', JSON.stringify(chatsToSync));
 }
+
+export function clearChats(): void {
+	localStorage.removeItem('chats');
+	// reload svelte page
+	window.location.reload();
+}

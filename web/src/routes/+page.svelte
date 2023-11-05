@@ -3,9 +3,9 @@ import type{ ChatMessage } from 'lib/chatUtils.ts';
   import Message from './Message.svelte';
   import { Avatar, ListBox, ListBoxItem, popup, type PopupSettings} from '@skeletonlabs/skeleton';
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-  import { faPaperPlane, faKey } from '@fortawesome/free-solid-svg-icons';
+  import { faPaperPlane, faKey, faTrash } from '@fortawesome/free-solid-svg-icons';
   import { onMount, tick } from 'svelte';
-  import { type Chat, type ChatMessage, syncChats } from '$lib/chatUtils';
+  import { type Chat, type ChatMessage, syncChats, clearChats } from '$lib/chatUtils';
 
   const API_ENDPOINT = process.env.NODE_ENV === 'production' ? 'http://165.232.143.186:8000' : 'http://localhost:8000';
 
@@ -235,10 +235,16 @@ import type{ ChatMessage } from 'lib/chatUtils.ts';
       </ListBox>
     </div>
     <!-- Footer -->
-	<button type="button" class="btn variant-filled mx-1" use:popup={popOpenAIKey}>
-		<FontAwesomeIcon icon={faKey} />
-		<span>OpenAI API KEY</span>
-	</button>
+	<div class="my-2 mx-auto">
+		<button type="button" class="btn variant-filled mx-1" use:popup={popOpenAIKey}>
+			<FontAwesomeIcon icon={faKey} />
+			<span>Key Settings</span>
+		</button>
+		<button type="button" class="btn bg-error-500 mx-1" on:click={clearChats}>
+			<FontAwesomeIcon icon={faTrash} />
+			<span>Clear Chats</span>
+		</button>
+	</div>
 
 	<div class="card p-4 w-96 shadow-xl " data-popup="popOpenAIKey">
         <textarea
