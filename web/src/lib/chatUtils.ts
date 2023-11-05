@@ -21,7 +21,7 @@ export function syncChats(chats: Chat[]): void {
 }
 
 export function clearChats(): void {
-	localStorage.removeItem('chats');
-	// reload svelte page
-	window.location.reload();
+  localStorage.removeItem('chats');
+  // reload svelte page
+  window.location.reload();
 }
