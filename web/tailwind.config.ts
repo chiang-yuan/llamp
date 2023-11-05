@@ -22,6 +22,22 @@ export default {
           {
             name: 'skeleton',
             enhancements: true
+          },
+          {
+            name: 'crimson',
+            enhancements: true
+          },
+          {
+            name: 'rocket',
+            enhancements: true
+          },
+          {
+            name: 'wintry',
+            enhancements: true
+          },
+          {
+            name: 'hamlindigo',
+            enhancements: true
           }
         ]
       }

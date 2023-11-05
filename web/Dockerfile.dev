@@ -10,6 +10,7 @@ RUN npm install --production=false
 
 RUN chown -R node /srv/app/node_modules
 
-USER node
+RUN usermod -u 99580 node && \ 
+    groupmod -g 99580 node 
 
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

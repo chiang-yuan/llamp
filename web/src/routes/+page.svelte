@@ -7,7 +7,7 @@ import type{ ChatMessage } from 'lib/chatUtils.ts';
   import { onMount, tick } from 'svelte';
   import { type Chat, type ChatMessage, syncChats, clearChats } from '$lib/chatUtils';
 
-  const API_ENDPOINT = process.env.NODE_ENV === 'production' ? 'http://165.232.143.186:8000' : 'http://localhost:8000';
+  const API_ENDPOINT = process.env.NODE_ENV === 'production' ? 'http://ingress.llamp.development.svc.spin.nersc.org/api' : 'http://localhost:8000/api';
 
   let chats: Chat[] = [];
   let currentChatIndex = 0;

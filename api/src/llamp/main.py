@@ -151,7 +151,7 @@ class MessageInput(BaseModel):
     key: str
 
 
-@app.post("/ask/")
+@app.post("/api/ask/")
 async def ask(data: MessageInput):
     messages = data.messages
     key = data.key
