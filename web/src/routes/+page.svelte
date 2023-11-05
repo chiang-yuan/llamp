@@ -1,15 +1,15 @@
 <script lang="ts">
-  import KeySettingsModal from './KeySettingsModal.svelte';
   import type { ChatMessage } from '$lib/chatUtils.ts';
   import Message from './Message.svelte';
-  import { Avatar, ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
+  import { Avatar, ListBox, ListBoxItem, getModalStore } from '@skeletonlabs/skeleton';
+  import type { ModalSettings} from '@skeletonlabs/skeleton';
+
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faPaperPlane, faKey, faTrash } from '@fortawesome/free-solid-svg-icons';
   import { onMount, tick } from 'svelte';
   import { type Chat, type ChatMessage, syncChats, clearChats } from '$lib/chatUtils';
-  import { Modals, closeModal, openModal } from 'svelte-modals';
   import { OpenAiAPIKey, mpAPIKey, keyNotSet } from '$lib/store';
-  
+
   const API_ENDPOINT =
     process.env.NODE_ENV === 'production'
       ? 'http://ingress.llamp.development.svc.spin.nersc.org/api'
@@ -71,7 +71,8 @@
 
     const body = {
       messages,
-      key: $OpenAiAPIKey,
+      openAIkey: $OpenAiAPIKey,
+	  mpAPIKey: $mpAPIKey
     };
     currentMessage = '';
 
@@ -190,9 +191,13 @@
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
-
+  const modalStore = getModalStore();
   function handleOpenModal() {
-    openModal(KeySettingsModal, {});
+    const modal: ModalSettings = {
+      type: 'component',
+      component: 'keySettingsModal'
+    };
+    modalStore.trigger(modal);
   }
 </script>
 
@@ -272,14 +277,16 @@
           <button
             class="input-group-shim"
             on:click={createNewChat}
-            disabled={processing || isCurrentChatEmpty}>+</button
+            disabled={processing || isCurrentChatEmpty || $keyNotSet}>+</button
           >
           <textarea
             bind:value={currentMessage}
             class="bg-transparent border-0 ring-0"
             name="prompt"
             id="prompt"
-            placeholder={$keyNotSet? "[Error] Please set your API keys first" :"Ask a question..."}
+            placeholder={$keyNotSet
+              ? '❌ Please set your API keys in [Key Settings]'
+              : 'Ask a question...'}
             rows="1"
             on:keyup={(e) => {
               e.preventDefault();
@@ -290,7 +297,7 @@
           <button
             class={currentMessage ? 'variant-filled-primary' : 'input-group-shim'}
             on:click={askQuestion}
-            disabled={processing}
+            disabled={processing || $keyNotSet}
           >
             <FontAwesomeIcon icon={faPaperPlane} />
           </button>
@@ -299,6 +306,3 @@
     </div>
   </div>
 {/if}
-<Modals>
-  <div slot="backdrop" class="backdrop" on:click={closeModal} />
-</Modals>

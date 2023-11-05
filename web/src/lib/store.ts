@@ -1,12 +1,9 @@
-import { writable, type Writable, derived} from 'svelte/store';
+import { writable, type Writable, derived } from 'svelte/store';
+import { localStorageStore } from '@skeletonlabs/skeleton';
 
-function createSyncedStore(key: string, initialValue: string): Writable<string> {
-	if (typeof localStorage === 'undefined') return writable('');
-    return writable(initialValue);
-}
+export const mpAPIKey: Writable<string> = localStorageStore('mpAPIKey', '');
+export const OpenAiAPIKey: Writable<string> = localStorageStore('openAiAPIKey', '');
 
-export const mpAPIKey = createSyncedStore('mpAPIKey', '');
-export const OpenAiAPIKey = createSyncedStore('OpenAiAPIKey', '');
 export const keyNotSet = derived(
   [mpAPIKey, OpenAiAPIKey],
   ([mpAPIKey, OpenAiAPIKey]) => mpAPIKey === '' || OpenAiAPIKey === ''

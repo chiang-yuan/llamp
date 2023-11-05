@@ -1,20 +1,27 @@
 <script lang="ts">
   import '../app.postcss';
   import { AppShell, AppBar, LightSwitch } from '@skeletonlabs/skeleton';
-
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faGithub } from '@fortawesome/free-brands-svg-icons';
-
-  // Floating UI for Popups
   import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
   import { storePopup } from '@skeletonlabs/skeleton';
+  import { Modal, getModalStore, initializeStores } from '@skeletonlabs/skeleton';
+  import type { ModalSettings, ModalComponent, ModalStore } from '@skeletonlabs/skeleton';
+  import KeySettingsModal from './KeySettingsModal.svelte';
+
+  initializeStores();
   storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
+
+  const modalRegistry: Record<string, ModalComponent> = {
+    keySettingsModal: { ref: KeySettingsModal }
+  };
 </script>
 
 <svelte:head>
   <title>LLaMP</title>
 </svelte:head>
 
+<Modal components={modalRegistry} />
 <!-- App Shell -->
 <AppShell class="flex flex-col h-screen">
   <svelte:fragment slot="header">

@@ -148,15 +148,16 @@ def load_simulations(str: str) -> list[Any]:
 
 class MessageInput(BaseModel):
     messages: list[ChatMessage]
-    key: str
+    openAIKey: str
+    mpAPIKey: str
 
 
 @app.post("/api/ask/")
 async def ask(data: MessageInput):
     messages = data.messages
-    key = data.key
-    print(key)
-    agent_executor.agent.llm.openai_api_key = key
+    openAIKey = data.openAIKey
+    mpAPIKey = data.mpAPIKey
+    agent_executor.agent.llm.openai_api_key = openAIKey
 
     output = None
     structures = []
