@@ -5,7 +5,7 @@
   import { faGithub } from '@fortawesome/free-brands-svg-icons';
   import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
   import { storePopup } from '@skeletonlabs/skeleton';
-  import { Modal, initializeStores } from '@skeletonlabs/skeleton';
+  import { Modal, initializeStores, Drawer, getDrawerStore } from '@skeletonlabs/skeleton';
   import type { ModalComponent } from '@skeletonlabs/skeleton';
   import KeySettingsModal from './KeySettingsModal.svelte';
 
@@ -15,6 +15,7 @@
   const modalRegistry: Record<string, ModalComponent> = {
     keySettingsModal: { ref: KeySettingsModal }
   };
+  const drawerStore = getDrawerStore();
 </script>
 
 <svelte:head>
@@ -22,6 +23,11 @@
 </svelte:head>
 
 <Modal components={modalRegistry} />
+<Drawer>
+  {#if $drawerStore.id == 'mobile-chats'}
+    <h2>Mobile Chats</h2>
+  {/if}
+</Drawer>
 <!-- App Shell -->
 <AppShell class="flex flex-col h-screen">
   <svelte:fragment slot="header">
@@ -33,12 +39,13 @@
             ><strong class="text-xl">LLaMP 🦙🔮 - Large Language model for Materials Project</strong
             ></span
           >
-        </a>
         <span class="lg:hidden"><strong class="text-xl">LLaMP</strong></span>
+        </a>
       </svelte:fragment>
       <svelte:fragment slot="trail">
         <a class="btn bg-gradient-to-br variant-gradient-secondary-primary" href="/about">
-          About LLaMP
+          <span class="lg:hidden inline">🦙</span>
+          <span class="lg:inline hidden">About LLaMP </span>
         </a>
         <a
           class="btn bg-gradient-to-br variant-gradient-primary-secondary"
@@ -46,7 +53,9 @@
           target="_blank"
           rel="noreferrer"
         >
-          Materials Project
+          <span class="lg:hidden inline">🔮</span>
+
+          <span class="lg:inline hidden">Materials Project</span>
         </a>
         <a
           class="btn-icon variant-ghost"

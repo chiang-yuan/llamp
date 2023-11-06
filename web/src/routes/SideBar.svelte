@@ -228,113 +228,38 @@
   }
 </script>
 
-{#if loading}
-  <div class="flex justify-center items-center h-screen">
-    <h1>Loading...</h1>
-  </div>
-{:else}
-  <div class="w-full lg:hidden p-2">
-    <button class="btn bg-gradient-to-br variant-ghost-tertiary w-full" on:click={openDrawer}>
-      <FontAwesomeIcon icon={faBars} />
-    </button>
-  </div>
-  <div class="chat w-full h-full grid grid-cols-1 lg:grid-cols-[20%_1fr]">
-    <!-- Navigation -->
-    <div class="hidden card lg:grid grid-rows-[auto_1fr_auto] border-r border-surface-500/30">
-      <!-- Header -->
-      <header class="border-b border-surface-500/30 p-4">
-        <input class="input" type="search" placeholder="Search History" disabled />
-      </header>
-      <!-- List -->
-      <div class="p-4 space-y-4 overflow-y-auto">
-        <small class="opacity-50">Chat History</small>
-        <ListBox active="variant-filled-primary">
-          {#each $chats as chat, index}
-            <ListBoxItem
-              on:click={() => setCurrentChat(index)}
-              bind:group={currentChat}
-              name="questions"
-              value={chat.title}
-            >
-              {chat.title.slice(0, 50) + '...'}
-            </ListBoxItem>
-          {/each}
-        </ListBox>
-      </div>
-      <!-- Footer -->
-      <button type="button" class="btn variant-filled mx-1 mb-1" on:click={handleOpenModal}>
-        <FontAwesomeIcon icon={faKey} />
-        <span>Key Settings</span>
-      </button>
-      <button type="button" class="btn variant-filled-primary mx-1" on:click={clearChats}>
-        <FontAwesomeIcon icon={faTrash} />
-        <span>Clear Chats</span>
-      </button>
-
-      <footer class="border-t border-surface-500/30 p-4 opacity-50">
-        LLaMP Project All Rights Reserved.
-      </footer>
-    </div>
-
-    <!-- Chat -->
-    <div class="flex flex-col h-full">
-      <!-- Conversation -->
-      <section
-        bind:this={chatContainer}
-        id="chat-conversation"
-        class="p-4 overflow-y-auto flex-grow space-y-4"
-      >
-        {#each $chats[currentChatIndex].messages as msg}
-          <Message data={msg} />
-        {/each}
-        {#if processing}
-          <div class="flex gap-2">
-            <div>
-              <Avatar width="w-12" initials="🔮" />
-            </div>
-            <div class="card p-4 rounded-tl-none space-y">
-              <header class="flex justify-between items-center">
-                <p class="font-bold">LLaMP</p>
-              </header>
-              <div class="placeholder animate-pulse my-2 w-96" />
-            </div>
-          </div>
-        {/if}
-      </section>
-      <!-- Prompt -->
-      <section class="card border-t border-surface-500/30 p-4">
-        <div
-          class="input-group input-group-divider grid-cols-[auto_1fr_auto] rounded-container-token"
+<div class="hidden card lg:grid grid-rows-[auto_1fr_auto] border-r border-surface-500/30">
+  <!-- Header -->
+  <header class="border-b border-surface-500/30 p-4">
+    <input class="input" type="search" placeholder="Search History" disabled />
+  </header>
+  <!-- List -->
+  <div class="p-4 space-y-4 overflow-y-auto">
+    <small class="opacity-50">Chat History</small>
+    <ListBox active="variant-filled-primary">
+      {#each $chats as chat, index}
+        <ListBoxItem
+          on:click={() => setCurrentChat(index)}
+          bind:group={currentChat}
+          name="questions"
+          value={chat.title}
         >
-          <button
-            class="input-group-shim"
-            on:click={createNewChat}
-            disabled={processing || isCurrentChatEmpty || $keyNotSet}>+</button
-          >
-          <textarea
-            bind:value={currentMessage}
-            class="bg-transparent border-0 ring-0"
-            name="prompt"
-            id="prompt"
-            placeholder={$keyNotSet
-              ? '❌ Please set your API keys in [Key Settings]'
-              : 'Ask a question...'}
-            rows="1"
-            on:keyup={(e) => {
-              e.preventDefault();
-              if (e.key === 'Enter') askQuestion();
-            }}
-            disabled={processing || $keyNotSet}
-          />
-          <button
-            class={currentMessage ? 'variant-filled-primary' : 'input-group-shim'}
-            on:click={askQuestion}
-            disabled={processing || $keyNotSet}
-          >
-            <FontAwesomeIcon icon={faPaperPlane} />
-          </button>
-        </div>
-      </section>
-    </div>
+          {chat.title.slice(0, 50) + '...'}
+        </ListBoxItem>
+      {/each}
+    </ListBox>
   </div>
-{/if}
+  <!-- Footer -->
+  <button type="button" class="btn variant-filled mx-1 mb-1" on:click={handleOpenModal}>
+    <FontAwesomeIcon icon={faKey} />
+    <span>Key Settings</span>
+  </button>
+  <button type="button" class="btn variant-filled-primary mx-1" on:click={clearChats}>
+    <FontAwesomeIcon icon={faTrash} />
+    <span>Clear Chats</span>
+  </button>
+
+  <footer class="border-t border-surface-500/30 p-4 opacity-50">
+    LLaMP Project All Rights Reserved.
+  </footer>
+</div>
