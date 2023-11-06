@@ -5,8 +5,8 @@
   import { faGithub } from '@fortawesome/free-brands-svg-icons';
   import { computePosition, autoUpdate, flip, shift, offset, arrow } from '@floating-ui/dom';
   import { storePopup } from '@skeletonlabs/skeleton';
-  import { Modal, getModalStore, initializeStores } from '@skeletonlabs/skeleton';
-  import type { ModalSettings, ModalComponent, ModalStore } from '@skeletonlabs/skeleton';
+  import { Modal, initializeStores } from '@skeletonlabs/skeleton';
+  import type { ModalComponent } from '@skeletonlabs/skeleton';
   import KeySettingsModal from './KeySettingsModal.svelte';
 
   initializeStores();
@@ -28,13 +28,18 @@
     <!-- App Bar -->
     <AppBar>
       <svelte:fragment slot="lead">
-        <span class="lg:inline hidden"
-          ><strong class="text-xl">LLaMP 🦙🔮 - Large Language model for Materials Project</strong
-          ></span
-        >
+        <a href="/">
+          <span class="lg:inline hidden"
+            ><strong class="text-xl">LLaMP 🦙🔮 - Large Language model for Materials Project</strong
+            ></span
+          >
+        </a>
         <span class="lg:hidden"><strong class="text-xl">LLaMP</strong></span>
       </svelte:fragment>
       <svelte:fragment slot="trail">
+        <a class="btn bg-gradient-to-br variant-gradient-secondary-primary" href="/about">
+          About LLaMP
+        </a>
         <a
           class="btn bg-gradient-to-br variant-gradient-primary-secondary"
           href="https://materialsproject.org"
