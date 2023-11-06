@@ -11,6 +11,7 @@ export const chats: Writable<Chat[]> = localStorageStore('chats', [
     messages: []
   }
 ]);
+export const currentChatIndex: Writable<number> = writable(0);
 
 export const keyNotSet = derived(
   [mpAPIKey, OpenAiAPIKey],

@@ -8,14 +8,13 @@
   import { faPaperPlane, faBars } from '@fortawesome/free-solid-svg-icons';
   import { onMount } from 'svelte';
   import { type Chat, type ChatMessage, syncChats, type SimulationDataItem } from '$lib/chatUtils';
-  import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats } from '$lib/store';
+  import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats, currentChatIndex } from '$lib/store';
 
   const API_ENDPOINT =
     process.env.NODE_ENV === 'production'
       ? 'http://ingress.llamp.development.svc.spin.nersc.org/api'
       : 'http://localhost:8000/api';
 
-  let currentChatIndex = 0;
   let loading = true;
 
   onMount(() => {
@@ -29,8 +28,8 @@
     };
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats];
-      const updatedMessages = [...updatedChats[currentChatIndex].messages, newMessage];
-      updatedChats[currentChatIndex].messages = updatedMessages;
+      const updatedMessages = [...updatedChats[$currentChatIndex].messages, newMessage];
+      updatedChats[$currentChatIndex].messages = updatedMessages;
       return updatedChats;
     });
   }
@@ -53,15 +52,15 @@
 
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats];
-      if (updatedChats[currentChatIndex].messages.length === 1) {
-        updatedChats[currentChatIndex].title = currentMessage;
-        updatedChats[currentChatIndex].question = currentMessage;
+      if (updatedChats[$currentChatIndex].messages.length === 1) {
+        updatedChats[$currentChatIndex].title = currentMessage;
+        updatedChats[$currentChatIndex].question = currentMessage;
       }
       return updatedChats;
     });
 
     const body = {
-      messages: $chats[currentChatIndex].messages,
+      messages: $chats[$currentChatIndex].messages,
       openAIKey: $OpenAiAPIKey,
       mpAPIKey: $mpAPIKey
     };
@@ -113,7 +112,7 @@
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats]; // Create a shallow copy of the current chats array
       const updatedMessages = [
-        ...updatedChats[currentChatIndex].messages,
+        ...updatedChats[$currentChatIndex].messages,
         {
           role: 'assistant',
           content: 'Simulation:\n',
@@ -129,7 +128,7 @@
           simulationData: simulation_data
         }
       ];
-      updatedChats[currentChatIndex].messages = updatedMessages;
+      updatedChats[$currentChatIndex].messages = updatedMessages;
       return updatedChats;
     });
   }
@@ -138,7 +137,7 @@
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats];
       const updatedMessages = [
-        ...updatedChats[currentChatIndex].messages,
+        ...updatedChats[$currentChatIndex].messages,
         {
           role: 'assistant',
           content: '',
@@ -147,7 +146,7 @@
           timestamp: new Date()
         }
       ];
-      updatedChats[currentChatIndex].messages = updatedMessages;
+      updatedChats[$currentChatIndex].messages = updatedMessages;
       return updatedChats;
     });
   }
@@ -156,7 +155,7 @@
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats];
       const updatedMessages = [
-        ...updatedChats[currentChatIndex].messages,
+        ...updatedChats[$currentChatIndex].messages,
         ...responses.map((r) => ({
           ...r,
           type: 'msg',
@@ -164,7 +163,7 @@
           content: r.content ? r.content : ''
         }))
       ];
-      updatedChats[currentChatIndex].messages = updatedMessages;
+      updatedChats[$currentChatIndex].messages = updatedMessages;
       return updatedChats;
     });
   }
@@ -178,11 +177,11 @@
       messages: []
     };
     chats.update((currentChats: Chat[]) => [newChat, ...currentChats]);
-    currentChatIndex = 0;
+    $currentChatIndex = 0;
   }
 
   $: isCurrentChatEmpty =
-    chats[currentChatIndex]?.messages.length === 0 && !chats[currentChatIndex]?.title;
+    chats[$currentChatIndex]?.messages.length === 0 && !chats[$currentChatIndex]?.title;
 
   const drawerStore = getDrawerStore();
   function openDrawer() {
@@ -217,7 +216,7 @@
         id="chat-conversation"
         class="overflow-y-auto flex-grow p-4 space-y-4 variant-soft-surface"
       >
-        {#each $chats[currentChatIndex].messages as msg, index (msg)}
+        {#each $chats[$currentChatIndex].messages as msg, index (msg)}
           <Message data={msg} />
         {/each}
         {#if processing}
