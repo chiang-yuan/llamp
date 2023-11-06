@@ -3,6 +3,7 @@
   import avatar from '$lib/images/avatar.jpeg';
   import { CodeBlock } from '@skeletonlabs/skeleton';
 </script>
+
 <svelte:head>
   <title>About LLaMP</title>
 </svelte:head>

@@ -8,6 +8,7 @@
   import { Modal, initializeStores, Drawer, getDrawerStore } from '@skeletonlabs/skeleton';
   import type { ModalComponent } from '@skeletonlabs/skeleton';
   import KeySettingsModal from './KeySettingsModal.svelte';
+  import SideBar from '$lib/components/SideBar.svelte';
 
   initializeStores();
   storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
@@ -25,7 +26,7 @@
 <Modal components={modalRegistry} />
 <Drawer>
   {#if $drawerStore.id == 'mobile-chats'}
-    <h2>Mobile Chats</h2>
+    <SideBar />
   {/if}
 </Drawer>
 <!-- App Shell -->
@@ -39,7 +40,7 @@
             ><strong class="text-xl">LLaMP 🦙🔮 - Large Language model for Materials Project</strong
             ></span
           >
-        <span class="lg:hidden"><strong class="text-xl">LLaMP</strong></span>
+          <span class="lg:hidden"><strong class="text-xl">LLaMP</strong></span>
         </a>
       </svelte:fragment>
       <svelte:fragment slot="trail">

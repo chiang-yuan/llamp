@@ -1,17 +1,9 @@
 <script lang="ts">
-  import Message from './Message.svelte';
-  import {
-    Avatar,
-    ListBox,
-    ListBoxItem,
-    getModalStore,
-    Drawer,
-    getDrawerStore
-  } from '@skeletonlabs/skeleton';
-  import type { ModalSettings, DrawerSettings, DrawerStore } from '@skeletonlabs/skeleton';
+  import { ListBox, ListBoxItem, getModalStore } from '@skeletonlabs/skeleton';
+  import type { ModalSettings } from '@skeletonlabs/skeleton';
 
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-  import { faPaperPlane, faKey, faTrash, faBars } from '@fortawesome/free-solid-svg-icons';
+  import { faKey, faTrash } from '@fortawesome/free-solid-svg-icons';
   import { onMount, tick } from 'svelte';
   import {
     type Chat,
@@ -20,7 +12,7 @@
     clearChats,
     type SimulationDataItem
   } from '$lib/chatUtils';
-  import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats } from '$lib/store';
+  import { OpenAiAPIKey, mpAPIKey, chats } from '$lib/store';
 
   const API_ENDPOINT =
     process.env.NODE_ENV === 'production'
@@ -204,9 +196,6 @@
     currentChatIndex = index;
   }
 
-  $: isCurrentChatEmpty =
-    chats[currentChatIndex]?.messages.length === 0 && !chats[currentChatIndex]?.title;
-
   let chatContainer: HTMLElement;
   async function scrollToBottom() {
     await tick();
@@ -221,20 +210,18 @@
     };
     modalStore.trigger(modal);
   }
-
-  const drawerStore = getDrawerStore();
-  function openDrawer() {
-    drawerStore.open({ id: 'mobile-chats' });
-  }
 </script>
 
-<div class="hidden card lg:grid grid-rows-[auto_1fr_auto] border-r border-surface-500/30">
-  <!-- Header -->
+<div class="flex flex-col h-full variant-soft-surface">
+  <!-- Set the flex direction to column and height to full -->
+
   <header class="border-b border-surface-500/30 p-4">
     <input class="input" type="search" placeholder="Search History" disabled />
   </header>
+
   <!-- List -->
-  <div class="p-4 space-y-4 overflow-y-auto">
+  <div class="flex-grow p-4 space-y-4 overflow-y-auto">
+    <!-- flex-grow will make this div take up all available space -->
     <small class="opacity-50">Chat History</small>
     <ListBox active="variant-filled-primary">
       {#each $chats as chat, index}
@@ -249,15 +236,19 @@
       {/each}
     </ListBox>
   </div>
-  <!-- Footer -->
-  <button type="button" class="btn variant-filled mx-1 mb-1" on:click={handleOpenModal}>
-    <FontAwesomeIcon icon={faKey} />
-    <span>Key Settings</span>
-  </button>
-  <button type="button" class="btn variant-filled-primary mx-1" on:click={clearChats}>
-    <FontAwesomeIcon icon={faTrash} />
-    <span>Clear Chats</span>
-  </button>
+
+  <!-- Buttons -->
+  <div class="mx-1 mb-1 space-y-1 px-2">
+    <!-- This div wraps your buttons and pushes them to the bottom -->
+    <button type="button" class="btn variant-filled w-full mb-1" on:click={handleOpenModal}>
+      <FontAwesomeIcon icon={faKey} />
+      <span>Key Settings</span>
+    </button>
+    <button type="button" class="btn variant-filled-primary w-full" on:click={clearChats}>
+      <FontAwesomeIcon icon={faTrash} />
+      <span>Clear Chats</span>
+    </button>
+  </div>
 
   <footer class="border-t border-surface-500/30 p-4 opacity-50">
     LLaMP Project All Rights Reserved.
