@@ -1,3 +1,10 @@
+import { chats } from '$lib/store';
+import { get } from 'svelte/store';
+
+export interface SimulationDataItem {
+  'Time[ps]': number;
+  'Etot/N[eV]': number;
+}
 export interface Chat {
   question: string;
   title: string;
@@ -8,20 +15,24 @@ export interface ChatMessage {
   role: 'assistant' | 'user';
   content: string;
   type: 'info' | 'msg' | 'structures' | 'simulation' | 'simulation_chart';
-  structures?: [];
+  structures?: any[];
   timestamp: Date;
-  simulationData?: [];
+  simulationData?: any[];
 }
 
-export function syncChats(chats: Chat[]): void {
-  // Only sync chats that have content
-  if (!chats) return;
-  const chatsToSync = chats.filter((chat) => chat.messages.length > 0);
-  localStorage.setItem('chats', JSON.stringify(chatsToSync));
+export function syncChats(): void {
+  const currentChats = get(chats);
+  const filteredChats = currentChats.filter((c: Chat) => c.messages.length > 0);
+  chats.set(filteredChats);
 }
 
 export function clearChats(): void {
-  localStorage.removeItem('chats');
-  // reload svelte page
+  chats.set([
+    {
+      question: '',
+      title: '',
+      messages: []
+    }
+  ]);
   window.location.reload();
 }

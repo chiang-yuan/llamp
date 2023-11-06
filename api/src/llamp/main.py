@@ -20,6 +20,7 @@ from pydantic import BaseModel
 
 from llamp.ase.tools import NoseHooverMD
 from llamp.mp.tools import (
+    MPTool,
     MaterialsBonds,
     MaterialsDielectric,
     MaterialsElasticity,
@@ -155,9 +156,12 @@ class MessageInput(BaseModel):
 @app.post("/api/ask/")
 async def ask(data: MessageInput):
     messages = data.messages
-    openAIKey = data.openAIKey
-    mpAPIKey = data.mpAPIKey
-    agent_executor.agent.llm.openai_api_key = openAIKey
+    print(data)
+    agent_executor.agent.llm.openai_api_key = data.openAIKey
+
+    for tool in agent_executor.agent.tools:
+        if isinstance(tool, MPTool):
+            tool.api_wrapper.set_api_key(data.mpAPIKey)
 
     output = None
     structures = []

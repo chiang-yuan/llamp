@@ -2,12 +2,9 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Optional
 
-from emmet.core.summary import HasProps
-from langchain.callbacks.manager import CallbackManagerForToolRun
 from langchain.pydantic_v1 import Field
-from langchain.tools import BaseTool, Tool
+from langchain.tools import BaseTool
 
 from llamp.mp.schemas import (
     BondsSchema,
@@ -30,7 +27,7 @@ from llamp.utilities import MPAPIWrapper
 
 
 class MPTool(BaseTool):
-    name: str
+    name: str = None
     api_wrapper: MPAPIWrapper = Field(default_factory=MPAPIWrapper)
 
     def _count_token(self, response) -> int:

@@ -1,25 +1,20 @@
 
 import json
 import logging
-import os
+import mp_api
+import mp_api.client
 import os.path as osp
 import re
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any
+from pydantic import BaseModel, Field
 
 import requests
 from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
 from langchain.tools.json.tool import JsonSpec
-from langchain.utils import get_from_dict_or_env
-
-# from langchain.pydantic_v1 import BaseModel, root_validator
-from pydantic import BaseModel, root_validator
-
-from llamp.utils import MP_API_KEY
 
 logger = logging.getLogger(__name__)
 
-# from pydantic import BaseModel
 # NOTE: https://python.langchain.com/docs/modules/agents/tools/custom_tools
 
 
@@ -44,36 +39,18 @@ class MPAPIWrapper(BaseModel):
             arxiv.run("tree of thought llm)
     """
 
-    mpr: Any
-    mp_api_key: str = MP_API_KEY
+    mpr: Any = {}
+    mp_api_key: str = Field('', alias='mpApiKey')
 
     max_tokens: int | None = 4096
-    spec_path: Path | str = Path(__file__).parent.resolve() / "mp_openapi_selected.json"
+    spec_path: Path | str = Path(
+        __file__).parent.resolve() / "mp_openapi_selected.json"
 
-    @root_validator(pre=True)
-    def validate_environment(cls, values: dict) -> dict:
-        """Validate that the python package exists in environment."""
-
-        mp_api_key = get_from_dict_or_env(
-            values, "mp_api_key", "MP_API_KEY"
-        )
-
-        try:
-            import mp_api
-            import mp_api.client
-            os.environ["MP_API_KEY"] = mp_api_key
-
-            values["client"] = mp_api.client
-            values["mpr"] = mp_api.client.MPRester(
-                api_key=mp_api_key, monty_decode=False, use_document_model=False,
-                headers={"X-API-KEY": mp_api_key, 'accept': 'application/json'}
-            )
-        except ImportError:
-            raise ImportError(
-                "Could not import `mp_api` python package. "
-                "Please install it with `pip install mp_api`."
-            )
-        return values
+    def set_api_key(self, api_key: str):
+        self.mp_api_key = api_key
+        self.mpr = mp_api.client.MPRester(
+            api_key=api_key, monty_decode=False, use_document_model=False,
+            headers={"X-API-KEY": api_key, 'accept': 'application/json'})
 
     def run(self, function_name: str, function_args: str, debug: bool = False) -> str:
         """
@@ -256,9 +233,10 @@ class MPAPIWrapper(BaseModel):
 
     def search_materials_summary(self, query_params: dict):
         query_params = self._process_query_params(query_params)
-        
+
         if "material_id" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["material_id"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
 
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -271,10 +249,12 @@ class MPAPIWrapper(BaseModel):
         query_params = self._process_query_params(query_params)
 
         if "material_id" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["material_id"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
 
         if "structure" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["structure"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["structure"]
 
         # query_params["fields"] = query_params.get(
         #     "fields", []) + ["structure", "material_id"]
@@ -364,10 +344,12 @@ class MPAPIWrapper(BaseModel):
         query_params = self._process_query_params(query_params)
 
         if "material_id" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["material_id"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
 
         if "formula_pretty" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["formula_pretty"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["formula_pretty"]
 
         if "formula" in query_params:
             material_docs = self.mpr.materials.search(
@@ -380,7 +362,8 @@ class MPAPIWrapper(BaseModel):
 
             return self.mpr.materials.dielectric.search(
                 material_ids=material_ids,
-                fields=query_params.get("fields", "material_id,formula_pretty,total,n,symmetry").split(",")
+                fields=query_params.get(
+                    "fields", "material_id,formula_pretty,total,n,symmetry").split(",")
             )[:query_params.get("_limit", 10)]
 
         return self.mpr.materials.dielectric._search(
@@ -389,7 +372,7 @@ class MPAPIWrapper(BaseModel):
 
     def search_materials_piezoelectric(self, query_params):
         query_params = self._process_query_params(query_params)
-        
+
         if "formula" in query_params:
             material_docs = self.mpr.materials.search(
                 formula=query_params.pop("formula").split(","), fields=["material_id"]
@@ -399,9 +382,10 @@ class MPAPIWrapper(BaseModel):
 
             return self.mpr.materials.piezoelectric.search(
                 material_ids=material_ids,
-                fields=query_params.get("fields", "material_id,formula_pretty,total,ionic,electronic,e_ij_max,max_direction,strain_for_max").split(",")
+                fields=query_params.get(
+                    "fields", "material_id,formula_pretty,total,ionic,electronic,e_ij_max,max_direction,strain_for_max").split(",")
             )
-        
+
         return self.mpr.materials.piezoelectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )[:query_params.get("_limit", 10)]
@@ -417,7 +401,8 @@ class MPAPIWrapper(BaseModel):
 
             return self.mpr.materials.magnetism.search(
                 material_ids=material_ids,
-                fields=query_params.get("fields", "material_id,formula_pretty,ordering,is_magnetic,exchange_symmetry,magmoms,types_of_magnetic_species,total_magnetization").split(",")
+                fields=query_params.get(
+                    "fields", "material_id,formula_pretty,ordering,is_magnetic,exchange_symmetry,magmoms,types_of_magnetic_species,total_magnetization").split(",")
             )
 
         return self.mpr.magnetism._search(

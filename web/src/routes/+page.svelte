@@ -1,79 +1,80 @@
 <script lang="ts">
-  import type { ChatMessage } from '$lib/chatUtils.ts';
   import Message from './Message.svelte';
   import { Avatar, ListBox, ListBoxItem, getModalStore } from '@skeletonlabs/skeleton';
-  import type { ModalSettings} from '@skeletonlabs/skeleton';
+  import type { ModalSettings } from '@skeletonlabs/skeleton';
 
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faPaperPlane, faKey, faTrash } from '@fortawesome/free-solid-svg-icons';
   import { onMount, tick } from 'svelte';
-  import { type Chat, type ChatMessage, syncChats, clearChats } from '$lib/chatUtils';
-  import { OpenAiAPIKey, mpAPIKey, keyNotSet } from '$lib/store';
+  import {
+    type Chat,
+    type ChatMessage,
+    syncChats,
+    clearChats,
+    type SimulationDataItem
+  } from '$lib/chatUtils';
+  import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats } from '$lib/store';
 
   const API_ENDPOINT =
     process.env.NODE_ENV === 'production'
       ? 'http://ingress.llamp.development.svc.spin.nersc.org/api'
       : 'http://localhost:8000/api';
 
-  let chats: Chat[] = [];
   let currentChatIndex = 0;
   let loading = true;
 
   onMount(() => {
-    const loadedChats = localStorage.getItem('chats');
-    if (loadedChats) {
-      chats = JSON.parse(loadedChats);
-    }
-    if (!loadedChats?.length) {
-      chats = [
-        {
-          question: '',
-          title: '',
-          messages: []
-        }
-      ];
-    }
-
     loading = false;
   });
 
   function addMessage(newMessage: ChatMessage) {
-    chats[currentChatIndex].messages.push({
+    newMessage = {
       ...newMessage,
       timestamp: new Date()
+    };
+    chats.update((currentChats: Chat[]) => {
+      const updatedChats = [...currentChats];
+      const updatedMessages = [...updatedChats[currentChatIndex].messages, newMessage];
+      updatedChats[currentChatIndex].messages = updatedMessages;
+      return updatedChats;
     });
-    syncChats(chats);
   }
-  $: messages = chats.length ? chats[currentChatIndex].messages : [];
 
-  $: currentChat = chats[currentChatIndex]?.title;
+  $: currentChat = $chats[currentChatIndex]?.title;
 
   let currentMessage = '';
   let processing = false;
 
   async function askQuestion() {
     if (!currentMessage || processing) return;
+
     const newMessage: ChatMessage = {
       role: 'user',
       content: currentMessage,
-      type: 'msg'
+      type: 'msg',
+      timestamp: new Date() // Assuming you want to add a timestamp here as well
     };
 
     // Adding user's message to the chat immediately
     addMessage(newMessage);
-    messages = chats[currentChatIndex].messages;
+
     await scrollToBottom();
 
-    if (chats[currentChatIndex].messages.length === 1) {
-      chats[currentChatIndex].title = currentMessage;
-      chats[currentChatIndex].question = currentMessage;
-    }
+    chats.update((currentChats: Chat[]) => {
+      const updatedChats = [...currentChats];
+      if (updatedChats[currentChatIndex].messages.length === 1) {
+        updatedChats[currentChatIndex].title = currentMessage;
+        updatedChats[currentChatIndex].question = currentMessage;
+      }
+      return updatedChats;
+    });
 
     const body = {
-      messages,
-      openAIkey: $OpenAiAPIKey,
-	  mpAPIKey: $mpAPIKey
+      messages: $chats[currentChatIndex].messages,
+      openAIKey: $OpenAiAPIKey,
+      mpAPIKey: $mpAPIKey
     };
+
     currentMessage = '';
 
     try {
@@ -88,10 +89,9 @@
       });
 
       const result = await response.json();
-      const responses: ChatMessage[] = result.responses.map((r) => ({
+      const responses: ChatMessage[] = result.responses.map((r: ChatMessage) => ({
         ...r
       }));
-      console.log(responses);
       appendResponse(responses);
       const structures = result.structures;
 
@@ -99,87 +99,102 @@
       if (simulation_data?.length > 0) {
         simulation_data = JSON.parse(simulation_data);
         simulation_data = simulation_data
-          .map((r) => ({
+          .map((r: SimulationDataItem) => ({
             time: r['Time[ps]'],
             Etot: r['Etot/N[eV]']
           }))
           .slice(0, 10);
 
         appendSimulation(simulation_data, structures);
-      } else if (structures.length > 0) {
+      } else if (structures?.length > 0) {
         appendStructures(structures);
       }
-      console.log(structures);
+      console.log('structures: ', structures);
 
-      syncChats(chats); // Syncing the chat after receiving the assistant’s response
+      syncChats();
+
+      await scrollToBottom();
     } catch (error) {
       console.error('Error while asking question:', error);
     } finally {
       processing = false;
     }
   }
+
   function appendSimulation(simulation_data: any[], structures: any[]) {
-    const msg: ChatMessage = (messages = [
-      ...messages,
-      {
-        role: 'assistant',
-        content: 'Simulation:\n',
-        type: 'simulation',
-        structures: structures,
-        timestamp: new Date()
-      },
-      {
-        role: 'assistant',
-        content: 'Chart: ',
-        type: 'simulation_chart',
-        timestamp: new Date(),
-        simulation_data
-      }
-    ]);
-    addMessage(msg);
+    chats.update((currentChats: Chat[]) => {
+      const updatedChats = [...currentChats]; // Create a shallow copy of the current chats array
+      const updatedMessages = [
+        ...updatedChats[currentChatIndex].messages,
+        {
+          role: 'assistant',
+          content: 'Simulation:\n',
+          type: 'simulation',
+          structures: structures,
+          timestamp: new Date()
+        },
+        {
+          role: 'assistant',
+          content: 'Chart: ',
+          type: 'simulation_chart',
+          timestamp: new Date(),
+          simulationData: simulation_data
+        }
+      ];
+      updatedChats[currentChatIndex].messages = updatedMessages;
+      return updatedChats;
+    });
   }
 
   function appendStructures(structures: any[]) {
-    const msg: ChatMessage = {
-      role: 'assistant',
-      content: '',
-      type: 'structures',
-      structures: structures,
-      timestamp: new Date()
-    };
-    messages = [...messages, msg];
-    addMessage(msg);
+    chats.update((currentChats: Chat[]) => {
+      const updatedChats = [...currentChats];
+      const updatedMessages = [
+        ...updatedChats[currentChatIndex].messages,
+        {
+          role: 'assistant',
+          content: '',
+          type: 'structures',
+          structures,
+          timestamp: new Date()
+        }
+      ];
+      updatedChats[currentChatIndex].messages = updatedMessages;
+      return updatedChats;
+    });
   }
 
   function appendResponse(responses: ChatMessage[]) {
-    messages = [
-      ...messages,
-      ...responses.map((r) => ({
-        ...r,
-        type: 'msg',
-        timestamp: new Date(),
-        content: r.content ? r.content : ''
-      }))
-    ];
-
-    for (const response of responses) {
-      addMessage(response);
-    }
+    chats.update((currentChats: Chat[]) => {
+      const updatedChats = [...currentChats];
+      const updatedMessages = [
+        ...updatedChats[currentChatIndex].messages,
+        ...responses.map((r) => ({
+          ...r,
+          type: 'msg',
+          timestamp: new Date(),
+          content: r.content ? r.content : ''
+        }))
+      ];
+      updatedChats[currentChatIndex].messages = updatedMessages;
+      return updatedChats;
+    });
   }
 
   function createNewChat() {
+    if (processing) return;
+    if ($chats.length === 1 && $chats[0].messages.length === 0) return;
     const newChat: Chat = {
       question: '',
       title: '',
       messages: []
     };
-    chats = [newChat, ...chats];
+    chats.update((currentChats: Chat[]) => [newChat, ...currentChats]);
     currentChatIndex = 0;
   }
 
   function setCurrentChat(index: number) {
     currentChatIndex = index;
-    messages = chats[currentChatIndex].messages; // Updating messages to display the correct chat conversation
   }
 
   $: isCurrentChatEmpty =
@@ -217,7 +232,7 @@
       <div class="p-4 space-y-4 overflow-y-auto">
         <small class="opacity-50">Chat History</small>
         <ListBox active="variant-filled-primary">
-          {#each chats as chat, index}
+          {#each $chats as chat, index}
             <ListBoxItem
               on:click={() => setCurrentChat(index)}
               bind:group={currentChat}
@@ -252,7 +267,7 @@
         id="chat-conversation"
         class="p-4 overflow-y-auto flex-grow space-y-4"
       >
-        {#each messages as msg}
+        {#each $chats[currentChatIndex].messages as msg}
           <Message data={msg} />
         {/each}
         {#if processing}

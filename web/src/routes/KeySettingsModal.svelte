@@ -6,11 +6,6 @@
   const cBase = 'card p-4 w-modal shadow-xl space-y-4';
   const cHeader = 'text-2xl font-bold';
   const cForm = 'p-4 space-y-4 rounded-container-token';
-
-  function clearKeys() {
-    OpenAiAPIKey.set('');
-    mpAPIKey.set('');
-  }
 </script>
 
 <div class="modal-example-form {cBase}">
@@ -33,7 +28,6 @@
   </form>
   <!-- prettier-ignore -->
   <footer class="modal-footer {parent.regionFooter}">
-	<button class="btn {parent.buttonNeutral}" on:click={clearKeys}>Clear</button>
         <button class="btn {parent.buttonPositive}" on:click={parent.onClose}>Ok</button>
     </footer>
 </div>
