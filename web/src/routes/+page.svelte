@@ -200,7 +200,7 @@
       <FontAwesomeIcon icon={faBars} />
     </button>
   </div>
-  <div class="flex flex-col lg:flex-row w-full h-full">
+  <div class="flex flex-col lg:flex-row w-full">
     <div
       class="hidden lg:flex lg:flex-col lg:sticky lg:top-0 lg:w-[20%] lg:overflow-y-auto"
       style="max-height: calc(100vh - 4.5rem);"
@@ -209,7 +209,9 @@
     </div>
 
     <!-- Chat -->
-    <div class="flex flex-col w-full h-full lg:h-full lg:w-[80%]">
+    <div
+      class="flex flex-col min-h-[calc(100vh-7.5rem)] lg:min-h-[calc(100vh-5rem)] w-full lg:w-[80%]"
+    >
       <!-- Conversation -->
       <section
         id="chat-conversation"

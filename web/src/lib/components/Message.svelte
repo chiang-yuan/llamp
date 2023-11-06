@@ -6,6 +6,7 @@
   export let data: ChatMessage;
 
   $: user = data.role === 'user';
+  let w: number;
 
   interface MessageFeed {
     id: number;
@@ -70,7 +71,7 @@
         {/if}
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
-      <div class="max-w-5xl">
+      <div class="max-w-[250px] lg:max-w-5xl">
         <div
           class="snap-x scroll-px-4 snap-mandatory scroll-smooth flex gap-4 overflow-x-auto px-4 py-10"
         >
@@ -78,8 +79,8 @@
             <div>
               <Structure
                 structure={stc}
-                --struct-height="500px"
-                --struct-width="500px"
+                --struct-height={w > 768 ? '500px' : '200px'}
+                --struct-width={w > 768 ? '500px' : '280px'}
                 camera_position={{ x: 3, y: 3, z: 3 }}
               />
               <StructureCard structure={stc} />
