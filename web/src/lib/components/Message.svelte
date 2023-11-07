@@ -79,9 +79,11 @@
             <div>
               <Structure
                 structure={stc}
-                --struct-height={w > 768 ? '500px' : '200px'}
+                --struct-height={w > 768 ? '500px' : '280px'}
                 --struct-width={w > 768 ? '500px' : '280px'}
                 camera_position={{ x: 3, y: 3, z: 3 }}
+                show_image_atoms={false}
+                show_bonds={true}
               />
               <StructureCard structure={stc} />
             </div>

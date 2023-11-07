@@ -45,25 +45,28 @@
         </a>
       </svelte:fragment>
       <svelte:fragment slot="trail">
-        <a class="btn bg-gradient-to-br variant-gradient-primary-secondary" href="/">
-          <span class="lg:hidden inline">👇</span>
-          <span class="lg:inline hidden">Try Now</span>
-        </a>
-        <a class="btn bg-gradient-to-br variant-gradient-secondary-primary" href="/about">
-          <span class="lg:hidden inline">🦙</span>
-          <span class="lg:inline hidden">About LLaMP </span>
-        </a>
-        <a
-          class="btn bg-gradient-to-br variant-gradient-primary-secondary"
-          href="https://materialsproject.org"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <span class="lg:hidden inline">🔮</span>
-
-          <span class="lg:inline hidden">Materials Project</span>
-        </a>
-
+        <span class="lg:hidden inline">
+          <a class="btn bg-gradient-to-br variant-gradient-primary-secondary" href="/">👇</a>
+        </span>
+        <span class="lg:inline hidden">
+          <a class="btn bg-gradient-to-br variant-gradient-primary-secondary" href="/">Try Now</a>
+        </span>
+        <span class="lg:hidden inline">
+          <a class="btn bg-gradient-to-br variant-ghost-surface" href="/about">🦙</a>
+        </span>
+        <span class="lg:inline hidden">
+          <a class="btn bg-gradient-to-br variant-ghost-surface" href="/about">About LLaMP</a>
+        </span>
+        <span class="lg:inline hidden">
+          <a 
+            class="btn bg-gradient-to-br variant-ghost-surface" 
+            href="https://materialsproject.org"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Materials Project
+          </a>
+        </span>
         <a
           class="btn-icon variant-ghost"
           href="https://github.com/chiang-yuan/llamp"
@@ -85,14 +88,14 @@
     >
       <!-- Message -->
       <div class="alert-message px-4">
-        <h3 class="h3">LLaMP is now in alpha 🚀</h3>
+        🚀 LLaMP is now in alpha version
       </div>
       <button
         class="btn inline"
         style="margin-top: 0"
         on:click={() => {
           showAlpha.set(false);
-        }}>X</button
+        }}>⨉</button
       >
     </aside>
   {/if}
