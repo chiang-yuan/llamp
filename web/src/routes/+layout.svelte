@@ -44,18 +44,18 @@
         </a>
       </svelte:fragment>
       <svelte:fragment slot="trail">
-        <a class="btn bg-gradient-to-br variant-gradient-secondary-primary" href="/about">
-          <span class="lg:hidden inline">🦙</span>
-          <span class="lg:inline hidden">About LLaMP </span>
+        <a class="btn bg-gradient-to-br variant-gradient-primary-secondary" href="/">
+          <span class="lg:inline hidden">Try Now</span>
+        </a>
+        <a class="btn bg-gradient-to-br variant-soft-secondary" href="/about">
+          <span class="lg:inline hidden">About LLaMP</span>
         </a>
         <a
-          class="btn bg-gradient-to-br variant-gradient-primary-secondary"
+          class="btn bg-gradient-to-br variant-soft-secondary"
           href="https://materialsproject.org"
           target="_blank"
           rel="noreferrer"
         >
-          <span class="lg:hidden inline">🔮</span>
-
           <span class="lg:inline hidden">Materials Project</span>
         </a>
         <a

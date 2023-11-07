@@ -1,17 +1,17 @@
 
 import json
 import logging
-import mp_api
-import mp_api.client
 import os.path as osp
 import re
 from pathlib import Path
 from typing import Any
-from pydantic import BaseModel, Field
 
+import mp_api
+import mp_api.client
 import requests
 from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
 from langchain.tools.json.tool import JsonSpec
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -301,9 +301,7 @@ class MPAPIWrapper(BaseModel):
 
         response = self.mpr.materials.synthesis._search(**query_params)
 
-        if len(response) > 5:
-            return response[:5]
-        return response
+        return response[:query_params.get("_limit", 10)]
 
     def search_materials_oxidation_states(self, query_params: dict):
         query_params = self._process_query_params(query_params)
@@ -352,7 +350,7 @@ class MPAPIWrapper(BaseModel):
                 "fields", []) + ["formula_pretty"]
 
         if "formula" in query_params:
-            material_docs = self.mpr.materials.search(
+            material_docs = self.mpr.materials.summary.search(
                 formula=query_params.pop("formula").split(","), fields=["material_id"]
             )
 
@@ -374,7 +372,7 @@ class MPAPIWrapper(BaseModel):
         query_params = self._process_query_params(query_params)
 
         if "formula" in query_params:
-            material_docs = self.mpr.materials.search(
+            material_docs = self.mpr.materials.summary.search(
                 formula=query_params.pop("formula").split(","), fields=["material_id"]
             )
 
@@ -393,7 +391,7 @@ class MPAPIWrapper(BaseModel):
     def search_materials_magnetism(self, query_params):
         query_params = self._process_query_params(query_params)
         if "formula" in query_params:
-            material_docs = self.mpr.materials.search(
+            material_docs = self.mpr.materials.summary.search(
                 formula=query_params.pop("formula").split(","), fields=["material_id"]
             )
 
@@ -413,7 +411,7 @@ class MPAPIWrapper(BaseModel):
         query_params = self._process_query_params(query_params)
 
         if "formula" in query_params:
-            material_docs = self.mpr.materials.search(
+            material_docs = self.mpr.materials.summary.search(
                 formula=query_params["formula"].split(","), fields=["material_id"]
             )
 
