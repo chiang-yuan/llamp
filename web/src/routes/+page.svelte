@@ -224,7 +224,7 @@
           <Message data={msg} />
         {/each}
         {#if processing}
-          <div class="flex gap-2">
+          <div class="flex gap-2 max-w-[250px] lg:max-w-5xl">
             <div>
               <Avatar width="w-12" initials="🔮" />
             </div>
