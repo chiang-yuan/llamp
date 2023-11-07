@@ -189,6 +189,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>LLaMP</title>
+</svelte:head>
+
 {#if loading}
   <div class="flex justify-center items-center h-screen">
     <h1>Loading...</h1>

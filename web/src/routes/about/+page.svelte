@@ -14,7 +14,6 @@
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faLink, faEnvelope, faBars } from '@fortawesome/free-solid-svg-icons';
   import { faGithub } from '@fortawesome/free-brands-svg-icons';
-  import AppShell from '@skeletonlabs/skeleton';
 </script>
 
 <svelte:head>
