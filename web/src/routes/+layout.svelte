@@ -57,16 +57,6 @@
         <span class="lg:inline hidden">
           <a class="btn bg-gradient-to-br variant-ghost-surface" href="/about">About LLaMP</a>
         </span>
-        <span class="lg:hidden inline">
-          <a 
-            class="btn bg-gradient-to-br variant-ghost-surface" 
-            href="https://materialsproject.org"
-            target="_blank"
-            rel="noreferrer"
-          >
-            🔮
-          </a>
-        </span>
         <span class="lg:inline hidden">
           <a 
             class="btn bg-gradient-to-br variant-ghost-surface" 
