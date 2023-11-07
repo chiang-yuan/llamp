@@ -33,6 +33,7 @@ from llamp.mp.tools import (
     MaterialsSynthesis,
     MaterialsTasks,
     MaterialsThermo,
+    MPTool,
 )
 
 wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
@@ -148,15 +149,19 @@ def load_simulations(str: str) -> list[Any]:
 
 class MessageInput(BaseModel):
     messages: list[ChatMessage]
-    key: str
+    openAIKey: str
+    mpAPIKey: str
 
 
-@app.post("/ask/")
+@app.post("/api/ask/")
 async def ask(data: MessageInput):
     messages = data.messages
-    key = data.key
-    print(key)
-    agent_executor.agent.llm.openai_api_key = key
+    print(data)
+    agent_executor.agent.llm.openai_api_key = data.openAIKey
+
+    for tool in agent_executor.agent.tools:
+        if isinstance(tool, MPTool):
+            tool.api_wrapper.set_api_key(data.mpAPIKey)
 
     output = None
     structures = []
