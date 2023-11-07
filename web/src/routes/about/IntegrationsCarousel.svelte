@@ -27,8 +27,8 @@
 <Carousel autoplay duration={1000} arrows={false} swiping={false} {particlesToShow}>
   <div class={imgContainerStyle}>
     <a href="https://materialsproject.org" target="_blank" rel="noreferrer">
-      <div class="rounded shadow flex flex-col justify-items-center align-middle">
-        <img src={mp} alt="Materials Project" class="w-full my-auto rounded" />
+      <div class="rounded shadow">
+        <img src={mp} alt="Materials Project" class="w-full h-36 my-auto rounded mb-4"/>
         <!-- <h3 class="text-xl font-bold">Materials Project</h3>
             <p>Description</p> -->
       </div>
@@ -37,23 +37,21 @@
   <div class={imgContainerStyle}>
     <a href="https://openai.com/" target="_blank" rel="noreferrer">
       <div class="rounded shadow">
-        <img src={op} alt="Open AI" class="w-full h-48 my-auto rounded mb-4" />
+        <img src={op} alt="Open AI" class="w-full h-36 my-auto rounded mb-4"/>
       </div>
     </a>
   </div>
   <div class={imgContainerStyle}>
     <a href="https://langchain.com" target="_blank" rel="noreferrer">
       <div class="rounded shadow">
-        <img src={lc} alt="Langchain" class="w-full h-48 my-auto rounded mb-4" />
-        <!-- <h3 class="text-xl font-bold">Materials Project</h3>
-            <p>Description</p> -->
+        <img src={lc} alt="Langchain" class="w-full h-36 my-auto rounded mb-4"/>
       </div>
     </a>
   </div>
   <div class={imgContainerStyle}>
     <a href="https://arxiv.org" target="_blank" rel="noreferrer">
       <div class="rounded shadow">
-        <img src={ar} alt="ArXiv" class="w-full h-48 my-auto rounded mb-4" />
+        <img src={ar} alt="ArXiv" class="w-full h-36 my-auto rounded mb-4"/>
       </div>
     </a>
   </div>

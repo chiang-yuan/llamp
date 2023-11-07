@@ -127,12 +127,12 @@
         <h2 class="text-2xl font-bold mb-4">Citation</h2>
         <CodeBlock
           code={`
-{
-	@article{author2023,
-	title={Title of Article},
-	author={Author Name},
-	journal={Journal Name},
-	year={2023}
+@software{llamp2023,
+  author={Yuan Chiang, Chia-Hong Chou, Janosh Riebesell},
+  title={LLaMP: Large Language model for Materials Project},
+  url={http://ingress.llamp.development.svc.spin.nersc.org/},
+  version={0.1.0},
+  date={2023-11-06},
 }
 		`}
         />
