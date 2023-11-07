@@ -114,7 +114,11 @@
 
     <section class="mb-12">
       <h2 class="text-2xl font-bold mb-4">Integrations</h2>
-      <client:component this={IntegrationsCarousel} />
+	  {#if loading === false}
+	  
+		<IntegrationsCarousel />
+		{/if}
+	  
 
       <!-- Repeat for other groups -->
     </section>
