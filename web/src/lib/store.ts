@@ -12,6 +12,7 @@ export const chats: Writable<Chat[]> = localStorageStore('chats', [
   }
 ]);
 export const currentChatIndex: Writable<number> = writable(0);
+export const showAlpha = writable(true);
 
 export const keyNotSet = derived(
   [mpAPIKey, OpenAiAPIKey],

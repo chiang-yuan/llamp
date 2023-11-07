@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { showAlpha } from './../lib/store.ts';
   import '../app.postcss';
   import { AppShell, AppBar, LightSwitch } from '@skeletonlabs/skeleton';
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -73,4 +74,21 @@
   </svelte:fragment>
   <!-- Page Route Content -->
   <slot />
+  {#if $showAlpha}
+    <aside
+      class="variant-filled fixed top-[70px] left-0 w-full z-50 flex flex-row justify-items-end items-center"
+    >
+      <!-- Message -->
+      <div class="alert-message px-4">
+        <h3 class="h3">LLaMP is now in alpha 🚀</h3>
+      </div>
+      <button
+        class="btn inline"
+        style="margin-top: 0"
+        on:click={() => {
+          showAlpha.set(false);
+        }}>X</button
+      >
+    </aside>
+  {/if}
 </AppShell>
