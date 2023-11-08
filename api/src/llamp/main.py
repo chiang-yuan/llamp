@@ -1,5 +1,7 @@
 
 import json
+import os
+import re
 from pathlib import Path
 from typing import Any, List
 
@@ -13,7 +15,7 @@ from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import MessagesPlaceholder
-from langchain.schema import ChatMessage
+from langchain.schema import ChatMessage, SystemMessage
 from langchain.tools import ArxivQueryRun, WikipediaQueryRun
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from pydantic import BaseModel
@@ -61,9 +63,12 @@ tools = [
 
 # MEMORY_KEY = "chat_history"
 
-llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo-16k-0613',
-                 # llm = ChatOpenAI(temperature=0, model='gpt-4',
-                 openai_api_key="sk-xxxxxx")
+llm = ChatOpenAI(
+    temperature=0, 
+    model='gpt-3.5-turbo-16k-0613',
+    # llm = ChatOpenAI(temperature=0, model='gpt-4',
+    openai_api_key="sk-xxxxxx"
+)
 # llm = ChatOpenAI(temperature=0, model='gpt-4')
 
 memory = ConversationBufferMemory(memory_key="chat_history")
@@ -75,6 +80,16 @@ conversational_memory = ConversationBufferWindowMemory(
 )
 agent_kwargs = {
     "extra_prompt_messages": [MessagesPlaceholder(variable_name="memory")],
+    "system_message": SystemMessage(
+        content=re.sub(
+            r"\s+", " ", 
+            """You are a data-aware agent that has access to Materials Project (MP) 
+            database. When you create function input arguments, follow MP API schema 
+            strictcly and DO NOT hallucinate invalid arguments. Convert all acronyms 
+            and abbreviations to valid arguments, especially chemical formula, 
+            composition, and systems. Ask user for more details if needed
+            """).strip().replace("\n", " ")[0]
+        )
 }
 
 agent_executor = initialize_agent(
@@ -86,6 +101,7 @@ agent_executor = initialize_agent(
     early_stopping_method='generate',
     memory=conversational_memory,
     agent_kwargs=agent_kwargs,
+    handle_parsing_errors=True,
 )
 
 app = FastAPI()
@@ -124,7 +140,9 @@ def load_structures(str: str) -> list[Any]:
     mp_list = str.split(',')
     res = []
     for mp in mp_list:
-        res.append(load_json(BASE_DIR / f'mp/.tmp/{mp}.json'))
+        fpath = BASE_DIR / f'mp/.tmp/{mp}.json'
+        res.append(load_json(fpath))
+        os.remove(fpath)
     return res
 
 

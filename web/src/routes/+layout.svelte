@@ -45,14 +45,14 @@
         </a>
       </svelte:fragment>
       <svelte:fragment slot="trail">
-        <span class="lg:hidden inline">
+        <!-- <span class="lg:hidden inline">
           <a class="btn bg-gradient-to-br variant-gradient-primary-secondary" href="/">👇</a>
-        </span>
+        </span> -->
         <span class="lg:inline hidden">
           <a class="btn bg-gradient-to-br variant-gradient-primary-secondary" href="/">Try Now</a>
         </span>
         <span class="lg:hidden inline">
-          <a class="btn bg-gradient-to-br variant-ghost-surface" href="/about">🦙</a>
+          <a class="btn bg-gradient-to-br variant-ghost-surface" href="/about">About</a>
         </span>
         <span class="lg:inline hidden">
           <a class="btn bg-gradient-to-br variant-ghost-surface" href="/about">About LLaMP</a>

@@ -81,8 +81,9 @@ class MPAPIWrapper(BaseModel):
                 query_params=json.loads(function_args)
             )
         except Exception as e:
-            raise ValueError(
-                f"Error on {function_name}: {e}. Please provide more information or try smaller request.")
+            error_response =  f"Error on {function_name}: {e}. Please provide more information or try smaller request."
+            print(error_response)
+            return error_response
 
         if debug:
             print("MP API response:", json.dumps(function_response))
@@ -259,9 +260,11 @@ class MPAPIWrapper(BaseModel):
         # query_params["fields"] = query_params.get(
         #     "fields", []) + ["structure", "material_id"]
 
+        chunk_size = min(query_params.get("_limit", 10), 100)
+
         return self.mpr.materials.summary._search(
-            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )
+            num_chunks=None, chunk_size=chunk_size, all_fields=False, **query_params
+        )[:query_params.get("_limit", 10)]
 
     def search_materials_robocrys(self, query_params: dict):
         query_params = self._process_query_params(query_params)

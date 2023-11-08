@@ -82,9 +82,9 @@ class MaterialsStructure(MPTool):
         re.sub(
             r"\s+",
             " ",
-            f"""useful when you need to get the pymatgen structures on Materials 
+            """useful when you need to get the pymatgen structures on Materials 
             Project, can be used with filters like chemical system, formula, etc. Use
-            {MaterialsSummary.name} tool instread to get statistics about all the
+            `search_materials_summary__get` tool instread to get statistics about all the
             structures on MP."""
         )
         .strip()
