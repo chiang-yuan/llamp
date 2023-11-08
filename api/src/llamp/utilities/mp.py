@@ -260,10 +260,10 @@ class MPAPIWrapper(BaseModel):
         # query_params["fields"] = query_params.get(
         #     "fields", []) + ["structure", "material_id"]
 
-        chunk_size = min(query_params.get("_limit", 10), 100)
+        # chunk_size = min(query_params.get("_limit", 10), 100)
 
         return self.mpr.materials.summary._search(
-            num_chunks=None, chunk_size=chunk_size, all_fields=False, **query_params
+            num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )[:query_params.get("_limit", 10)]
 
     def search_materials_robocrys(self, query_params: dict):

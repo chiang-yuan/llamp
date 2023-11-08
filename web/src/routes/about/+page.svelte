@@ -100,6 +100,18 @@
       </p>
     </section>
 
+    <section class="mb-12 flex justify-center items-center">
+      <iframe 
+          title="LLaMP Introduction"
+          class="w-full lg:w-3/4 aspect-video mx-auto my-auto"
+          src="https://docs.google.com/presentation/d/e/2PACX-1vR1LjNO2gp_jVUkIX4qxdkAC0Q9PJ4c2vOvNY2HP6-HjlZCOAdiciw8yTpgZvpw9-a9tF7qT8oC6ntV/embed?start=false&loop=true&delayms=3000" 
+          frameborder="0" 
+          allowfullscreen="true" 
+          mozallowfullscreen="true" 
+          webkitallowfullscreen="true">
+      </iframe>
+    </section>
+
     <section class="mb-12">
       <h2 class="text-2xl font-bold mb-4">Preprint</h2>
       <ul class="space-y-4">

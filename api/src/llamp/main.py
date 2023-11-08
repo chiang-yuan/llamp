@@ -193,7 +193,9 @@ async def ask(data: MessageInput):
             structures, simulation_data = load_simulations(output)
             output = None
     except openai.error.AuthenticationError:
-        output = "[Error] Invalid API key"
+        output = "[error] Invalid API key. Please check your API key."
+    except Exception as e:
+        output = f"[error] {e}. Please try again."
 
     return {
         "responses": [{
