@@ -62,6 +62,6 @@
   </div>
 
   <footer class="border-t border-surface-500/30 p-4 opacity-50">
-    LLaMP Project All Rights Reserved.
+    © 2023 LLaMP. All Rights Reserved.
   </footer>
 </div>
