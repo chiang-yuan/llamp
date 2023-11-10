@@ -160,8 +160,7 @@
     <section class="mb-12">
       <h3 class="h3 font-bold mb-4">Abstract</h3>
       <p>
-        Reducing hallucination of Large Language Models (LLMs) should be the top priority of any attempt to make LLMs useful and reliable for scientific applications. However, LLMs suffer from the lack of long-term memory and it is nontrivial and inevitably biased to fine-tune LLMs against pre-selected literature or documents. Here we present LLaMP, a <i>retrieval augmented generation</i> (RAG) framework to
-        build a data-aware agent that interacts with computational and experimental data on Materials Project (<a href="https://materialsproject.org" class="text-blue-500">https://materialsproject.org</a>). Without any fine-tuning, the agent can understand complex materials science concepts,
+        Reducing hallucination of Large Language Models (LLMs) should be the top priority of any attempt to make LLMs useful and reliable for scientific applications. However, LLMs suffer from the lack of long-term memory and it is nontrivial and inevitably biased to fine-tune LLMs against pre-selected literature or documents. Here we present LLaMP, a <i>retrieval augmented generation</i> (RAG) framework to build a data-aware agent that interacts with computational and experimental data on Materials Project (<a href="https://materialsproject.org" class="text-blue-500">https://materialsproject.org</a>). Without any fine-tuning, the agent can understand complex materials science concepts,
         fetch relevant data stores on-the-fly, process higher-order data (such as crystal structures and dielectric tensors), and summarize multi-step procedures for solid-state synthesis. We envision that the framework lays the foundation for a future autonomous laboratory where multiple LLM agents communicate and cooperate in synergy with robotics to drive materials synthesis without hard-coded human logic and intervention.
       </p>
     </section>
