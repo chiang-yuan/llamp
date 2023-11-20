@@ -141,6 +141,7 @@ class StructureSchema(SummarySchema):
         )
 
 class ElasticitySchema(BaseModel):
+    material_ids: str | None = Field(None, description="Comma-separated list of material_ids to query on")
     formula: str | None = Field(None, description="Query by formula including anonymized formula or by including wild cards. A comma delimited string list of anonymous formulas or regular formulas can also be provided.")
     chemsys: str | None = Field(None, description="A comma delimited string list of chemical systems. Wildcards for unknown elements only supported for single chemsys queries")
     k_voigt_max: float | None = Field(None, description="Maximum value for the Voigt average of the bulk modulus in GPa")
@@ -207,7 +208,7 @@ class ThermoSchema(BaseModel):
     thermo_ids: str | None = Field(None, description="Comma-separated list of thermo_ids to query on")
     material_ids: str | None = Field(None, description="Comma-separated list of material_id to query on")
     thermo_types: list[ThermoType | str] | None = Field(
-        default=[ThermoType.GGA_GGA_U_R2SCAN]
+        default=[ThermoType.GGA_GGA_U_R2SCAN],
         description="List of thermo types to query on"
         )
     formula: str | None = Field(None, description="Query by formula including anonymized formula or by including wild cards. A comma delimited string list of anonymous formulas or regular formulas can also be provided.")

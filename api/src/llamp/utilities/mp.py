@@ -445,6 +445,10 @@ class MPAPIWrapper(BaseModel):
     def search_materials_elasticity(self, query_params):
         query_params = self._process_query_params(query_params)
 
+        if "elasticity" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["elasticity"]
+
         if "formula" in query_params:
             material_docs = self.mpr.materials.summary.search(
                 formula=query_params["formula"].split(","), fields=["material_id"]
@@ -459,6 +463,23 @@ class MPAPIWrapper(BaseModel):
                     )
 
                     # print(elastic_doc)
+                    elastic_docs.append(elastic_doc)
+
+                except Exception:
+                    continue
+
+            return elastic_docs[:query_params.get("_limit", 10)]
+        
+        # BUG: mp-api does not support get elastic properties by material_ids
+        if "material_ids" in query_params:
+            material_ids = query_params["material_ids"].split(",")
+            elastic_docs = []
+            for material_id in material_ids:
+                try:
+                    elastic_doc = self.mpr.materials.elasticity.get_data_by_id(
+                        document_id=material_id,
+                        fields=["pretty_formula", "elasticity", "task_id"],
+                    )
                     elastic_docs.append(elastic_doc)
 
                 except Exception:

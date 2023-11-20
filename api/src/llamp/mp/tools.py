@@ -44,7 +44,7 @@ class MPTool(BaseTool):
 
     def _run(self, **query_params):
         _res = self.api_wrapper.run(
-            function_name=self.name, function_args=json.dumps(query_params), debug=False
+            function_name=self.name, function_args=json.dumps(query_params), debug=self.verbose
         )
         '''
         while self._too_large(_res):
