@@ -8,8 +8,10 @@ from langchain.agents.output_parsers import (
     JSONAgentOutputParser,
     ReActSingleInputOutputParser,
 )
+from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
+from langchain.tools import tool
 from langchain.tools.render import render_text_description_and_args
 
 from llamp.mp.tools import (
@@ -33,25 +35,25 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
 
 llm = ChatOpenAI(
-    temperature=0, 
+    # temperature=0, 
     # model='gpt-3.5-turbo-16k-0613',
-    model='gpt-3.5-turbo-16k-0613',
+    model='gpt-4-1106-preview',
     openai_api_key=OPENAI_API_KEY
 )
 
 tools = load_tools(["llm-math"], llm=llm)
 tools += [
-    MaterialsSummary(),
-    MaterialsSynthesis(),
-    MaterialsThermo(),
-    MaterialsElasticity(),
-    MaterialsMagnetism(),
-    MaterialsDielectric(),
-    MaterialsPiezoelectric(),
-    MaterialsRobocrystallographer(),
-    MaterialsOxidation(),
-    MaterialsBonds(),
-    MaterialsSimilarity(),
+    MaterialsSummary(handle_tool_error=True),
+    MaterialsSynthesis(handle_tool_error=True),
+    MaterialsThermo(handle_tool_error=True),
+    MaterialsElasticity(handle_tool_error=True),
+    MaterialsMagnetism(handle_tool_error=True),
+    MaterialsDielectric(handle_tool_error=True),
+    MaterialsPiezoelectric(handle_tool_error=True),
+    MaterialsRobocrystallographer(handle_tool_error=True),
+    MaterialsOxidation(handle_tool_error=True),
+    MaterialsBonds(handle_tool_error=True),
+    MaterialsSimilarity(handle_tool_error=True),
 ]
 
 prompt = hub.pull("hwchase17/react-multi-input-json")
@@ -60,9 +62,13 @@ prompt = prompt.partial(
     tool_names=", ".join([t.name for t in tools]),
 )
 
-print(prompt)
+llm_with_stop = llm.bind(stop=["Observation"])
 
-llm_with_stop = llm.bind(stop=["\nObservation"])
+summarizer = load_summarize_chain(
+    llm, 
+    chain_type="map_reduce", 
+    # max_tokens=4096
+    )
 
 agent = (
     {
@@ -71,6 +77,7 @@ agent = (
     }
     | prompt
     | llm_with_stop
+    # | summarizer
     | JSONAgentOutputParser()
 )
 
