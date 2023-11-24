@@ -1,8 +1,16 @@
 import os
+from typing import List
 
 from dotenv import load_dotenv
 from langchain import hub
-from langchain.agents import AgentExecutor, AgentType, initialize_agent, load_tools
+from langchain.agents import (
+    AgentExecutor,
+    AgentType,
+    BaseSingleActionAgent,
+    Tool,
+    initialize_agent,
+    load_tools,
+)
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import (
     JSONAgentOutputParser,
@@ -33,6 +41,13 @@ from llamp.mp.tools import (
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
+
+# class MPAgent(BaseSingleActionAgent):
+#     """Agent that uses the MP tools."""
+
+#     @property
+#     def input_keys(self):
+#         return ["input"]
 
 llm = ChatOpenAI(
     # temperature=0, 

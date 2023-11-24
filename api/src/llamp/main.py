@@ -3,20 +3,37 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 import openai
 import pandas as pd
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from langchain.agents import AgentType, initialize_agent, load_tools
+from langchain import hub
+from langchain.agents import (
+    AgentExecutor,
+    AgentType,
+    BaseSingleActionAgent,
+    Tool,
+    initialize_agent,
+    load_tools,
+)
+from langchain.agents.format_scratchpad import format_log_to_str
+from langchain.agents.output_parsers import (
+    JSONAgentOutputParser,
+    ReActSingleInputOutputParser,
+)
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI
+from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import MessagesPlaceholder
 from langchain.schema import ChatMessage, SystemMessage
-from langchain.tools import ArxivQueryRun, WikipediaQueryRun
+from langchain.tools import ArxivQueryRun, WikipediaQueryRun, tool
+from langchain.tools.render import render_text_description_and_args
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from pydantic import BaseModel
 
@@ -38,40 +55,121 @@ from llamp.mp.tools import (
     MPTool,
 )
 
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
+
+# MP React Agent
+
+mp_tools = [
+    MaterialsSummary(return_direct=False, handle_tool_error=True),
+    MaterialsThermo(return_direct=False, handle_tool_error=True),
+    MaterialsElasticity(return_direct=False, handle_tool_error=True),
+    MaterialsMagnetism(return_direct=False, handle_tool_error=True),
+    MaterialsDielectric(return_direct=False, handle_tool_error=True),
+    MaterialsPiezoelectric(return_direct=False, handle_tool_error=True),
+    MaterialsRobocrystallographer(return_direct=False, handle_tool_error=True),
+    MaterialsOxidation(return_direct=False, handle_tool_error=True),
+    MaterialsBonds(return_direct=False, handle_tool_error=True),
+    MaterialsSimilarity(return_direct=False, handle_tool_error=True),
+    # TODO: consider moving to another agent
+    MaterialsSynthesis(return_direct=False, handle_tool_error=True),
+    MaterialsTasks(return_direct=False, handle_tool_error=True),
+]
+
+mp_prompt = hub.pull("hwchase17/react-multi-input-json")
+mp_prompt = mp_prompt.partial(
+    tools=render_text_description_and_args(mp_tools),
+    tool_names=", ".join([t.name for t in mp_tools]),
+)
+
+# from langchain.chains import MapReduceDocumentsChain
+# def map_fn(doc):
+#     """Summarize each chunk"""
+#     return mp_llm(f"Summarize this in 100 words: {doc}")  
+
+# def reduce_fn(docs):
+#     """Consolidate summaries"""
+#     return mp_llm(f"Consolidate these summaries: {docs}")
+
+# map_reduce_chain = MapReduceDocumentsChain(
+#     map_fn=map_fn, 
+#     reduce_fn=reduce_fn,
+#     token_max=4000 # chunk size
+# )
+
+mp_llm = ChatOpenAI(
+    # temperature=0, 
+    # model='gpt-3.5-turbo-16k-0613',
+    model='gpt-4-1106-preview',
+    openai_api_key=OPENAI_API_KEY
+)
+
+mp_llm_with_stop = mp_llm.bind(stop=["Observation"])
+
+mp_agent = (
+    {
+        "input": lambda x: x["input"],
+        "agent_scratchpad": lambda x: format_log_to_str(x["intermediate_steps"]),
+    }
+    | mp_prompt
+    | mp_llm_with_stop
+    # | map_reduce_chain # TODO: Add map-reduce after LLM
+    | JSONAgentOutputParser()
+)
+
+mp_agent_executor = AgentExecutor(
+    agent=mp_agent, 
+    agent_kwargs={
+        "system_message": SystemMessage(
+        content=re.sub(
+            r"\s+", " ", 
+            """When you create function input arguments, follow MP API schema 
+            strictcly and DO NOT hallucinate invalid arguments. Convert all acronyms 
+            and abbreviations to valid arguments, especially chemical formula and 
+            isotopes (e.g. D2O should be H2O), composition, and systems."""
+            ).strip().replace("\n", " ")[0]
+        )
+    },
+    tools=mp_tools, 
+    return_intermediate_steps=True,
+    verbose=True,
+    handle_parsing_errors=True,
+)  
+
+@tool("Materials Project ReAct Agent", return_direct=True)
+def mp_react_agent(input: str):
+    """Materials Project ReAct Agent that has access to MP database."""
+    return mp_agent_executor.invoke(
+        {
+            "input": input
+        }
+    )
+
+# Top-level agent
+
+llm = ChatOpenAI(
+    # temperature=0,
+    # model='gpt-3.5-turbo-16k-0613',
+    model='gpt-4-1106-preview',
+    openai_api_key=OPENAI_API_KEY
+)
+
 wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
 arxiv = ArxivQueryRun(api_wrapper=ArxivAPIWrapper())
 
 tools = [
-    MaterialsSummary(),
-    MaterialsSynthesis(),
-    MaterialsThermo(),
-    MaterialsElasticity(),
-    MaterialsMagnetism(),
-    MaterialsDielectric(),
-    MaterialsPiezoelectric(),
-    MaterialsRobocrystallographer(),
-    MaterialsOxidation(),
-    MaterialsBonds(),
-    MaterialsSimilarity(),
-    MaterialsTasks(),
+    mp_react_agent,
     MaterialsStructure(return_direct=True),
     NoseHooverMD(return_direct=True),
-    # StructureVis(),
     arxiv,
-    wikipedia
-]
+    wikipedia,
+] + load_tools(["llm-math"], llm=llm)
+
 
 # MEMORY_KEY = "chat_history"
 
-llm = ChatOpenAI(
-    temperature=0, 
-    model='gpt-3.5-turbo-16k-0613',
-    # llm = ChatOpenAI(temperature=0, model='gpt-4',
-    openai_api_key="sk-xxxxxx"
-)
-# llm = ChatOpenAI(temperature=0, model='gpt-4')
-
-memory = ConversationBufferMemory(memory_key="chat_history")
+memory = ConversationBufferMemory(memory_key="chat_history") # FIXME: unsued?
 
 conversational_memory = ConversationBufferWindowMemory(
     memory_key='memory',
@@ -83,17 +181,14 @@ agent_kwargs = {
     "system_message": SystemMessage(
         content=re.sub(
             r"\s+", " ", 
-            """You are a data-aware agent that has access to Materials Project (MP) 
-            database. When you create function input arguments, follow MP API schema 
-            strictcly and DO NOT hallucinate invalid arguments. Convert all acronyms 
-            and abbreviations to valid arguments, especially chemical formula, 
-            composition, and systems. Ask user for more details if needed
+            """You are a data-aware agent that can consult Materials Project (MP) 
+            agent who has access to MP database. Ask user for more details if needed
             """).strip().replace("\n", " ")[0]
         )
 }
 
 agent_executor = initialize_agent(
-    agent=AgentType.OPENAI_FUNCTIONS,
+    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
     tools=tools,
     llm=llm,
     verbose=True,
@@ -172,12 +267,20 @@ class MessageInput(BaseModel):
 
 
 @app.post("/api/ask/")
-async def ask(data: MessageInput):
+async def ask(data: MessageInput): # FIXME: bad argument name
     messages = data.messages
-    print(data)
-    agent_executor.agent.llm.openai_api_key = data.openAIKey
+
+    if isinstance(agent_executor.agent.llm, ChatOpenAI | OpenAI):
+        agent_executor.agent.llm.openai_api_key = data.openAIKey
+    
+    if isinstance(mp_agent_executor.agent.llm, ChatOpenAI | OpenAI):
+        mp_agent_executor.agent.llm.openai_api_key = data.openAIKey
 
     for tool in agent_executor.agent.tools:
+        if isinstance(tool, MPTool):
+            tool.api_wrapper.set_api_key(data.mpAPIKey)
+
+    for tool in mp_agent_executor.agent.tools:
         if isinstance(tool, MPTool):
             tool.api_wrapper.set_api_key(data.mpAPIKey)
 

@@ -296,9 +296,20 @@ class MPAPIWrapper(BaseModel):
 
     def search_materials_robocrys(self, query_params: dict):
         query_params = self._process_query_params(query_params)
-        return self.mpr.materials.robocrys._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+
+        return self.mpr.materials.robocrys.text_query_resource(
+            criteria={
+                "keywords": query_params.pop("keywords"), 
+                "_limit": query_params.get("_limit", 10)
+                },
+            suburl="text_search",
+            use_document_model=False,
+            chunk_size=1000,
+            num_chunks=None,
         )
+        # return self.mpr.materials.robocrys._search(
+        #     num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+        # )
 
     def search_materials_synthesis(self, query_params: dict):
         query_params = self._process_query_params(query_params)

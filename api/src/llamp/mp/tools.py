@@ -242,7 +242,9 @@ class MaterialsRobocrystallographer(MPTool):
             r"\s+",
             " ",
             """Robocrystallographer is a tool to generate text descriptions of crystal 
-            structures. Similar to how a real-life crystallographer would analyse a 
+            structures. User this more than 'search_materials_summary__get' if the 
+            question is more qualitative and descriptive. 
+            Similar to how a real-life crystallographer would analyse a 
             structure, robocrystallographer looks at the symmetry, local coordination 
             and polyhedral type, polyhedral connectivity, octahedral tilt angles, 
             component-dimensionality, and molecule-within-crystal and fuzzy prototype 
