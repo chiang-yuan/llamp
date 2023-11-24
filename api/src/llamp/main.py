@@ -99,7 +99,7 @@ mp_prompt = mp_prompt.partial(
 # )
 
 mp_llm = ChatOpenAI(
-    # temperature=0, 
+    temperature=0, 
     # model='gpt-3.5-turbo-16k-0613',
     model='gpt-4-1106-preview',
     openai_api_key=OPENAI_API_KEY
@@ -137,14 +137,14 @@ mp_agent_executor = AgentExecutor(
     handle_parsing_errors=True,
 )  
 
-@tool("Materials Project ReAct Agent", return_direct=True)
+@tool("MaterialsProject_React_Agent", return_direct=True)
 def mp_react_agent(input: str):
     """Materials Project ReAct Agent that has access to MP database."""
     return mp_agent_executor.invoke(
         {
             "input": input
         }
-    )
+    )["output"]
 
 # Top-level agent
 
@@ -188,7 +188,7 @@ agent_kwargs = {
 }
 
 agent_executor = initialize_agent(
-    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+    agent=AgentType.OPENAI_MULTI_FUNCTIONS,
     tools=tools,
     llm=llm,
     verbose=True,
@@ -273,14 +273,14 @@ async def ask(data: MessageInput): # FIXME: bad argument name
     if isinstance(agent_executor.agent.llm, ChatOpenAI | OpenAI):
         agent_executor.agent.llm.openai_api_key = data.openAIKey
     
-    if isinstance(mp_agent_executor.agent.llm, ChatOpenAI | OpenAI):
-        mp_agent_executor.agent.llm.openai_api_key = data.openAIKey
+    if isinstance(mp_llm, ChatOpenAI | OpenAI):
+        mp_llm.openai_api_key = data.openAIKey
 
     for tool in agent_executor.agent.tools:
         if isinstance(tool, MPTool):
             tool.api_wrapper.set_api_key(data.mpAPIKey)
 
-    for tool in mp_agent_executor.agent.tools:
+    for tool in mp_agent_executor.tools:
         if isinstance(tool, MPTool):
             tool.api_wrapper.set_api_key(data.mpAPIKey)
 

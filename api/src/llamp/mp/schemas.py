@@ -253,6 +253,7 @@ class ThermoSchema(BaseModel):
         description="Maximum number of entries to return"
         )
     fields: str | None = Field(
+        default="material_id,thermo_id,formula_pretty,thermo_type,uncorrected_energy_per_atom,formation_energy_per_atom,energy_above_hull,decomposes_to",
         description="Fields to project from ThermoDoc as a list of comma separated strings. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `property_name` `material_id` `deprecated` `deprecation_reasons` `last_updated` `origins` `warnings` `thermo_type` `thermo_id` `uncorrected_energy_per_atom` `energy_per_atom` `energy_uncertainy_per_atom` `formation_energy_per_atom` `energy_above_hull` `is_stable` `equilibrium_reaction_energy_per_atom` `decomposes_to` `decomposition_enthalpy` `decomposition_enthalpy_decomposes_to` `energy_type` `entry_types` `entries`",
         )
     all_fields: bool | None = Field(False, description="Whether to return all fields in results")

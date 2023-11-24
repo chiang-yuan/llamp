@@ -15,16 +15,22 @@ dependencies = [
     "mp-api>=0.37.0",
     "openai==0.28.0",
     "langchain>=0.0.325",
+    "langchainhub",
+    "numexpr",
     "fastapi",
     "uvicorn",
     "python-dotenv",
-    "mace @ git+https://github.com/chiang-yuan/mace.git@uip",
+    "mace @ git+https://github.com/chiang-yuan/mace.git@universal",
     "arxiv",
     "wikipedia",
     "pandas"
 ]
 requires-python = ">=3.9"
 
+[options.extras_require]
+mace = [
+    "mace @ git+https://github.com/chiang-yuan/mace.git@universal"
+]
 
 [project.urls]
 Homepage = "https://github.com/chiang-yuan/llamp"
