@@ -8,7 +8,6 @@ from typing import Any
 import openai
 import pandas as pd
 import uvicorn
-from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, HTTPException, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 
@@ -52,11 +51,9 @@ from llamp.mp.tools import (
 from llamp.ws.agents import WSEventAgentExecutor, initialize_ws_event_agent
 
 
-load_dotenv()
-
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
 
-# MP React Agent
+# MP ReAct Agent
 
 mp_tools = [
     MaterialsSummary(return_direct=False, handle_tool_error=True),
@@ -99,7 +96,8 @@ mp_llm = ChatOpenAI(
     temperature=0,
     # model='gpt-3.5-turbo-16k-0613',
     model='gpt-4-1106-preview',
-    openai_api_key=OPENAI_API_KEY
+    # this is just to satisfy the llm interface, the key is set later from the request
+    openai_api_key="sk-xxxxxx"
 )
 
 mp_llm_with_stop = mp_llm.bind(stop=["Observation"])
@@ -148,7 +146,7 @@ def mp_react_agent(input: str):
 
 
 llm = ChatOpenAI(
-    # temperature=0,
+    temperature=0,
     # model='gpt-3.5-turbo-16k-0613',
     model='gpt-4-1106-preview',
     openai_api_key=OPENAI_API_KEY
