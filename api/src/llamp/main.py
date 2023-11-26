@@ -10,23 +10,19 @@ import pandas as pd
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, HTTPException, WebSocketDisconnect
+from starlette.websockets import WebSocketState
+
 from fastapi.middleware.cors import CORSMiddleware
 from langchain import hub
 from langchain.agents import (
-    AgentExecutor,
     AgentType,
-    BaseSingleActionAgent,
-    Tool,
-    initialize_agent,
     load_tools,
 )
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import (
     JSONAgentOutputParser,
-    ReActSingleInputOutputParser,
 )
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
@@ -37,7 +33,6 @@ from langchain.tools.render import render_text_description_and_args
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from pydantic import BaseModel
 
-from llamp.ase.tools import NoseHooverMD
 from llamp.mp.tools import (
     MaterialsBonds,
     MaterialsDielectric,
@@ -47,14 +42,14 @@ from llamp.mp.tools import (
     MaterialsPiezoelectric,
     MaterialsRobocrystallographer,
     MaterialsSimilarity,
-    MaterialsStructure,
     MaterialsSummary,
     MaterialsSynthesis,
     MaterialsTasks,
     MaterialsThermo,
     MPTool,
+    MaterialsStructure
 )
-from .ws import AgentExecutorDecorator
+from llamp.ws.agents import WSEventAgentExecutor, initialize_ws_event_agent
 
 
 load_dotenv()
@@ -116,11 +111,11 @@ mp_agent = (
     }
     | mp_prompt
     | mp_llm_with_stop
-    # | map_reduce_chain # TODO: Add map-reduce after LLM
+    # | map_reduce_chain  # TODO: Add map-reduce after LLM
     | JSONAgentOutputParser()
 )
 
-mp_agent_executor = AgentExecutor(
+mp_agent_executor = WSEventAgentExecutor(
     agent=mp_agent,
     agent_kwargs={
         "system_message": SystemMessage(
@@ -173,8 +168,6 @@ tools = [
 
 # MEMORY_KEY = "chat_history"
 
-memory = ConversationBufferMemory(memory_key="chat_history")  # FIXME: unsued?
-
 conversational_memory = ConversationBufferWindowMemory(
     memory_key='memory',
     k=5,
@@ -191,7 +184,7 @@ agent_kwargs = {
     )
 }
 
-agent_executor = initialize_agent(
+agent_executor = initialize_ws_event_agent(
     agent=AgentType.OPENAI_MULTI_FUNCTIONS,
     tools=tools,
     llm=llm,
@@ -202,20 +195,6 @@ agent_executor = initialize_agent(
     agent_kwargs=agent_kwargs,
     handle_parsing_errors=True,
 )
-agent_executor = AgentExecutorDecorator(agent_executor)
-'''
-agent_executor = initialize_custom_agent(
-    agent=AgentType.OPENAI_MULTI_FUNCTIONS,
-    tools=tools,
-    llm=llm,
-    verbose=True,
-    max_iterations=3,
-    early_stopping_method='generate',
-    memory=conversational_memory,
-    agent_kwargs=agent_kwargs,
-    handle_parsing_errors=True,
-)
-'''
 
 app = FastAPI()
 
@@ -315,8 +294,9 @@ async def process_request(data):
 @app.websocket("/ws")
 async def websocket_ask(websocket: WebSocket):
     await websocket.accept()
+    connection_open = True
     try:
-        while True:
+        while connection_open:
             data = await websocket.receive_json()
             try:
                 output, structures, simulation_data = await process_request(data)
@@ -330,8 +310,19 @@ async def websocket_ask(websocket: WebSocket):
             except HTTPException as e:
                 print(e)
                 await websocket.send_text(f"[error] HTTP error: {e.detail}")
+    except WebSocketDisconnect:
+        connection_open = False
+        print("WebSocket connection was disconnected.")
     except Exception as e:
-        await websocket.send_text(f"[error] Unexpected error: {e}")
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await websocket.send_text(f"[error] Unexpected error: {e}")
+        else:
+            print(f"Error after WebSocket was closed: {e}")
+        connection_open = False
+
+    if connection_open:
+        # Ensure the connection is closed properly if it's still open
+        await websocket.close()
 
 
 if __name__ == "__main__":
