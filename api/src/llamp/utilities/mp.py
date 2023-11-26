@@ -297,6 +297,19 @@ class MPAPIWrapper(BaseModel):
     def search_materials_robocrys(self, query_params: dict):
         query_params = self._process_query_params(query_params)
 
+        if "material_id" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
+        
+        if "description" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["description"]
+
+        if "material_ids" in query_params:
+            return self.mpr.materials.robocrys._search(
+                num_chunks=None, all_fields=False, **query_params
+            )
+
         return self.mpr.materials.robocrys.text_query_resource(
             criteria={
                 "keywords": query_params.pop("keywords"), 
@@ -307,9 +320,6 @@ class MPAPIWrapper(BaseModel):
             chunk_size=1000,
             num_chunks=None,
         )
-        # return self.mpr.materials.robocrys._search(
-        #     num_chunks=None, chunk_size=1000, all_fields=True, **query_params
-        # )
 
     def search_materials_synthesis(self, query_params: dict):
         query_params = self._process_query_params(query_params)

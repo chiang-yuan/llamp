@@ -137,7 +137,7 @@ mp_agent_executor = AgentExecutor(
     handle_parsing_errors=True,
 )  
 
-@tool("MaterialsProject_React_Agent", return_direct=True)
+@tool("MaterialsProject_React_Agent", return_direct=False)
 def mp_react_agent(input: str):
     """Materials Project ReAct Agent that has access to MP database."""
     return mp_agent_executor.invoke(
@@ -160,8 +160,8 @@ arxiv = ArxivQueryRun(api_wrapper=ArxivAPIWrapper())
 
 tools = [
     mp_react_agent,
-    MaterialsStructure(return_direct=True),
-    NoseHooverMD(return_direct=True),
+    # MaterialsStructure(return_direct=False),
+    # NoseHooverMD(return_direct=False),
     arxiv,
     wikipedia,
 ] + load_tools(["llm-math"], llm=llm)

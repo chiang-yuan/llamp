@@ -335,7 +335,7 @@ class SimilaritySchema(BaseModel):
     all_fields: bool | None = Field(False, description="Whether to return all fields in results")
 
 class RobocrysSchema(BaseModel):
-    material_id: str | None = Field(None, description="Material ID to find similar materials to")
+    material_ids: str | None = Field(None, description="Comma-separated list of material_ids to query on")
     keywords: str | None = Field(None, description="Comma-delimited list of keywords to search robocrystallographer description text with")
     # _skip: int = Field(description="Number of entries to skip")
     limit: int | None = Field(
