@@ -164,8 +164,6 @@ tools = [
 ] + load_tools(["llm-math"], llm=llm)
 
 
-# MEMORY_KEY = "chat_history"
-
 conversational_memory = ConversationBufferWindowMemory(
     memory_key='memory',
     k=5,
@@ -299,6 +297,7 @@ async def websocket_ask(websocket: WebSocket):
             try:
                 output, structures, simulation_data = await process_request(data)
                 await websocket.send_json({
+                    "messageType": "response-msg",
                     "responses": [{'role': 'assistant', 'content': output}],
                     "structures": structures,
                     "simulation_data": simulation_data

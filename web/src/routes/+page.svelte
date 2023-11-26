@@ -54,7 +54,12 @@ async function openWebSocket() {
     websocket.onmessage = function(event) {
 console.log(event);
       const result = JSON.parse(event.data);
-      processWebSocketResponse(result);
+	  switch(result.messageType) {
+		case 'response-msg':
+			processWebSocketResponse(result);
+		default:
+			console.log('Unknown message: ', result)
+	  }
     };
 
     websocket.onerror = function(event) {
