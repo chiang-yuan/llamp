@@ -3,6 +3,8 @@
   import { Avatar } from '@skeletonlabs/skeleton';
   import { Structure, StructureCard } from 'elementari';
   import Carousel from 'svelte-carousel';
+  import * as marked from 'marked';
+  import DOMPurify from 'dompurify';
   export let data: ChatMessage;
 
   $: user = data.role === 'user';
@@ -28,6 +30,11 @@
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla euismod, nisl eget ultricies aliquam, quam libero ultricies nunc, nec aliquet nisl nunc eu nunc. Nulla facil',
     color: 'primary'
   };
+
+  let parsedContent: string;
+  $: if (data && data.content) {
+	parsedContent = DOMPurify.sanitize(marked.parse(data.content));
+  }
 </script>
 
 {#if data.type == 'msg' && data.content.length > 0}
@@ -49,7 +56,7 @@
         {/if}
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
-      <pre class="whitespace-pre-wrap">{data.content}</pre>
+        <pre class="whitespace-pre-wrap" bind:this={parsedContent}>{@html parsedContent}</pre>
     </div>
   </div>
 {:else if data.type == 'structures'}
@@ -112,7 +119,7 @@
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
       <div class="max-w-lg">
-        <pre class="whitespace-pre-wrap">{data.content}</pre>
+        <pre class="whitespace-pre-wrap" bind:this={parsedContent}>{@html parsedContent}</pre>
         <Carousel
           autoplay
           duration={500}
@@ -155,7 +162,7 @@
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
       <div class="max-w-lg">
-        <pre class="whitespace-pre-wrap">{data.content}</pre>
+        <pre class="whitespace-pre-wrap" bind:this={parsedContent}>{@html parsedContent}</pre>
         <path stroke="none" fill-opacity="0" class="voronoi-cell" d={data.similation_data} />
       </div>
     </div>

@@ -42,7 +42,7 @@ class WSEventAgentExecutor(AgentExecutor):
             "default": "\033[0m",  # Default terminal color
             "bold": "\033[1m",
             "before_action": "\033[93m",  # Yellow
-            "after_action": "\033[92m",  # Green
+            "after_action": "\033[33m"  # Brown
         }
 
         # Choose color based on event type or use default

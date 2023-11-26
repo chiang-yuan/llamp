@@ -51,8 +51,6 @@ from llamp.mp.tools import (
 from llamp.ws.agents import WSEventAgentExecutor, initialize_ws_event_agent
 
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
-
 # MP ReAct Agent
 
 mp_tools = [
@@ -92,12 +90,15 @@ mp_prompt = mp_prompt.partial(
 #     token_max=4000 # chunk size
 # )
 
+OPENAI_API_KEY = "sk-xxx"
+OPENAI_GPT_MODEL = "gpt-4-1106-preview"
+# OPENAI_GPT_MODEL = "gpt-3.5-turbo-1106"
+
 mp_llm = ChatOpenAI(
     temperature=0,
-    # model='gpt-3.5-turbo-16k-0613',
-    model='gpt-4-1106-preview',
+    model=OPENAI_GPT_MODEL,
     # this is just to satisfy the llm interface, the key is set later from the request
-    openai_api_key="sk-xxxxxx"
+    openai_api_key=OPENAI_API_KEY,
 )
 
 mp_llm_with_stop = mp_llm.bind(stop=["Observation"])
@@ -147,8 +148,7 @@ def mp_react_agent(input: str):
 
 llm = ChatOpenAI(
     temperature=0,
-    # model='gpt-3.5-turbo-16k-0613',
-    model='gpt-4-1106-preview',
+    model=OPENAI_GPT_MODEL,
     openai_api_key=OPENAI_API_KEY
 )
 
@@ -282,9 +282,9 @@ async def process_request(data):
             return None, *load_simulations(output)
         return output, [], None
     except openai.error.AuthenticationError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=e)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=e)
 
 
 @app.websocket("/ws")
@@ -305,7 +305,7 @@ async def websocket_ask(websocket: WebSocket):
             except KeyError:
                 await websocket.send_text("[Key error] Missing 'messages' key in received data")
             except HTTPException as e:
-                print(e)
+                print(f"[HTTP error] {e.detail}")
                 await websocket.send_text(f"[error] HTTP error: {e.detail}")
     except WebSocketDisconnect:
         connection_open = False
