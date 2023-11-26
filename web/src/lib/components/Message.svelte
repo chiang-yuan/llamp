@@ -33,7 +33,15 @@
 
   let parsedContent: string;
   $: if (data && data.content) {
-	parsedContent = DOMPurify.sanitize(marked.parse(data.content));
+	const mpRegex = /mp-\d+/g;
+	function processLinks(content: string) {
+		return content.replace(mpRegex, (materialId: string) => {
+			const tailwindClasses = "underline text-blue-600 hover:opacity-75";
+			return `<a href="https://next-gen.materialsproject.org/materials/${materialId}"
+				class="${tailwindClasses}" target="_blank" rel="noopener noreferrer">${materialId}</a>`;
+		});
+	}
+	parsedContent = processLinks(DOMPurify.sanitize(marked.parse(data.content)));
   }
 </script>
 
