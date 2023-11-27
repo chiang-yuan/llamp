@@ -169,8 +169,8 @@ class ElasticitySchema(BaseModel):
         description="Max number of entries to return in a single query. Limited to 1000.",
         )
     fields: str | None = Field(
-        default="pretty_formula,task_id,elasticity",
-        description="Fields to project from ElasticityDoc as a list of comma separated strings. Fields include: `pretty_formula` `chemsys` `elasticity` `task_id`"
+        default="material_id,formula_pretty,elastic_tensor",
+        description="Fields to project from ElasticityDoc as a list of comma separated strings. Fields include: 'material_id' 'formula_pretty' 'elastic_tensor' 'builder_meta', 'nsites', 'elements', 'nelements', 'composition', 'composition_reduced', 'formula_anonymous', 'chemsys', 'volume', 'density', 'density_atomic', 'symmetry', 'property_name', 'deprecated', 'deprecation_reasons', 'last_updated', 'origins', 'warnings', 'structure', 'order', 'compliance_tensor', 'bulk_modulus', 'shear_modulus', 'sound_velocity', 'thermal_conductivity', 'young_modulus', 'universal_anisotropy', 'homogeneous_poisson', 'debye_temperature', 'fitting_data', 'fitting_method', 'state'"
         )
     all_fields: bool | None = Field(False, description="Whether to return all fields in results")
 

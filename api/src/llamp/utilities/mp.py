@@ -397,6 +397,8 @@ class MPAPIWrapper(BaseModel):
     def search_materials_dielectric(self, query_params):
         query_params = self._process_query_params(query_params)
 
+        query_params["fields"] = query_params.get("fields", ["material_id", "formula_pretty", "total", "n", "symmetry"])
+
         if "material_id" not in query_params.get("fields", []):
             query_params["fields"] = query_params.get(
                 "fields", []) + ["material_id"]

@@ -12,7 +12,7 @@ authors = [
 ]
 license = { file = "LICENSE" }
 dependencies = [
-    "mp-api>=0.37.0",
+    "mp-api>=0.38.0",
     "openai==0.28.0",
     "langchain>=0.0.325",
     "langchainhub",

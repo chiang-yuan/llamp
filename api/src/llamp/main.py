@@ -78,6 +78,7 @@ mp_tools = [
 ]
 
 mp_prompt = hub.pull("hwchase17/react-multi-input-json")
+mp_prompt.messages[0].prompt.template = "You are a helpful agent having access to materials data on Materials Project." + mp_prompt.messages[0].prompt.template
 mp_prompt = mp_prompt.partial(
     tools=render_text_description_and_args(mp_tools),
     tool_names=", ".join([t.name for t in mp_tools]),
@@ -101,7 +102,7 @@ mp_prompt = mp_prompt.partial(
 mp_llm = ChatOpenAI(
     temperature=0, 
     # model='gpt-3.5-turbo-16k-0613',
-    model='gpt-4-1106-preview',
+    model='gpt-3.5-turbo-16k-0613',
     openai_api_key=OPENAI_API_KEY
 )
 
@@ -144,14 +145,15 @@ def mp_react_agent(input: str):
         {
             "input": input
         }
-    )["output"]
+    )#["output"]
 
 # Top-level agent
 
 llm = ChatOpenAI(
     # temperature=0,
-    # model='gpt-3.5-turbo-16k-0613',
-    model='gpt-4-1106-preview',
+    # model='gpt-4-32k',
+    # model='gpt-3.5-turbo-1106',
+    model="gpt-3.5-turbo",
     openai_api_key=OPENAI_API_KEY
 )
 
@@ -188,7 +190,7 @@ agent_kwargs = {
 }
 
 agent_executor = initialize_agent(
-    agent=AgentType.OPENAI_MULTI_FUNCTIONS,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     tools=tools,
     llm=llm,
     verbose=True,
@@ -270,13 +272,16 @@ class MessageInput(BaseModel):
 async def ask(data: MessageInput): # FIXME: bad argument name
     messages = data.messages
 
-    if isinstance(agent_executor.agent.llm, ChatOpenAI | OpenAI):
-        agent_executor.agent.llm.openai_api_key = data.openAIKey
+    # if isinstance(agent_executor.agent.llm, ChatOpenAI | OpenAI):
+    #     agent_executor.agent.llm.openai_api_key = data.openAIKey
+
+    if isinstance(llm, ChatOpenAI | OpenAI):
+        llm.openai_api_key = data.openAIKey
     
     if isinstance(mp_llm, ChatOpenAI | OpenAI):
         mp_llm.openai_api_key = data.openAIKey
 
-    for tool in agent_executor.agent.tools:
+    for tool in agent_executor.tools:
         if isinstance(tool, MPTool):
             tool.api_wrapper.set_api_key(data.mpAPIKey)
 
