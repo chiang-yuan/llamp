@@ -18,7 +18,7 @@ dependencies = [
     "langchainhub",
     "numexpr",
     "fastapi",
-    "uvicorn",
+    "uvicorn[standard]",
     "python-dotenv",
     "mace @ git+https://github.com/chiang-yuan/mace.git@universal",
     "arxiv",

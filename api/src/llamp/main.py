@@ -8,25 +8,18 @@ from typing import Any
 import openai
 import pandas as pd
 import uvicorn
-from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from langchain import hub
 from langchain.agents import (
-    AgentExecutor,
     AgentType,
-    BaseSingleActionAgent,
-    Tool,
-    initialize_agent,
     load_tools,
 )
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import (
     JSONAgentOutputParser,
-    ReActSingleInputOutputParser,
 )
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
@@ -36,8 +29,8 @@ from langchain.tools import ArxivQueryRun, WikipediaQueryRun, tool
 from langchain.tools.render import render_text_description_and_args
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from pydantic import BaseModel
+from starlette.websockets import WebSocketState
 
-from llamp.ase.tools import NoseHooverMD
 from llamp.mp.tools import (
     MaterialsBonds,
     MaterialsDielectric,
@@ -54,12 +47,9 @@ from llamp.mp.tools import (
     MaterialsThermo,
     MPTool,
 )
+from llamp.ws.agents import WSEventAgentExecutor, initialize_ws_event_agent
 
-load_dotenv()
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
-
-# MP React Agent
+# MP ReAct Agent
 
 mp_tools = [
     MaterialsSummary(return_direct=False, handle_tool_error=True),
@@ -87,23 +77,27 @@ mp_prompt = mp_prompt.partial(
 # from langchain.chains import MapReduceDocumentsChain
 # def map_fn(doc):
 #     """Summarize each chunk"""
-#     return mp_llm(f"Summarize this in 100 words: {doc}")  
+#     return mp_llm(f"Summarize this in 100 words: {doc}")
 
 # def reduce_fn(docs):
 #     """Consolidate summaries"""
 #     return mp_llm(f"Consolidate these summaries: {docs}")
 
 # map_reduce_chain = MapReduceDocumentsChain(
-#     map_fn=map_fn, 
+#     map_fn=map_fn,
 #     reduce_fn=reduce_fn,
 #     token_max=4000 # chunk size
 # )
 
+OPENAI_API_KEY = "sk-xxx"
+OPENAI_GPT_MODEL = "gpt-4-1106-preview"
+# OPENAI_GPT_MODEL = "gpt-3.5-turbo-1106"
+
 mp_llm = ChatOpenAI(
-    temperature=0, 
-    # model='gpt-3.5-turbo-16k-0613',
-    model='gpt-3.5-turbo-16k-0613',
-    openai_api_key=OPENAI_API_KEY
+    temperature=0,
+    model=OPENAI_GPT_MODEL,
+    # this is just to satisfy the llm interface, the key is set later from the request
+    openai_api_key=OPENAI_API_KEY,
 )
 
 mp_llm_with_stop = mp_llm.bind(stop=["Observation"])
@@ -115,28 +109,29 @@ mp_agent = (
     }
     | mp_prompt
     | mp_llm_with_stop
-    # | map_reduce_chain # TODO: Add map-reduce after LLM
+    # | map_reduce_chain  # TODO: Add map-reduce after LLM
     | JSONAgentOutputParser()
 )
 
-mp_agent_executor = AgentExecutor(
-    agent=mp_agent, 
+mp_agent_executor = WSEventAgentExecutor(
+    agent=mp_agent,
     agent_kwargs={
         "system_message": SystemMessage(
-        content=re.sub(
-            r"\s+", " ", 
-            """When you create function input arguments, follow MP API schema 
+            content=re.sub(
+                r"\s+", " ",
+                """When you create function input arguments, follow MP API schema 
             strictcly and DO NOT hallucinate invalid arguments. Convert all acronyms 
             and abbreviations to valid arguments, especially chemical formula and 
             isotopes (e.g. D2O should be H2O), composition, and systems."""
             ).strip().replace("\n", " ")[0]
         )
     },
-    tools=mp_tools, 
+    tools=mp_tools,
     return_intermediate_steps=True,
     verbose=True,
     handle_parsing_errors=True,
-)  
+)
+
 
 @tool("MaterialsProject_React_Agent", return_direct=False)
 def mp_react_agent(input: str):
@@ -149,11 +144,10 @@ def mp_react_agent(input: str):
 
 # Top-level agent
 
+
 llm = ChatOpenAI(
-    # temperature=0,
-    # model='gpt-4-32k',
-    # model='gpt-3.5-turbo-1106',
-    model="gpt-3.5-turbo",
+    temperature=0,
+    model=OPENAI_GPT_MODEL,
     openai_api_key=OPENAI_API_KEY
 )
 
@@ -169,10 +163,6 @@ tools = [
 ] + load_tools(["llm-math"], llm=llm)
 
 
-# MEMORY_KEY = "chat_history"
-
-memory = ConversationBufferMemory(memory_key="chat_history") # FIXME: unsued?
-
 conversational_memory = ConversationBufferWindowMemory(
     memory_key='memory',
     k=5,
@@ -182,14 +172,14 @@ agent_kwargs = {
     "extra_prompt_messages": [MessagesPlaceholder(variable_name="memory")],
     "system_message": SystemMessage(
         content=re.sub(
-            r"\s+", " ", 
+            r"\s+", " ",
             """You are a data-aware agent that can consult Materials Project (MP) 
             agent who has access to MP database. Ask user for more details if needed
             """).strip().replace("\n", " ")[0]
-        )
+    )
 }
 
-agent_executor = initialize_agent(
+agent_executor = initialize_ws_event_agent(
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     tools=tools,
     llm=llm,
@@ -268,9 +258,8 @@ class MessageInput(BaseModel):
     mpAPIKey: str
 
 
-@app.post("/api/ask/")
-async def ask(data: MessageInput): # FIXME: bad argument name
-    messages = data.messages
+async def process_request(data):
+    messages = data.get('messages')
 
     # if isinstance(agent_executor.agent.llm, ChatOpenAI | OpenAI):
     #     agent_executor.agent.llm.openai_api_key = data.openAIKey
@@ -279,40 +268,60 @@ async def ask(data: MessageInput): # FIXME: bad argument name
         llm.openai_api_key = data.openAIKey
     
     if isinstance(mp_llm, ChatOpenAI | OpenAI):
-        mp_llm.openai_api_key = data.openAIKey
+        mp_llm.openai_api_key = data.get('openAIKey')
 
     for tool in agent_executor.tools:
         if isinstance(tool, MPTool):
-            tool.api_wrapper.set_api_key(data.mpAPIKey)
+            tool.api_wrapper.set_api_key(data.get('mpAPIKey'))
 
-    for tool in mp_agent_executor.tools:
-        if isinstance(tool, MPTool):
-            tool.api_wrapper.set_api_key(data.mpAPIKey)
-
-    output = None
-    structures = []
-    simulation_data = None
+    # Execute and handle the response
     try:
-        output = agent_executor.run(input=messages[-1].content)
-        if (output.startswith('[structures]')):
-            structures = [*load_structures(output)]
-            output = ""
+        output = agent_executor.run(input=messages[-1].get('content'))
+        if output.startswith('[structures]'):
+            return "", [*load_structures(output)], None
         if output.startswith('[simulation]'):
-            structures, simulation_data = load_simulations(output)
-            output = None
+            return None, *load_simulations(output)
+        return output, [], None
     except openai.error.AuthenticationError as e:
-        output = f"[error] {e}. Invalid API key. Please check your API key."
+        raise HTTPException(status_code=400, detail=e)
     except Exception as e:
-        output = f"[error] {e}. Please try again."
+        raise HTTPException(status_code=500, detail=e)
 
-    return {
-        "responses": [{
-            'role': 'assistant',
-            'content': output,
-        }],
-        "structures": structures,
-        "simulation_data": simulation_data
-    }
+
+@app.websocket("/ws")
+async def websocket_ask(websocket: WebSocket):
+    await websocket.accept()
+    connection_open = True
+    try:
+        while connection_open:
+            data = await websocket.receive_json()
+            try:
+                output, structures, simulation_data = await process_request(data)
+                await websocket.send_json({
+                    "messageType": "response-msg",
+                    "responses": [{'role': 'assistant', 'content': output}],
+                    "structures": structures,
+                    "simulation_data": simulation_data
+                })
+            except KeyError:
+                await websocket.send_text("[Key error] Missing 'messages' key in received data")
+            except HTTPException as e:
+                print(f"[HTTP error] {e.detail}")
+                await websocket.send_text(f"[error] HTTP error: {e.detail}")
+    except WebSocketDisconnect:
+        connection_open = False
+        print("WebSocket connection was disconnected.")
+    except Exception as e:
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await websocket.send_text(f"[error] Unexpected error: {e}")
+        else:
+            print(f"Error after WebSocket was closed: {e}")
+        connection_open = False
+
+    if connection_open:
+        # Ensure the connection is closed properly if it's still open
+        await websocket.close()
+
 
 if __name__ == "__main__":
     uvicorn.run(app="app", host="127.0.0.1", port=8000, reload=True)

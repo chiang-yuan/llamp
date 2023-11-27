@@ -1,6 +1,10 @@
 # FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 FROM python:3.11-slim
 
+ENV PYTHONDONTWRITEBYTECODE 1
+
+ENV PYTHONUNBUFFERED 1
+
 EXPOSE 8000
 
 WORKDIR /usr/src/app
