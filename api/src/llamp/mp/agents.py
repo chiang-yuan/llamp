@@ -19,6 +19,7 @@ from langchain.agents.output_parsers import (
 from langchain.agents.schema import AgentAction
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI
+from langchain.embeddings import OpenAIEmbeddings
 from langchain.llms import OpenAI
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import StructuredTool, Tool, tool
@@ -58,6 +59,7 @@ class MPAgent:
 
     def __init__(self, llm):
         self.llm = llm
+        # self.summary_chain = load_summarize_chain(self.llm, chain_type="map_reduce", verbose=True)
         self.chain = (
             {
                 "input": lambda x: x["input"],
