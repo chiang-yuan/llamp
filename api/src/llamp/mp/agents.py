@@ -19,7 +19,7 @@ from langchain.agents.output_parsers import (
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
-from langchain.tools import tool
+from langchain.tools import Tool, tool
 from langchain.tools.render import render_text_description_and_args
 
 from llamp.mp.tools import (
@@ -41,6 +41,125 @@ from llamp.mp.tools import (
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
+
+# OPENAI_GPT_MODEL = "gpt-4-1106-preview"
+OPENAI_GPT_MODEL = "gpt-3.5-turbo-1106"
+
+REACT_MULTI_JSON_PROMPT = hub.pull("hwchase17/react-multi-input-json")
+
+class MPAgent:
+    """Agent that uses the MP tools."""
+
+    def __init__(self, llm):
+        self.llm = llm
+        self.chain = (
+            {
+                "input": lambda x: x["input"],
+                "agent_scratchpad": lambda x: format_log_to_str(x["intermediate_steps"]),
+            }
+            | self.prompt
+            | self.llm.bind(stop=["Observation"])
+            # TODO: add a summarizer to take care of large reponses
+            | JSONAgentOutputParser()
+        )
+    
+    @property
+    def name(self) -> str:
+        return self.__class__.__name__
+    
+    @property
+    def description(self) -> str:
+        return self.__doc__
+
+    @property
+    def tools(self) -> list[Tool]:
+        raise NotImplementedError
+
+    @property
+    def prompt(self):
+        return REACT_MULTI_JSON_PROMPT.partial(
+            tools=render_text_description_and_args(self.tools),
+            tool_names=", ".join([t.name for t in self.tools]),
+        )
+    
+    def as_executor(
+            self, 
+            verbose=True,
+            return_intermediate_steps=False,
+            max_iterations=10,
+            handle_parsing_errors=True,
+            **kwargs
+            ) -> AgentExecutor:
+        return AgentExecutor(
+            agent=self.chain, 
+            tools=self.tools, 
+            verbose=verbose,
+            return_intermediate_steps=return_intermediate_steps,
+            max_iterations=max_iterations,
+            handle_parsing_errors=handle_parsing_errors,
+            **kwargs
+        )
+    
+    def as_tool(self, return_direct=True, **kwargs) -> Tool:
+        return Tool.from_function(
+            func=self.as_executor().run, # if use `invoke`, need to provide `input` key when calling
+            name=self.name,
+            description=self.description,
+            return_direct=return_direct,
+            **kwargs
+        )
+
+class MPThermoExpert(MPAgent):
+    """Theromodynamics expert that has access to Materials Project thermo endpoint"""
+
+    @property
+    def tools(self):
+        return [
+            MaterialsThermo(return_direct=True, handle_tool_error=True),
+        ]
+    
+class MPElasticityExpert(MPAgent):
+    """Elasticity expert that has access to Materials Project elasticity endpoint"""
+
+    @property
+    def tools(self):
+        return [
+            MaterialsElasticity(return_direct=True, handle_tool_error=True),
+        ]
+
+class MPMagnetismExpert(MPAgent):
+    """Magnetism expert that has access to Materials Project magnetism endpoint"""
+
+    @property
+    def tools(self):
+        return [
+            MaterialsMagnetism(return_direct=True, handle_tool_error=True),
+        ]
+
+class MPDielectricExpert(MPAgent):
+    """Dielectric expert that has access to Materials Project dielectric endpoint"""
+
+    @property
+    def tools(self):
+        return [
+            MaterialsDielectric(return_direct=True, handle_tool_error=True),
+        ]
+    
+class MPPiezoelectricExpert(MPAgent):
+    """Piezoelectric expert that has access to Materials Project piezoelectric endpoint"""
+
+    @property
+    def tools(self):
+        return [
+            MaterialsPiezoelectric(return_direct=True, handle_tool_error=True),
+        ]
+
+
+    
+    
+    
+        
+
 
 # class MPAgent(BaseSingleActionAgent):
 #     """Agent that uses the MP tools."""
