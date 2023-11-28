@@ -1,30 +1,30 @@
 import asyncio
+from collections.abc import Sequence
 from typing import (
+    Any,
     Dict,
     List,
     Optional,
     Tuple,
-    Sequence,
     Union,
-    Any,
 )
-from langchain.agents.agent import AgentExecutor
-from langchain.agents.tools import InvalidTool
-from langchain.agents.agent import ExceptionTool
-from langchain.schema.language_model import BaseLanguageModel
+
+from langchain.agents.agent import AgentExecutor, ExceptionTool
 from langchain.agents.agent_types import AgentType
 from langchain.agents.loading import AGENT_TO_CLASS, load_agent
+from langchain.agents.tools import InvalidTool
 from langchain.callbacks.base import BaseCallbackManager
-from langchain.tools.base import BaseTool
+from langchain.callbacks.manager import (
+    AsyncCallbackManagerForChainRun,
+    CallbackManagerForChainRun,
+)
 from langchain.schema import (
     AgentAction,
     AgentFinish,
     OutputParserException,
 )
-from langchain.callbacks.manager import (
-    CallbackManagerForChainRun,
-    AsyncCallbackManagerForChainRun,
-)
+from langchain.schema.language_model import BaseLanguageModel
+from langchain.tools.base import BaseTool
 
 
 class WSEventAgentExecutor(AgentExecutor):
@@ -54,12 +54,12 @@ class WSEventAgentExecutor(AgentExecutor):
 
     def _take_next_step(
         self,
-        name_to_tool_map: Dict[str, BaseTool],
-        color_mapping: Dict[str, str],
-        inputs: Dict[str, str],
-        intermediate_steps: List[Tuple[AgentAction, str]],
-        run_manager: Optional[CallbackManagerForChainRun] = None,
-    ) -> Union[AgentFinish, List[Tuple[AgentAction, str]]]:
+        name_to_tool_map: dict[str, BaseTool],
+        color_mapping: dict[str, str],
+        inputs: dict[str, str],
+        intermediate_steps: list[tuple[AgentAction, str]],
+        run_manager: CallbackManagerForChainRun | None = None,
+    ) -> AgentFinish | list[tuple[AgentAction, str]]:
         """Take a single step in the thought-action-observation loop.
 
         Override this to take control of how the agent makes and acts on choices.
@@ -115,11 +115,8 @@ class WSEventAgentExecutor(AgentExecutor):
         # If the tool chosen is the finishing tool, then we end and return.
         if isinstance(output, AgentFinish):
             return output
-        actions: List[AgentAction]
-        if isinstance(output, AgentAction):
-            actions = [output]
-        else:
-            actions = output
+        actions: list[AgentAction]
+        actions = [output] if isinstance(output, AgentAction) else output
         result = []
         for agent_action in actions:
 
@@ -162,12 +159,12 @@ class WSEventAgentExecutor(AgentExecutor):
 
     async def _atake_next_step(
         self,
-        name_to_tool_map: Dict[str, BaseTool],
-        color_mapping: Dict[str, str],
-        inputs: Dict[str, str],
-        intermediate_steps: List[Tuple[AgentAction, str]],
-        run_manager: Optional[AsyncCallbackManagerForChainRun] = None,
-    ) -> Union[AgentFinish, List[Tuple[AgentAction, str]]]:
+        name_to_tool_map: dict[str, BaseTool],
+        color_mapping: dict[str, str],
+        inputs: dict[str, str],
+        intermediate_steps: list[tuple[AgentAction, str]],
+        run_manager: AsyncCallbackManagerForChainRun | None = None,
+    ) -> AgentFinish | list[tuple[AgentAction, str]]:
         """Take a single step in the thought-action-observation loop.
 
         Override this to take control of how the agent makes and acts on choices.
@@ -221,15 +218,12 @@ class WSEventAgentExecutor(AgentExecutor):
         # If the tool chosen is the finishing tool, then we end and return.
         if isinstance(output, AgentFinish):
             return output
-        actions: List[AgentAction]
-        if isinstance(output, AgentAction):
-            actions = [output]
-        else:
-            actions = output
+        actions: list[AgentAction]
+        actions = [output] if isinstance(output, AgentAction) else output
 
         async def _aperform_agent_action(
             agent_action: AgentAction,
-        ) -> Tuple[AgentAction, str]:
+        ) -> tuple[AgentAction, str]:
             self.emit_event("before_action", {"action": agent_action})
             if run_manager:
                 await run_manager.on_agent_action(
@@ -279,12 +273,12 @@ class WSEventAgentExecutor(AgentExecutor):
 def initialize_ws_event_agent(
     tools: Sequence[BaseTool],
     llm: BaseLanguageModel,
-    agent: Optional[AgentType] = None,
-    callback_manager: Optional[BaseCallbackManager] = None,
-    agent_path: Optional[str] = None,
-    agent_kwargs: Optional[dict] = None,
+    agent: AgentType | None = None,
+    callback_manager: BaseCallbackManager | None = None,
+    agent_path: str | None = None,
+    agent_kwargs: dict | None = None,
     *,
-    tags: Optional[Sequence[str]] = None,
+    tags: Sequence[str] | None = None,
     **kwargs: Any,
 ) -> WSEventAgentExecutor:
     """Load a custom agent executor given tools and LLM.

@@ -90,8 +90,8 @@ mp_prompt = mp_prompt.partial(
 # )
 
 OPENAI_API_KEY = "sk-xxx"
-OPENAI_GPT_MODEL = "gpt-4-1106-preview"
-# OPENAI_GPT_MODEL = "gpt-3.5-turbo-1106"
+# OPENAI_GPT_MODEL = "gpt-4-1106-preview"
+OPENAI_GPT_MODEL = "gpt-3.5-turbo-1106"
 
 mp_llm = ChatOpenAI(
     temperature=0,
@@ -127,6 +127,7 @@ mp_agent_executor = WSEventAgentExecutor(
         )
     },
     tools=mp_tools,
+    max_iterations=5,
     return_intermediate_steps=True,
     verbose=True,
     handle_parsing_errors=True,
@@ -184,8 +185,8 @@ agent_executor = initialize_ws_event_agent(
     tools=tools,
     llm=llm,
     verbose=True,
-    max_iterations=3,
-    early_stopping_method='generate',
+    max_iterations=5,
+    # early_stopping_method='generate',
     memory=conversational_memory,
     agent_kwargs=agent_kwargs,
     handle_parsing_errors=True,
@@ -265,7 +266,7 @@ async def process_request(data):
     #     agent_executor.agent.llm.openai_api_key = data.openAIKey
 
     if isinstance(llm, ChatOpenAI | OpenAI):
-        llm.openai_api_key = data.openAIKey
+        llm.openai_api_key = data.get('openAIKey')
     
     if isinstance(mp_llm, ChatOpenAI | OpenAI):
         mp_llm.openai_api_key = data.get('openAIKey')
@@ -283,10 +284,11 @@ async def process_request(data):
             return None, *load_simulations(output)
         return output, [], None
     except openai.error.AuthenticationError as e:
-        raise HTTPException(status_code=400, detail=e)
+        # raise HTTPException(status_code=400, detail=e)
+        return e, [], None
     except Exception as e:
-        raise HTTPException(status_code=500, detail=e)
-
+        # raise HTTPException(status_code=500, detail=e)
+        return e, [], None
 
 @app.websocket("/ws")
 async def websocket_ask(websocket: WebSocket):
