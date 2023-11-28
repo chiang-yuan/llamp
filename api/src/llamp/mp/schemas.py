@@ -1,10 +1,7 @@
-
-
 from emmet.core.summary import HasProps
 from emmet.core.thermo import ThermoType
 from pydantic import BaseModel, Field
-
-# from langchain.pydantic_v1 import BaseModel, Field
+from pymatgen.analysis.magnetism.analyzer import Ordering
 
 
 class SummarySchema(BaseModel):
@@ -404,3 +401,28 @@ class TasksSchema(BaseModel):
         description="Fields to project from TaskDoc as comma separated strings. Fields include: `builder_meta` `nsites` `elements` `nelements` `composition` `composition_reduced` `formula_pretty` `formula_anonymous` `chemsys` `volume` `density` `density_atomic` `symmetry` `tags` `dir_name` `state` `calcs_reversed` `structure` `task_type` `task_id` `orig_inputs` `input` `output` `included_objects` `vasp_objects` `entry` `task_label` `author` `icsd_id` `transformations` `additional_json` `custodian` `analysis` `last_updated`"
         )
     all_fields: bool | None = Field(False, description="Whether to return all fields in results")
+
+class ElectronicSchema(BaseModel):
+    material_ids: str | None = Field(None, description="Comma-separated list of material_ids to query on")
+    band_gap_max: float | None = Field(None, description="Maximum band gap in eV")
+    band_gap_min: float | None = Field(None, description="Minimum band gap in eV")
+    chemsys: str | None = Field(None, description="A comma delimited string list of chemical systems. Wildcards for unknown elements only supported for single chemsys queries")
+    formula: str | None = Field(None, description="Query by formula including anonymized formula or by including wild cards. A comma delimited string list of anonymous formulas or regular formulas can also be provided.")
+    elements: str | None = Field(None, description="A comma delimited string list of elements to query on")
+    exclude_elements: str | None = Field(None, description="A comma delimited string list of elements to exclude")
+    efermi_max: float | None = Field(None, description="Maximum Fermi energy in eV")
+    efermi_min: float | None = Field(None, description="Minimum Fermi energy in eV")
+    magnetic_ordering: Ordering | None = Field(None, description="Magnetic ordering: FM, AFM, FiM, NM, Unknown")
+    nelements_max: int | None = Field(None, description="Maximum number of elements")
+    nelements_min: int | None = Field(None, description="Minimum number of elements")
+    is_gap_direct: bool | None = Field(None, description="Whether the band gap is direct")
+    is_metal: bool | None = Field(None, description="Whether the material is a metal")
+    sort_fields: str | None = Field(None, description="Comma-delimited list of fields to sort on. Prefix with - for descending order.")
+    limit: int | None = Field(
+        default=10,
+        description="Maximum number of entries to return"
+        )
+    fields: str | None = Field(
+        default="material_id,formula_pretty,band_gap,efermi,is_gap_direct,is_metal,magnetic_ordering",
+        description="Fields to project from ElectronicStructureDoc as comma separated strings. Fields include: 'task_id', 'band_gap', 'cbm', 'vbm', 'efermi', 'is_gap_direct', 'is_metal', 'magnetic_ordering', 'builder_meta', 'nsites', 'elements', 'nelements', 'composition', 'composition_reduced', 'formula_pretty', 'formula_anonymous', 'chemsys', 'volume', 'density', 'density_atomic', 'symmetry', 'property_name', 'material_id', 'deprecated', 'deprecation_reasons', 'last_updated', 'origins', 'warnings', 'bandstructure', 'dos'",
+        )
