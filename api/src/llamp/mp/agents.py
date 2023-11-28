@@ -21,7 +21,7 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
 from langchain.pydantic_v1 import BaseModel, Field
-from langchain.tools import Tool, tool
+from langchain.tools import StructuredTool, Tool, tool
 from langchain.tools.render import render_text_description_and_args
 
 from llamp.mp.tools import (
@@ -97,8 +97,8 @@ class MPAgent:
                 arguments, follow MP API schema strictcly and DO NOT hallucinate 
                 invalid arguments. Convert all acronyms and abbreviations to valid 
                 arguments, especially chemical formula and isotopes (e.g. D2O should be 
-                H2O), composition, and systems."""
-            ).strip().replace("\n", " ")[0] + partial_prompt.messages[0].prompt.template
+                H2O), composition, and systems. """
+            ).replace("\n", " ") + partial_prompt.messages[0].prompt.template
         return partial_prompt
 
     def as_executor(
@@ -131,7 +131,7 @@ class MPAgent:
                 "input": input,
             })
         
-        return Tool.from_function(
+        return StructuredTool.from_function(
             func=run,
             name=self.name,
             description=self.description,
