@@ -29,6 +29,7 @@ from llamp.mp.tools import (
     MaterialsBonds,
     MaterialsDielectric,
     MaterialsElasticity,
+    MaterialsElectronic,
     MaterialsMagnetism,
     MaterialsOxidation,
     MaterialsPiezoelectric,
@@ -217,4 +218,16 @@ class MPPiezoelectricExpert(MPAgent):
     def tools(self):
         return [
             MaterialsPiezoelectric(return_direct=False, handle_tool_error=True),
+        ]
+    
+class MPElectronicExpert(MPAgent):
+    """Electronic expert that has access to Materials Project electronic endpoint"""
+
+    def __init__(self, llm):
+        super().__init__(llm)
+
+    @property
+    def tools(self):
+        return [
+            MaterialsElectronic(return_direct=False, handle_tool_error=True),
         ]

@@ -10,6 +10,7 @@ from llamp.mp.schemas import (
     BondsSchema,
     DielectricSchema,
     ElasticitySchema,
+    ElectronicSchema,
     MagnetismSchema,
     OxidationSchema,
     PiezoSchema,
@@ -318,3 +319,20 @@ class MaterialsSimilarity(MPTool):
         .replace("\n", " ")[0]
     )
     args_schema: type[SimilaritySchema] = SimilaritySchema
+
+
+class MaterialsElectronic(MPTool):
+    name: str = "search_materials_electronic_structure__get"
+    description: str = (
+        re.sub(
+            r"\s+",
+            " ",
+            """useful when you need electronic structure properties like band gap, 
+            fermi energy, band structure, density of states, also useful when 
+            you need to perform filtering and sorting electronic structure properties 
+            and retrieve the qualified materials""",
+        )
+        .strip()
+        .replace("\n", " ")[0]
+    )
+    args_schema: type[ElectronicSchema] = ElectronicSchema
