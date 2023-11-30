@@ -1,7 +1,6 @@
 import os
 import re
 
-from dotenv import load_dotenv
 from langchain import hub
 from langchain.agents import (
     AgentExecutor,
@@ -41,13 +40,6 @@ from llamp.mp.tools import (
     MaterialsTasks,
     MaterialsThermo,
 )
-
-load_dotenv()
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
-
-# OPENAI_GPT_MODEL = "gpt-4-1106-preview"
-OPENAI_GPT_MODEL = "gpt-3.5-turbo-1106"
 
 REACT_MULTI_JSON_PROMPT = hub.pull("hwchase17/react-multi-input-json")
 
@@ -108,7 +100,7 @@ class MPAgent:
         self,
         verbose=True,
         return_intermediate_steps=False,
-        max_iterations=10,
+        max_iterations=5,
         handle_parsing_errors=True,
         **kwargs,
     ) -> AgentExecutor:

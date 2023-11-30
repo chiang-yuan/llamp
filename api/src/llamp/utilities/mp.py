@@ -266,6 +266,10 @@ class MPAPIWrapper(BaseModel):
         if "material_id" not in query_params.get("fields", []):
             query_params["fields"] = query_params.get(
                 "fields", []) + ["material_id"]
+        
+        if "formula_pretty" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["formula_pretty"]
 
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params

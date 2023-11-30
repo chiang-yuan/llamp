@@ -23,7 +23,8 @@ dependencies = [
     "mace @ git+https://github.com/chiang-yuan/mace.git@universal",
     "arxiv",
     "wikipedia",
-    "pandas"
+    "pandas",
+    "pypdf"
 ]
 requires-python = ">=3.9"
 
