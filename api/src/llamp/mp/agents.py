@@ -88,9 +88,10 @@ class MPAgent:
         partial_prompt.messages[0].prompt.template = re.sub(
                 r"\s+", " ",
                 f"""You are a helpful agent called {self.name} having access to 
-                materials data on Materials Project. When you create function input 
-                arguments, follow MP API schema strictcly and DO NOT hallucinate 
-                invalid arguments. Convert all acronyms and abbreviations to valid 
+                materials data on Materials Project (MP). DO NOT be overconfident and 
+                request related MP API endpoint whenever possible. When you create 
+                function input arguments, ALWAYS follow MP API schema strictcly and 
+                DO NOT hallucinate invalid arguments. Convert all acronyms and abbreviations to valid 
                 arguments, especially chemical formula and isotopes (e.g. D2O should be 
                 H2O), composition, and systems. """
             ).replace("\n", " ") + partial_prompt.messages[0].prompt.template
@@ -222,4 +223,18 @@ class MPElectronicExpert(MPAgent):
     def tools(self):
         return [
             MaterialsElectronic(return_direct=False, handle_tool_error=True),
+        ]
+
+class MPSynthesisExpert(MPAgent):
+    """Materials synthesis expert that has access to Materials Project synthesis 
+    endpoint, where synthesis recipes are extracted  from scientific literature through 
+    text mining and natural language processing approaches"""
+
+    def __init__(self, llm):
+        super().__init__(llm)
+
+    @property
+    def tools(self):
+        return [
+            MaterialsSynthesis(return_direct=False, handle_tool_error=True),
         ]
