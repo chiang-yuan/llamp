@@ -263,6 +263,8 @@ class MPAPIWrapper(BaseModel):
     def search_materials_summary(self, query_params: dict):
         query_params = self._process_query_params(query_params)
 
+        assert "fields" in query_params, "`fields` must be specified in the query"
+
         if "material_id" not in query_params.get("fields", []):
             query_params["fields"] = query_params.get(
                 "fields", []) + ["material_id"]
@@ -393,6 +395,8 @@ class MPAPIWrapper(BaseModel):
         thermo_types = query_params.pop("thermo_types", None)
         if thermo_types:
             query_params.update({"thermo_types": ",".join(thermo_types)})
+
+        assert "fields" in query_params, "fields must be specified"
 
         return self.mpr.materials.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -533,6 +537,18 @@ class MPAPIWrapper(BaseModel):
 
     def search_materials_electronic_structure(self, query_params):
         query_params = self._process_query_params(query_params)
+
+        if "material_id" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
+
+        if "formula_pretty" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["formula_pretty"]
+
+        if "band_gap" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["band_gap"]
 
         return self.mpr.materials.electronic_structure._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params

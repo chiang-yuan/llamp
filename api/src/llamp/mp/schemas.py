@@ -200,6 +200,7 @@ class SynthesisSchema(BaseModel):
         default=5, 
         description="Maximum number of entries to return",
         )
+    
 
 class ThermoSchema(BaseModel):
     thermo_ids: str | None = Field(None, description="Comma-separated list of thermo_ids to query on")

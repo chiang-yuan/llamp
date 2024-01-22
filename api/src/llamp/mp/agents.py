@@ -35,6 +35,7 @@ from llamp.mp.tools import (
     MaterialsRobocrystallographer,
     MaterialsSimilarity,
     MaterialsStructure,
+    MaterialsStructureText,
     MaterialsSummary,
     MaterialsSynthesis,
     MaterialsTasks,
@@ -147,6 +148,18 @@ class MPSummaryExpert(MPAgent):
     def tools(self):
         return [
             MaterialsSummary(return_direct=False, handle_tool_error=True),
+        ]
+
+class MPStructureRetriever(MPAgent):
+    """Structure expert that will return directly from Materials Project summary endpoint"""
+
+    def __init__(self, llm):
+        super().__init__(llm)
+
+    @property
+    def tools(self):
+        return [
+            MaterialsStructureText(return_direct=True, handle_tool_error=True),
         ]
 
 class MPThermoExpert(MPAgent):
