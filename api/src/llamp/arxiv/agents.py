@@ -17,7 +17,12 @@ from langchain.agents.output_parsers import (
     ReActSingleInputOutputParser,
 )
 from langchain.agents.schema import AgentAction
-from langchain.chains import LLMChain, StuffDocumentsChain
+from langchain.chains import (
+    LLMChain,
+    MapReduceDocumentsChain,
+    ReduceDocumentsChain,
+    StuffDocumentsChain,
+)
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import PyPDFLoader
@@ -28,6 +33,7 @@ from langchain.embeddings import HuggingFaceInferenceAPIEmbeddings, OpenAIEmbedd
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.pydantic_v1 import BaseModel, Field
+from langchain.text_splitter import CharacterTextSplitter
 from langchain.tools import ArxivQueryRun, StructuredTool, Tool, tool
 from langchain.tools.render import (
     format_tool_to_openai_function,
@@ -39,14 +45,48 @@ from langchain.vectorstores import Chroma
 REACT_MULTI_JSON_PROMPT = hub.pull("hwchase17/react-multi-input-json")
 
 load_dotenv()
-HF_API_KEY = os.getenv("HUGGINGFACE_API_KEY", None)
+HF_API_KEY = os.getenv("HF_API_KEY", None)
 
-class ARXIVAgent:
-    """Agent that uses the arXiv API and PDF loader to answer questions about scientific papers and preprints."""
+class ArxivAgent:
+    """Agent that uses the arXiv API and PDF loader to answer questions about 
+    scientific papers and preprints. Instruct the agent to use "load_pdf_from_url" 
+    to load the PDF and summarize it when neccessary.
+    """
 
-    def __init__(self, llm, hf_api_key=HF_API_KEY, embeddings_model_name="all-MiniLM-L6-v2"):
+    def __init__(self, llm, hf_api_key=HF_API_KEY, embeddings_model_name="sentence-transformers/all-mpnet-base-v2"):
         self.llm = llm
         # self.summary_chain = load_summarize_chain(self.llm, chain_type="map_reduce", verbose=True)
+
+        # NOTE: https://python.langchain.com/docs/use_cases/summarization#option-2-map-reduce
+        map_prompt = hub.pull("rlm/map-prompt")
+        map_chain = LLMChain(llm=llm, prompt=map_prompt)
+        reduce_prompt = hub.pull("rlm/map-prompt")
+        reduce_chain = LLMChain(llm=llm, prompt=reduce_prompt)
+        combine_documents_chain = StuffDocumentsChain(
+            llm_chain=reduce_chain, document_variable_name="docs",
+            verbose=True
+        )
+        reduce_documents_chain = ReduceDocumentsChain(
+            # This is final chain that is called.
+            combine_documents_chain=combine_documents_chain,
+            # If documents exceed context for `StuffDocumentsChain`
+            collapse_documents_chain=combine_documents_chain,
+            # The maximum number of tokens to group documents into.
+            token_max=12000,
+            verbose=True,
+        )
+        # Combining documents by mapping a chain over them, then combining results
+        self.summary_chain = MapReduceDocumentsChain(
+            # Map chain
+            llm_chain=map_chain,
+            # Reduce chain
+            reduce_documents_chain=reduce_documents_chain,
+            # The variable name in the llm_chain to put the documents in
+            document_variable_name="docs",
+            # Return the results of the map steps in the output
+            return_intermediate_steps=False,
+            verbose=True
+        )
         self.embeddings = HuggingFaceInferenceAPIEmbeddings(
             api_key=HF_API_KEY,
             model_name=embeddings_model_name
@@ -76,16 +116,16 @@ class ARXIVAgent:
     class PDFLoaderInputSchema(BaseModel):
         url: str = Field(..., description="URL to a PDF file.")
         query: str = Field(..., description="Query to search for in the PDF file.")
+        top_k: int = Field(10, description="Number of documents to return.")
 
-    def load_pdf_from_url(self, url: str, query: str):
+    def load_pdf_from_url(self, url: str, query: str, top_k: int = 10):
         loader = PyPDFLoader(url, extract_images=False)
         pages = loader.load_and_split()
-        retriever = Chroma.from_documents(pages, embedding=self.embeddings).as_retriever(
-            search_kwargs={"k": 10}
-        )
-        docs = retriever.get_relevant_documents(query)
-        # could add StuffDocumentsChain here https://python.langchain.com/docs/modules/data_connection/document_transformers/post_retrieval/long_context_reorder
-        return docs
+        # retriever = Chroma.from_documents(pages, embedding=self.embeddings).as_retriever(
+        #     search_kwargs={"k": top_k}
+        # )
+        # docs = retriever.get_relevant_documents(query)
+        return self.summary_chain.run(pages)
     
     @property
     def tools(self) -> list[Tool]: 
@@ -99,13 +139,13 @@ class ARXIVAgent:
                 format https://arxiv.org/pdf/{arxiv_id}.pdf, where {arxiv_id} is
                 the arXiv identifier of the paper.
                 """).replace("\n", " "),
-            return_direct=True,
+            return_direct=False,
             args_schema=self.PDFLoaderInputSchema,
         )
 
         return [
+            pdf_tool,
             ArxivQueryRun(api_wrapper=ArxivAPIWrapper()),
-            pdf_tool
         ]
 
     @property
@@ -119,7 +159,9 @@ class ARXIVAgent:
                 f"""You are a helpful agent called {self.name} having access to 
                 papers and preprints on arXiv through arXiv API and PDF loaders. 
                 "Preprint" means the paper might not have been peer-reviewed yet. 
-                Be critical of the information you find."""
+                Be critical of the information you find. If you are asked to
+                read the paper, you must use "load_pdf_from_url" to load the PDF. 
+                Remember to keep arXiv ids in scratchpad for future reference."""
             ).replace("\n", " ") + partial_prompt.messages[0].prompt.template
         return partial_prompt
 

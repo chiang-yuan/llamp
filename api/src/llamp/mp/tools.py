@@ -76,7 +76,6 @@ class MaterialsSummary(MPTool):
     )
     args_schema: type[SummarySchema] = SummarySchema
 
-
 class MaterialsStructure(MPTool):
     name: str = "search_materials_structure__get"
     description: str = (
@@ -108,6 +107,20 @@ class MaterialsStructure(MPTool):
                 f.write(json.dumps(structure))
 
         return '[structures]' + ','.join(list(map(lambda x: x['material_id'], _response)))
+
+class MaterialsStructureText(MPTool):
+    name: str = "search_materials_structure__get"
+    description: str = (
+        re.sub(
+            r"\s+",
+            " ",
+            """useful when you need to get the pymatgen structures on Materials 
+            Project as direct JSON text response."""
+        )
+        .strip()
+        .replace("\n", " ")[0]
+    )
+    args_schema: type[StructureSchema] = StructureSchema
 
 
 class MaterialsElasticity(MPTool):
