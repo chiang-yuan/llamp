@@ -3,15 +3,16 @@ import os
 import asyncio
 
 from dotenv import load_dotenv
+from typing import AsyncGenerator
 from langchain import hub
-from langchain.agents import AgentExecutor, AgentType, initialize_agent, load_tools
+from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import (
     JSONAgentOutputParser,
     ReActSingleInputOutputParser,
 )
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.llms import OpenAI
 from langchain.tools import ArxivQueryRun, WikipediaQueryRun, tool
 from langchain.tools.render import render_text_description_and_args, format_tool_to_openai_function
@@ -34,7 +35,6 @@ from llamp.mp.agents import (
     MPThermoExpert,
     MPElasticityExpert,
     MPDielectricExpert,
-    MPPiezoelectricExpert,
     MPMagnetismExpert,
     MPElectronicExpert,
 )
@@ -100,16 +100,11 @@ prompt = prompt.partial(
     tool_names=", ".join([t.name for t in tools]),
 )
 
-agent = (
-    {
-        "input": lambda x: x["input"],
-        "agent_scratchpad": lambda x: format_log_to_str(x["intermediate_steps"]),
-    }
-    | prompt
-    | llm.bind(stop=["Observation"])
-    | JSONAgentOutputParser()
-)
 
+model = ChatOpenAI(temperature=0, streaming=True, max_retries=5,
+                   model=OPENAI_GPT_MODEL, api_key=OPENAI_API_KEY)
+agent = create_openai_tools_agent(model.with_config(
+    {'tags': ['react-multi-input-json']}), tools, prompt)
 
 conversational_memory = ConversationBufferWindowMemory(
     memory_key='chat_history',
@@ -124,16 +119,9 @@ agent_kwargs = {
     ],
 }
 
-agent_executor = initialize_agent(
-    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-    tools=tools,
-    llm=llm,
-    verbose=True,
-    max_iterations=10,
-    memory=conversational_memory,
-    agent_kwargs=agent_kwargs,
-    handle_parsing_errors=True,
-)
+agent_executor = AgentExecutor(agent=agent, tools=tools).with_config({
+    'run_name': 'react-multi-input-json',
+})
 
 app = FastAPI()
 
@@ -169,11 +157,24 @@ async def create_gen(input: str, stream_it: CustomHandler):
     await task
 
 
+async def agent_stream(input_data: str) -> AsyncGenerator[str, None]:
+    async for chunk in agent_executor.astream({"input": input_data}):
+        if "actions" in chunk:
+            for action in chunk["actions"]:
+                yield f"Calling Tool: `{action.tool}` with input `{action.tool_input}`\n"
+        elif "steps" in chunk:
+            for step in chunk["steps"]:
+                yield f"Tool Result: `{step.observation}`\n"
+        elif "output" in chunk:
+            yield f'Final Output: {chunk["output"]}\n'
+        else:
+            raise ValueError()
+        yield "---\n"
+
+
 @app.get('/chat')
 async def chat(query: Query):
-    stream_it = CustomHandler()
-    gen = create_gen(query.text, stream_it)
-    return StreamingResponse(gen, media_type="text/plain")
+    return StreamingResponse(agent_stream(query.text), media_type="text/plain")
 
 
 # agent_executor.invoke({
