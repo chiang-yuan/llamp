@@ -1,5 +1,6 @@
 import re
 import os
+import asyncio
 
 from dotenv import load_dotenv
 from langchain import hub
@@ -18,12 +19,14 @@ from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from langchain.prompts import MessagesPlaceholder
 from langchain.schema import ChatMessage, SystemMessage
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
 
 import uvicorn
 from fastapi import FastAPI, Body
 from fastapi.responses import StreamingResponse
 from queue import Queue
 from pydantic import BaseModel
+from typing import Any, AsyncIterator, List, Literal
 
 
 from llamp.mp.agents import (
@@ -136,15 +139,41 @@ app = FastAPI()
 
 
 class Query(BaseModel):
-    query: str
+    text: str
 
 
-@app.post('/chat')
-async def chat(query: Query):
-    response = agent_executor.invoke({
-        "input": query.text
+@app.get('/health')
+async def health():
+    return {"status": "ok"}
+
+
+class CustomHandler(AsyncIteratorCallbackHandler):
+    async def on_chat_model_start(self, *args, **kwargs):
+        # Implement your logic here
+        # This method will be called when the chat model starts processing
+        pass
+
+
+async def run_call(input: str, stream_it: CustomHandler):
+    agent_executor.agent.llm_chain.llm.callbacks = [stream_it]
+    response = await agent_executor.ainvoke({
+        "input": input
     })
     return response
+
+
+async def create_gen(input: str, stream_it: CustomHandler):
+    task = asyncio.create_task(run_call(input, stream_it))
+    async for token in stream_it.aiter():
+        yield token
+    await task
+
+
+@app.get('/chat')
+async def chat(query: Query):
+    stream_it = CustomHandler()
+    gen = create_gen(query.text, stream_it)
+    return StreamingResponse(gen, media_type="text/plain")
 
 
 # agent_executor.invoke({
