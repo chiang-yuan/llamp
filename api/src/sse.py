@@ -142,21 +142,6 @@ class CustomHandler(AsyncIteratorCallbackHandler):
         pass
 
 
-async def run_call(input: str, stream_it: CustomHandler):
-    agent_executor.agent.llm_chain.llm.callbacks = [stream_it]
-    response = await agent_executor.ainvoke({
-        "input": input
-    })
-    return response
-
-
-async def create_gen(input: str, stream_it: CustomHandler):
-    task = asyncio.create_task(run_call(input, stream_it))
-    async for token in stream_it.aiter():
-        yield token
-    await task
-
-
 async def agent_stream(input_data: str) -> AsyncGenerator[str, None]:
     async for chunk in agent_executor.astream({"input": input_data}):
         if "actions" in chunk:
