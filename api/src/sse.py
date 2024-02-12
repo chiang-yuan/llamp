@@ -1,33 +1,28 @@
 import re
 import os
-import asyncio
 
 from dotenv import load_dotenv
 from typing import AsyncGenerator
 from langchain import hub
-from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain.agents.format_scratchpad import format_log_to_str
-from langchain.agents.output_parsers import (
-    JSONAgentOutputParser,
-    ReActSingleInputOutputParser,
+from langchain.agents import (
+    AgentExecutor,
+    create_openai_tools_agent,
+    create_structured_chat_agent,
+    create_react_agent,
 )
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_openai import ChatOpenAI
-from langchain.llms import OpenAI
-from langchain.tools import ArxivQueryRun, WikipediaQueryRun, tool
-from langchain.tools.render import render_text_description_and_args, format_tool_to_openai_function
+from langchain.tools import ArxivQueryRun, WikipediaQueryRun
+from langchain.tools.render import render_text_description_and_args
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from langchain.prompts import MessagesPlaceholder
-from langchain.schema import ChatMessage, SystemMessage
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
 
 import uvicorn
-from fastapi import FastAPI, Body
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
-from queue import Queue
 from pydantic import BaseModel
-from typing import Any, AsyncIterator, List, Literal
 
 
 from llamp.mp.agents import (
@@ -86,6 +81,8 @@ tools = [
 ]
 
 prompt = hub.pull("hwchase17/react-multi-input-json")
+# prompt = hub.pull("hwchase17/structured-chat-agent")
+# prompt = hub.pull("hwchase17/react")
 prompt.messages[0].prompt.template = re.sub(
     r"\s+", " ",
     """You are a data-aware agent that can consult materials-related
@@ -105,6 +102,8 @@ model = ChatOpenAI(temperature=0, streaming=True, max_retries=5,
                    model=OPENAI_GPT_MODEL, api_key=OPENAI_API_KEY)
 agent = create_openai_tools_agent(model.with_config(
     {'tags': ['react-multi-input-json']}), tools, prompt)
+# agent = create_structured_chat_agent(llm, tools, prompt)
+# agent = create_react_agent(llm, tools, prompt)
 
 conversational_memory = ConversationBufferWindowMemory(
     memory_key='chat_history',
@@ -160,11 +159,6 @@ async def agent_stream(input_data: str) -> AsyncGenerator[str, None]:
 @app.get('/chat')
 async def chat(query: Query):
     return StreamingResponse(agent_stream(query.text), media_type="text/plain")
-
-
-# agent_executor.invoke({
-#    "input": "What's the bandgap of CsPbI3?"
-# })
 
 
 if __name__ == "__main__":
