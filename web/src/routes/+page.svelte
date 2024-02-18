@@ -6,9 +6,9 @@
 
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faPaperPlane, faBars } from '@fortawesome/free-solid-svg-icons';
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import { type Chat, type ChatMessage, syncChats, type SimulationDataItem } from '$lib/chatUtils';
-  import { writable } from 'svelte/store';
+  //  import { writable } from 'svelte/store';
   import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats, currentChatIndex } from '$lib/store';
 
   const CHAT_ENDPOINT =
@@ -38,7 +38,17 @@
   let currentMessage = '';
   let processing = false;
 
-  const streamData = writable('');
+  function parseSection(section: string) {
+    if (section.startsWith('Calling Tool:')) {
+      return { type: 'callingTool', content: section };
+    } else if (section.startsWith('Tool Result:')) {
+      return { type: 'toolResult', content: section };
+    } else if (section.startsWith('Final Output:')) {
+      return { type: 'finalOutput', content: section };
+    } else {
+      return { type: 'unknown', content: section };
+    }
+  }
 
   async function getStream(message: ChatMessage) {
     const response = await fetch(CHAT_ENDPOINT, {
@@ -50,30 +60,19 @@
       body: JSON.stringify({ text: message.content })
     });
 
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
-
-    let result = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      result += decoder.decode(value, { stream: true });
-      if (result.includes('\n')) {
-        const lines = result.split('\n');
-        for (let i = 0; i < lines.length - 1; i++) {
-          console.log(lines[i]);
-          streamData.update((currentData) => currentData + lines[i] + '\n');
-        }
-        result = lines[lines.length - 1];
-      }
-    }
-
-    // Handle any remaining data
-    if (result) {
-      console.log(result);
-      streamData.update((currentData) => currentData + result);
+      const section = decoder.decode(value, { stream: true });
+      console.log(parseSection(section));
     }
   }
 
