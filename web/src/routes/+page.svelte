@@ -8,24 +8,18 @@
   import { faPaperPlane, faBars } from '@fortawesome/free-solid-svg-icons';
   import { onMount, onDestroy } from 'svelte';
   import { type Chat, type ChatMessage, syncChats, type SimulationDataItem } from '$lib/chatUtils';
+  import { writable } from 'svelte/store';
   import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats, currentChatIndex } from '$lib/store';
 
-  const WS_ENDPOINT =
-	process.env.NODE_ENV === 'production'
-		? 'ws://ingress.llamp.development.svc.spin.nersc.org/ws'
-		: 'ws://localhost:8000/ws';
+  const CHAT_ENDPOINT =
+    process.env.NODE_ENV === 'production'
+      ? 'http://ingress.llamp.development.svc.spin.nersc.org/chat'
+      : 'http://localhost:8000/chat';
 
   let loading = true;
 
   onMount(() => {
     loading = false;
-	openWebSocket();
-  });
-
-    onDestroy(() => {
-    if (websocket) {
-      websocket.close();
-    }
   });
 
   function addMessage(newMessage: ChatMessage) {
@@ -43,66 +37,50 @@
 
   let currentMessage = '';
   let processing = false;
-  let websocket: WebSocket|null = null;
 
-async function openWebSocket() {
-	if (websocket && websocket.readyState === WebSocket.OPEN) {
-		return;
-	}
-    websocket = new WebSocket(WS_ENDPOINT);
+  const streamData = writable('');
 
-    websocket.onmessage = function(event) {
-console.log(event);
-      const result = JSON.parse(event.data);
-	  switch(result.messageType) {
-		case 'response-msg':
-			processWebSocketResponse(result);
-		default:
-			console.log('Unknown message: ', result)
-	  }
-    };
+  async function getStream(message: ChatMessage) {
+    const response = await fetch(CHAT_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      // TODO: send timestamps and other metadata
+      body: JSON.stringify({ text: message.content })
+    });
 
-    websocket.onerror = function(event) {
-      console.error('WebSocket error:', event);
-    };
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
 
-    websocket.onclose = function(event) {
-      console.log('WebSocket connection closed:', event);
-    };
-}
+    let result = '';
 
-async function processWebSocketResponse(result) {
-  const responses = result.responses.map(r => ({ ...r }));
-  appendResponse(responses);
-  const structures = result.structures;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-  let simulation_data = result.simulation_data;
-  if (simulation_data?.length > 0) {
-    simulation_data = JSON.parse(simulation_data);
-    simulation_data = simulation_data
-      .map(r => ({
-        time: r['Time[ps]'],
-        Etot: r['Etot/N[eV]']
-      }))
-      .slice(0, 10);
+      result += decoder.decode(value, { stream: true });
+      if (result.includes('\n')) {
+        const lines = result.split('\n');
+        for (let i = 0; i < lines.length - 1; i++) {
+          console.log(lines[i]);
+          streamData.update((currentData) => currentData + lines[i] + '\n');
+        }
+        result = lines[lines.length - 1];
+      }
+    }
 
-    appendSimulation(simulation_data, structures);
-  } else if (structures?.length > 0) {
-    appendStructures(structures);
+    // Handle any remaining data
+    if (result) {
+      console.log(result);
+      streamData.update((currentData) => currentData + result);
+    }
   }
-  console.log('structures: ', structures);
 
-  syncChats();
-}
-
-async function askQuestion() {
-  if (!currentMessage || processing) {
-	return;
-  }
-  if (!websocket || websocket.readyState !== WebSocket.OPEN) {
-    console.error("WebSocket is not open");
-    return;
-  }
+  async function askQuestion() {
+    if (!currentMessage || processing) {
+      return;
+    }
 
     const newMessage: ChatMessage = {
       role: 'user',
@@ -123,33 +101,24 @@ async function askQuestion() {
       return updatedChats;
     });
 
-  const body = {
-    messages: $chats[$currentChatIndex].messages,
-    openAIKey: $OpenAiAPIKey,
-    mpAPIKey: $mpAPIKey
-  };
+    const body = {
+      messages: $chats[$currentChatIndex].messages,
+      openAIKey: $OpenAiAPIKey,
+      mpAPIKey: $mpAPIKey
+    };
 
-  currentMessage = '';
+    currentMessage = '';
 
-  try {
-    processing = true;
+    try {
+      processing = true;
 
-    // Send data over WebSocket
-    websocket!.send(JSON.stringify(body));
-  } catch (error) {
-    console.error('Error while asking question:', error);
-  } finally {
-    processing = false;
+      getStream(newMessage);
+    } catch (error) {
+      console.error('Error while asking question:', error);
+    } finally {
+      processing = false;
+    }
   }
-}
-
-// Ensure to call a function to close the WebSocket when the component unmounts or when you are done using it
-function closeWebSocket() {
-  if (websocket) {
-    websocket.close();
-  }
-}
-
 
   function appendSimulation(simulation_data: any[], structures: any[]) {
     chats.update((currentChats: Chat[]) => {

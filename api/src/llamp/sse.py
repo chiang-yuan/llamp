@@ -1,14 +1,13 @@
 import re
 import os
 
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import AsyncGenerator
 from langchain import hub
 from langchain.agents import (
     AgentExecutor,
     create_openai_tools_agent,
-    create_structured_chat_agent,
-    create_react_agent,
 )
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_openai import ChatOpenAI
@@ -124,6 +123,16 @@ agent_executor = AgentExecutor(agent=agent, tools=tools).with_config({
 
 app = FastAPI()
 
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class Query(BaseModel):
     text: str
@@ -156,7 +165,7 @@ async def agent_stream(input_data: str) -> AsyncGenerator[str, None]:
         yield "---\n"
 
 
-@app.get('/chat')
+@app.post('/chat')
 async def chat(query: Query):
     return StreamingResponse(agent_stream(query.text), media_type="text/plain")
 
