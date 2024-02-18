@@ -72,7 +72,14 @@
       if (done) break;
 
       const section = decoder.decode(value, { stream: true });
-      console.log(parseSection(section));
+      appendResponses([
+        {
+          role: 'assistant',
+          content: section,
+          type: 'msg',
+          timestamp: new Date()
+        }
+      ]);
     }
   }
 
@@ -162,7 +169,7 @@
     });
   }
 
-  function appendResponse(responses: ChatMessage[]) {
+  function appendResponses(responses: ChatMessage[]) {
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats];
       const updatedMessages = [
