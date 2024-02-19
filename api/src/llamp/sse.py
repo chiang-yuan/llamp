@@ -154,10 +154,10 @@ async def agent_stream(input_data: str) -> AsyncGenerator[str, None]:
     async for chunk in agent_executor.astream({"input": input_data}):
         if "actions" in chunk:
             for action in chunk["actions"]:
-                yield f"Calling Tool: `{action.tool}` with input `{action.tool_input}`\n"
+                yield f"⌛️ Action: `{action.tool}` with input `{action.tool_input}`\n"
         elif "steps" in chunk:
             for step in chunk["steps"]:
-                yield f"Tool Result: `{step.observation}`\n"
+                yield f"🔎 Observation: `{step.observation}`\n"
         elif "output" in chunk:
             yield f'Final Output: {chunk["output"]}\n'
         else:

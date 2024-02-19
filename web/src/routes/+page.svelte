@@ -119,8 +119,7 @@
 
     try {
       processing = true;
-
-      getStream(newMessage);
+      await getStream(newMessage);
     } catch (error) {
       console.error('Error while asking question:', error);
     } finally {
