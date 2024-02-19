@@ -31,6 +31,7 @@ from llamp.mp.agents import (
     MPDielectricExpert,
     MPMagnetismExpert,
     MPElectronicExpert,
+    MPStructureRetriever,
 )
 
 load_dotenv()
@@ -75,6 +76,9 @@ tools = [
         agent_kwargs=dict(return_intermediate_steps=False)),
     MPSummaryExpert(llm=mp_llm).as_tool(
         agent_kwargs=dict(return_intermediate_steps=False)),
+    MPStructureRetriever(llm=mp_llm).as_tool(
+        agent_kwargs=dict(return_intermediate_steps=False)),
+
     # arxiv,
     # wikipedia,
 ]
