@@ -38,16 +38,18 @@
   let currentMessage = '';
   let processing = false;
 
-  function parseSection(section: string) {
-    if (section.startsWith('Calling Tool:')) {
-      return { type: 'callingTool', content: section };
-    } else if (section.startsWith('Tool Result:')) {
-      return { type: 'toolResult', content: section };
-    } else if (section.startsWith('Final Output:')) {
-      return { type: 'finalOutput', content: section };
-    } else {
-      return { type: 'unknown', content: section };
+  function parseActionInput(input: string): string {
+    const prefix = 'Final Output: Action:';
+    if (!input.startsWith(prefix)) {
+      return input;
     }
+    const jsonPart = input.substring(prefix.length).trim();
+    const match = /"action_input"\s*:\s*"((?:\\.|[^"\\])*)"/.exec(jsonPart);
+
+    if (!match || match.length < 2) {
+      return input;
+    }
+    return match[1].replace(/\\n/g, '\n');
   }
 
   async function getStream(message: ChatMessage) {
@@ -75,7 +77,7 @@
       appendResponses([
         {
           role: 'assistant',
-          content: section,
+          content: parseActionInput(section),
           type: 'msg',
           timestamp: new Date()
         }
