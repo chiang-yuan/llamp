@@ -6,26 +6,20 @@
 
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faPaperPlane, faBars } from '@fortawesome/free-solid-svg-icons';
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import { type Chat, type ChatMessage, syncChats, type SimulationDataItem } from '$lib/chatUtils';
+  //  import { writable } from 'svelte/store';
   import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats, currentChatIndex } from '$lib/store';
 
-  const WS_ENDPOINT =
-	process.env.NODE_ENV === 'production'
-		? 'ws://ingress.llamp.development.svc.spin.nersc.org/ws'
-		: 'ws://localhost:8000/ws';
+  const CHAT_ENDPOINT =
+    process.env.NODE_ENV === 'production'
+      ? 'http://ingress.llamp.development.svc.spin.nersc.org/chat'
+      : 'http://localhost:8000/chat';
 
   let loading = true;
 
   onMount(() => {
     loading = false;
-	openWebSocket();
-  });
-
-    onDestroy(() => {
-    if (websocket) {
-      websocket.close();
-    }
   });
 
   function addMessage(newMessage: ChatMessage) {
@@ -43,66 +37,58 @@
 
   let currentMessage = '';
   let processing = false;
-  let websocket: WebSocket|null = null;
 
-async function openWebSocket() {
-	if (websocket && websocket.readyState === WebSocket.OPEN) {
-		return;
-	}
-    websocket = new WebSocket(WS_ENDPOINT);
+  function parseActionInput(input: string): string {
+    const prefix = 'Final Output: Action:';
+    if (!input.startsWith(prefix)) {
+      return input;
+    }
+    const jsonPart = input.substring(prefix.length).trim();
+    const match = /"action_input"\s*:\s*"((?:\\.|[^"\\])*)"/.exec(jsonPart);
 
-    websocket.onmessage = function(event) {
-console.log(event);
-      const result = JSON.parse(event.data);
-	  switch(result.messageType) {
-		case 'response-msg':
-			processWebSocketResponse(result);
-		default:
-			console.log('Unknown message: ', result)
-	  }
-    };
-
-    websocket.onerror = function(event) {
-      console.error('WebSocket error:', event);
-    };
-
-    websocket.onclose = function(event) {
-      console.log('WebSocket connection closed:', event);
-    };
-}
-
-async function processWebSocketResponse(result) {
-  const responses = result.responses.map(r => ({ ...r }));
-  appendResponse(responses);
-  const structures = result.structures;
-
-  let simulation_data = result.simulation_data;
-  if (simulation_data?.length > 0) {
-    simulation_data = JSON.parse(simulation_data);
-    simulation_data = simulation_data
-      .map(r => ({
-        time: r['Time[ps]'],
-        Etot: r['Etot/N[eV]']
-      }))
-      .slice(0, 10);
-
-    appendSimulation(simulation_data, structures);
-  } else if (structures?.length > 0) {
-    appendStructures(structures);
+    if (!match || match.length < 2) {
+      return input;
+    }
+    return match[1].replace(/\\n/g, '\n');
   }
-  console.log('structures: ', structures);
 
-  syncChats();
-}
+  async function getStream(message: ChatMessage) {
+    const response = await fetch(CHAT_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      // TODO: send timestamps and other metadata
+      body: JSON.stringify({ text: message.content })
+    });
 
-async function askQuestion() {
-  if (!currentMessage || processing) {
-	return;
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const section = decoder.decode(value, { stream: true });
+      appendResponses([
+        {
+          role: 'assistant',
+          content: parseActionInput(section),
+          type: 'msg',
+          timestamp: new Date()
+        }
+      ]);
+    }
   }
-  if (!websocket || websocket.readyState !== WebSocket.OPEN) {
-    console.error("WebSocket is not open");
-    return;
-  }
+
+  async function askQuestion() {
+    if (!currentMessage || processing) {
+      return;
+    }
 
     const newMessage: ChatMessage = {
       role: 'user',
@@ -123,33 +109,23 @@ async function askQuestion() {
       return updatedChats;
     });
 
-  const body = {
-    messages: $chats[$currentChatIndex].messages,
-    openAIKey: $OpenAiAPIKey,
-    mpAPIKey: $mpAPIKey
-  };
+    const body = {
+      messages: $chats[$currentChatIndex].messages,
+      openAIKey: $OpenAiAPIKey,
+      mpAPIKey: $mpAPIKey
+    };
 
-  currentMessage = '';
+    currentMessage = '';
 
-  try {
-    processing = true;
-
-    // Send data over WebSocket
-    websocket!.send(JSON.stringify(body));
-  } catch (error) {
-    console.error('Error while asking question:', error);
-  } finally {
-    processing = false;
+    try {
+      processing = true;
+      await getStream(newMessage);
+    } catch (error) {
+      console.error('Error while asking question:', error);
+    } finally {
+      processing = false;
+    }
   }
-}
-
-// Ensure to call a function to close the WebSocket when the component unmounts or when you are done using it
-function closeWebSocket() {
-  if (websocket) {
-    websocket.close();
-  }
-}
-
 
   function appendSimulation(simulation_data: any[], structures: any[]) {
     chats.update((currentChats: Chat[]) => {
@@ -194,7 +170,7 @@ function closeWebSocket() {
     });
   }
 
-  function appendResponse(responses: ChatMessage[]) {
+  function appendResponses(responses: ChatMessage[]) {
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats];
       const updatedMessages = [

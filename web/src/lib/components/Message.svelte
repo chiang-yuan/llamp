@@ -9,6 +9,15 @@
 
   $: user = data.role === 'user';
   let w: number;
+  let messageType: string | null = null;
+  function getMessageType(content: string): string | null {
+    if (content.includes('⌛️ Action')) {
+      return 'action';
+    } else if (content.includes('🔎 Observation')) {
+      return 'observation';
+    }
+    return null;
+  }
 
   interface MessageFeed {
     id: number;
@@ -33,16 +42,23 @@
 
   let parsedContent: string;
   $: if (data && data.content) {
-	const mpRegex = /mp-\d+/g;
-	function processLinks(content: string) {
-		return content.replace(mpRegex, (materialId: string) => {
-			const tailwindClasses = "underline text-blue-600 hover:opacity-75";
-			return `<a href="https://next-gen.materialsproject.org/materials/${materialId}"
+    const mpRegex = /mp-\d+/g;
+    function processLinks(content: string) {
+      return content.replace(mpRegex, (materialId: string) => {
+        const tailwindClasses = 'underline text-blue-600 hover:opacity-75';
+        return `<a href="https://next-gen.materialsproject.org/materials/${materialId}"
 				class="${tailwindClasses}" target="_blank" rel="noopener noreferrer">${materialId}</a>`;
-		});
-	}
-	parsedContent = processLinks(DOMPurify.sanitize(marked.parse(data.content)));
+      });
+    }
+    parsedContent = processLinks(DOMPurify.sanitize(marked.parse(data.content)));
+    messageType = getMessageType(data.content);
   }
+  $: typeColor =
+    messageType === 'action'
+      ? 'text-pink-800 dark:text-pink-500'
+      : messageType === 'observation'
+        ? 'text-green-800 dark:text-lime-500'
+        : undefined;
 </script>
 
 {#if data.type == 'msg' && data.content.length > 0}
@@ -64,7 +80,9 @@
         {/if}
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
-        <pre class="whitespace-pre-wrap" bind:this={parsedContent}>{@html parsedContent}</pre>
+      <pre
+        class="whitespace-pre-wrap {typeColor}"
+        bind:this={parsedContent}>{@html parsedContent}</pre>
     </div>
   </div>
 {:else if data.type == 'structures'}

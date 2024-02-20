@@ -10,7 +10,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y build-essential git
 
 # Copy the requirements file and install dependencies
-COPY ./pyproject.toml ./requirements.txt /app/
+COPY ./pyproject.toml ./rq.txt /app/
 
 # Change directory to where your FastAPI application code is located
 WORKDIR /app/src
@@ -26,5 +26,5 @@ RUN pip install --no-cache-dir -e .
 EXPOSE 8000
 
 # Define the command to start the FastAPI application
-CMD ["uvicorn", "llamp.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "llamp.sse:app", "--host", "0.0.0.0", "--port", "8000"]
 
