@@ -17,4 +17,4 @@ class StreamingRedisCallbackHandler(BaseCallbackHandler):
 
     def on_agent_finish(self, finish: AgentFinish, **kwargs: Any) -> None:
         """Run on agent finish. Only available when streaming is enabled."""
-        self.redis_client.publish(self.redis_channel, "Agent finished!")
+        self.redis_client.publish(self.redis_channel, "AGENT_FINISH")

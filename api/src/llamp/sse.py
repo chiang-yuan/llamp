@@ -1,8 +1,6 @@
 import re
 import os
-import json
 import redis
-import time
 import uuid
 import asyncio
 
@@ -17,7 +15,6 @@ from langchain.tools import ArxivQueryRun, WikipediaQueryRun
 from langchain.tools.render import render_text_description_and_args
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from langchain.prompts import MessagesPlaceholder
-# from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import (
@@ -202,7 +199,7 @@ async def listen_to_pubsub(pubsub):
     while True:
         message = pubsub.get_message()
         if message and message['type'] == 'message':
-            print(f"Received message: {message['data'].decode()}")
+            yield message['data'].decode()
         await asyncio.sleep(0.1)  # Prevents busy-waiting
 
 
@@ -211,18 +208,25 @@ async def agent_stream(input_data: str, chat_id: str):
     # pubsub.subscribe(chat_id)
     pubsub.subscribe('llm_stream')
     print("Subscribed to 'llm_stream' channel. Listening for new messages...")
-    listen_task = asyncio.create_task(listen_to_pubsub(pubsub))
+
     ainvoke_task = asyncio.create_task(
         agent_executor.ainvoke({"input": input_data}))
-    await asyncio.gather(listen_task, ainvoke_task)
+
+    async for message in listen_to_pubsub(pubsub):
+        if message == "AGENT_FINISH":
+            pubsub.unsubscribe()
+            ainvoke_task.cancel()
+            break
+        yield message
+
+    # Ensure ainvoke_task is also completed before exiting
+    await ainvoke_task
 
 
 @app.post('/chat')
 async def chat(query: Query):
     chat_id = str(uuid.uuid4())
-    await agent_stream(query.text, chat_id)
-    # return StreamingResponse(agent_stream(query.text, chat_id), media_type="text/plain")
-    return "Hello"
+    return StreamingResponse(agent_stream(query.text, chat_id), media_type="text/plain")
 
 
 if __name__ == "__main__":
