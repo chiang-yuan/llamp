@@ -27,3 +27,8 @@ services:
       - ./api/src:/usr/src/app/src
     env_file:
       - .env.local
+
+  redis:
+    image: 'redis:alpine'
+    ports:
+      - '6379:6379'

@@ -30,6 +30,8 @@ dependencies = [
     "pypdf",
     "transformers",
     "accelerate",
+	"redis>=5.0.1,<5.1.0",
+	"pymatgen==2024.2.8",
 ]
 requires-python = ">=3.9"
 
