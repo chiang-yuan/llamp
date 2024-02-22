@@ -16,6 +16,7 @@ from langchain.tools.render import render_text_description_and_args
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from langchain.prompts import MessagesPlaceholder
 from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import (
     JSONAgentOutputParser,
@@ -160,7 +161,7 @@ agent_executor = initialize_agent(
     agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
     tools=tools,
     llm=llm,
-    verbose=False,
+    verbose=True,
     max_iterations=5,
     # memory=conversational_memory,
     # agent_kwargs=agent_kwargs,
@@ -214,10 +215,9 @@ async def agent_stream(input_data: str, chat_id: str):
 
     async for message in listen_to_pubsub(pubsub):
         if message == "AGENT_FINISH":
-            pubsub.unsubscribe()
             ainvoke_task.cancel()
             break
-        yield message
+        yield message.encode('utf-8')
 
     # Ensure ainvoke_task is also completed before exiting
     await ainvoke_task
