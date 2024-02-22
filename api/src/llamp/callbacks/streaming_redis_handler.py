@@ -1,12 +1,8 @@
-import sys
 import redis
-import pprint
 
 from langchain_core.callbacks.base import AsyncCallbackHandler
 from langchain_core.agents import AgentFinish, AgentAction
-from langchain_core.messages import BaseMessage
-from langchain_core.outputs import LLMResult
-from typing import Any, Dict, List
+from typing import Any
 
 
 class StreamingRedisCallbackHandler(AsyncCallbackHandler):
