@@ -1,44 +1,42 @@
-import re
-import os
-import redis
-import uuid
 import asyncio
+import os
+import re
+import uuid
+from collections.abc import AsyncGenerator, Generator
 
-from fastapi.middleware.cors import CORSMiddleware
+import redis
+import uvicorn
 from dotenv import load_dotenv
-from typing import AsyncGenerator, Generator
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from langchain import hub
 from langchain.agents import AgentType, initialize_agent
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain_openai import ChatOpenAI
-from langchain.tools import ArxivQueryRun, WikipediaQueryRun
-from langchain.tools.render import render_text_description_and_args
-from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
-from langchain.prompts import MessagesPlaceholder
-from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import (
     JSONAgentOutputParser,
 )
 from langchain.callbacks.base import BaseCallbackManager
-
-import uvicorn
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain.prompts import MessagesPlaceholder
+from langchain.tools import ArxivQueryRun, WikipediaQueryRun
+from langchain.tools.render import render_text_description_and_args
+from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 
-
+from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
 from llamp.mp.agents import (
-    MPSummaryExpert,
-    MPThermoExpert,
-    MPElasticityExpert,
     MPDielectricExpert,
-    MPMagnetismExpert,
+    MPElasticityExpert,
     MPElectronicExpert,
+    MPMagnetismExpert,
+    MPPiezoelectricExpert,
     MPStructureRetriever,
+    MPSummaryExpert,
     MPSynthesisExpert,
-    MPPiezoelectricExpert
+    MPThermoExpert,
 )
 
 load_dotenv()
