@@ -127,6 +127,7 @@ class SummarySchema(BaseModel):
     all_fields: bool | None = Field(False, description="Whether to return all fields in results")
 
 class StructureSchema(SummarySchema):
+    material_id: str = Field(description="Material ID to fetch structure.")
     limit: int | None = Field(
         default=5,
         description="Maximum number of entries to return",
