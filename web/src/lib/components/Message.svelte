@@ -40,7 +40,7 @@
     color: 'primary'
   };
 
-  let parsedContent: string;
+  let parsedContent: HTMLPreElement;
   $: if (data && data.content) {
     const mpRegex = /mp-\d+/g;
     function processLinks(content: string) {

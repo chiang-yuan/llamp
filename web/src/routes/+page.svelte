@@ -69,19 +69,51 @@
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
 
+    const stack = [];
+    let currentSection = '';
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const section = decoder.decode(value, { stream: true });
-      appendResponses([
-        {
-          role: 'assistant',
-          content: parseActionInput(section),
-          type: 'msg',
-          timestamp: new Date()
+      const tokens = decoder.decode(value, { stream: true });
+
+      for (let token of tokens) {
+        if (token === '{') {
+          stack.push(token);
+          currentSection += token;
+        } else if (token === '}') {
+          if (stack.length > 0 && stack[stack.length - 1] === '{') {
+            stack.pop();
+            currentSection += token;
+            if (stack.length === 0) {
+              if (currentSection.startsWith('{"simulation_data"')) {
+                return appendSimulation(JSON.parse(currentSection), []);
+              } else {
+                appendResponses([
+                  {
+                    role: 'assistant',
+                    content: parseActionInput(currentSection),
+                    type: 'msg',
+                    timestamp: new Date()
+                  }
+                ]);
+              }
+              currentSection = ''; // Reset for the next section
+            }
+          } else {
+            // Handle mismatched closing brace if necessary
+            console.error('Mismatched closing brace encountered');
+          }
+        } else {
+          currentSection += token;
         }
-      ]);
+      }
+    }
+
+    if (currentSection !== '') {
+      // Handle any remaining incomplete section if necessary
+      console.error('Incomplete section encountered at the end of the stream');
     }
   }
 

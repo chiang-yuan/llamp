@@ -6,7 +6,6 @@ import asyncio
 
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from typing import AsyncGenerator, Generator
 from langchain import hub
 from langchain.agents import AgentType, initialize_agent
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
@@ -16,7 +15,6 @@ from langchain.tools.render import render_text_description_and_args
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from langchain.prompts import MessagesPlaceholder
 from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import (
     JSONAgentOutputParser,
@@ -44,11 +42,12 @@ from llamp.mp.agents import (
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
-OPENAI_GPT_MODEL = "gpt-4-1106-preview"
+# OPENAI_GPT_MODEL = "gpt-4-1106-preview"
+OPENAI_GPT_MODEL = "gpt-3.5-turbo-0125"
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", 6379)
 
-top_level_callback_handler = StreamingRedisCallbackHandler(
+custom_callback_handler = StreamingRedisCallbackHandler(
     redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel='llm_stream')  # TODO: different redis channel for each chat_id
 
 mp_llm = ChatOpenAI(
@@ -58,7 +57,7 @@ mp_llm = ChatOpenAI(
     openai_organization=None,
     max_retries=5,
     streaming=True,
-    callbacks=[top_level_callback_handler],
+    callbacks=[custom_callback_handler],
 )
 
 llm = ChatOpenAI(
@@ -67,7 +66,7 @@ llm = ChatOpenAI(
     openai_api_key=OPENAI_API_KEY,
     openai_organization=None,
     streaming=True,
-    callbacks=[top_level_callback_handler],
+    callbacks=[custom_callback_handler],
 )
 
 wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
@@ -167,7 +166,7 @@ agent_executor = initialize_agent(
     # agent_kwargs=agent_kwargs,
     handle_parsing_errors=True,
     callback_manager=BaseCallbackManager(
-        handlers=[top_level_callback_handler]),
+        handlers=[custom_callback_handler]),
 )
 
 app = FastAPI()
