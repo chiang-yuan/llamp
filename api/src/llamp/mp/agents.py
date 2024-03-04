@@ -34,8 +34,8 @@ from llamp.mp.tools import (
     MaterialsPiezoelectric,
     MaterialsRobocrystallographer,
     MaterialsSimilarity,
-    MaterialsStructure,
     MaterialsStructureText,
+    MaterialsStructureVis,
     MaterialsSummary,
     MaterialsSynthesis,
     MaterialsTasks,
@@ -154,7 +154,7 @@ class MPSummaryExpert(MPAgent):
 
 
 class MPStructureRetriever(MPAgent):
-    """Structure expert that will return directly from Materials Project summary endpoint"""
+    """Structure expert who will retrieve the structure from Materials Project as a JSON text or save it to a local file for frontend visualization"""
 
     def __init__(self, llm):
         super().__init__(llm)
@@ -163,6 +163,7 @@ class MPStructureRetriever(MPAgent):
     def tools(self):
         return [
             MaterialsStructureText(return_direct=True, handle_tool_error=True),
+            MaterialsStructureVis(return_direct=True, handle_tool_error=True),
         ]
 
 

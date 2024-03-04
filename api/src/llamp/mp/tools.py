@@ -76,15 +76,15 @@ class MaterialsSummary(MPTool):
     )
     args_schema: type[SummarySchema] = SummarySchema
 
-class MaterialsStructure(MPTool):
+class MaterialsStructureVis(MPTool):
     name: str = "search_materials_structure__get"
     description: str = (
         re.sub(
             r"\s+",
             " ",
-            """useful when you need to get the pymatgen structures on Materials 
-            Project, can be used with filters like chemical system, formula, etc. Use
-            `search_materials_summary__get` tool instread to get statistics about all the
+            """useful when you need to save the pymatgen structures from Materials 
+            Project into local storage and visualize them. Use 
+            `search_materials_summary__get` tool instead to get statistics about all the
             structures on MP."""
         )
         .strip()
@@ -114,8 +114,8 @@ class MaterialsStructureText(MPTool):
         re.sub(
             r"\s+",
             " ",
-            """useful when you need to get the pymatgen structures on Materials 
-            Project as direct JSON text response."""
+            """useful when you need to get the pymatgen structures from Materials 
+            Project as JSON text for structure generation or manipulation."""
         )
         .strip()
         .replace("\n", " ")[0]
