@@ -58,8 +58,11 @@
       headers: {
         'Content-Type': 'application/json'
       },
-      // TODO: send timestamps and other metadata
-      body: JSON.stringify({ text: message.content })
+      body: JSON.stringify({
+        text: message.content,
+        OpenAiAPIKey: $OpenAiAPIKey,
+        mpAPIKey: $mpAPIKey
+      })
     });
 
     if (!response.body) {

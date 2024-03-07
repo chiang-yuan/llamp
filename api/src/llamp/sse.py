@@ -37,8 +37,7 @@ from llamp.mp.agents import (
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
-# OPENAI_GPT_MODEL = "gpt-4-1106-preview"
-OPENAI_GPT_MODEL = "gpt-3.5-turbo-0125"
+OPENAI_GPT_MODEL = "gpt-4-1106-preview"
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", 6379)
 
@@ -93,6 +92,8 @@ app.add_middleware(
 
 class Query(BaseModel):
     text: str
+    OpenAiAPIKey: str
+    mpAPIKey: str
 
 
 @app.get('/health')
@@ -109,19 +110,22 @@ async def listen_to_pubsub(pubsub):
         message = pubsub.get_message()
         if message and message['type'] == 'message':
             yield message['data'].decode()
-        await asyncio.sleep(0.1)  # Prevents busy-waiting
+        await asyncio.sleep(0.01)  # Prevents busy-waiting
 
 
-async def agent_stream(input_data: str, chat_id: str):
+async def agent_stream(input_data: str,
+                       chat_id: str,
+                       user_openai_api_key: str,
+                       user_mp_api_key: str):
 
     custom_callback_handler = StreamingRedisCallbackHandler(
         redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel=chat_id)
 
+    # TODO: set MP_API_KEY
     mp_llm = ChatOpenAI(
         temperature=0,
         model=OPENAI_GPT_MODEL,
-        openai_api_key=OPENAI_API_KEY,
-        openai_organization=None,
+        openai_api_key=user_openai_api_key,
         max_retries=5,
         streaming=True,
         callbacks=[custom_callback_handler],
@@ -167,8 +171,7 @@ async def agent_stream(input_data: str, chat_id: str):
     llm = ChatOpenAI(
         temperature=0,
         model=OPENAI_GPT_MODEL,
-        openai_api_key=OPENAI_API_KEY,
-        openai_organization=None,
+        openai_api_key=user_openai_api_key,
         streaming=True,
         callbacks=[custom_callback_handler],
     )
@@ -187,7 +190,6 @@ async def agent_stream(input_data: str, chat_id: str):
     )
     pubsub = redis_client.pubsub()
     pubsub.subscribe(chat_id)
-    print("Subscribed to 'llm_stream' channel. Listening for new messages...")
 
     ainvoke_task = asyncio.create_task(
         agent_executor.ainvoke({"input": input_data}))
@@ -204,8 +206,11 @@ async def agent_stream(input_data: str, chat_id: str):
 
 @app.post('/chat')
 async def chat(query: Query):
+    print(query.OpenAiAPIKey)
+    print(query.mpAPIKey)
     chat_id = str(uuid.uuid4())
-    return StreamingResponse(agent_stream(query.text, chat_id), media_type="text/plain")
+    return StreamingResponse(agent_stream(query.text, chat_id, query.OpenAiAPIKey, query.mpAPIKey),
+                             media_type="text/plain")
 
 
 if __name__ == "__main__":
