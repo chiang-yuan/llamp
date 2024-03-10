@@ -24,9 +24,7 @@ We are sorry! LLaMP is actually a homonym of **Large Language model [Materials P
 
 ## :crystal_ball: Introduction
 
-Discovering and understanding materials is a cornerstone of innovation across various industries, from electronics and energy to healthcare and beyond. However, navigating the vast landscape of materials data and scientific information can be a challenging task. That's where LLaMP steps in – a groundbreaking smart agent designed to revolutionize the way we explore and interact with materials information.
-
-LLaMP seamlessly integrates the power of the Materials Project API and the intelligence of OpenAI's GPT-3.5 to offer a comprehensive and intuitive solution for exploring, querying, and understanding materials data. Whether you're a seasoned materials scientist or an enthusiast curious about the properties of different materials, LLaMP empowers you with a dynamic and user-friendly platform to uncover valuable insights and answers.
+Reducing hallucination of Large Language Models (LLMs) is imperative for use in the sciences where reproducibility is crucial. However, LLMs inherently lack long-term memory, making it a nontrivial, ad hoc, and inevitably biased task to fine-tune them on domain-specific literature and data. Here we introduce LLaMP, a multimodal retrieval-augmented generation (RAG) framework of multiple data-aware reasoning-and-acting (ReAct) agents that dynamically interact with computational and experimental data on Materials Project (MP). Without fine-tuning, LLaMP demonstrates an ability to comprehend and integrate various modalities of materials science concepts, fetch relevant data stores on the fly, process higher-order data (such as crystal structures and elastic tensors), and summarize multi-step procedures for solid-state synthesis. The proposed framework offers an intuitive and nearly hallucination free approach to exploring materials informatics and establishes a pathway for knowledge distillation and fine-tuning other language models.
 
 <!-- **:mag_right: Key Features of LLaMP**
 
