@@ -8,7 +8,6 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 from fastapi.responses import StreamingResponse
 from langchain import hub
 from langchain.agents import AgentType, initialize_agent
@@ -20,6 +19,7 @@ from langchain.tools.render import render_text_description_and_args
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
+from redis.client import PubSub
 
 from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
 from llamp.mp.agents import (
@@ -37,7 +37,8 @@ from llamp.mp.agents import (
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
-OPENAI_GPT_MODEL = "gpt-4-1106-preview"
+OPENAI_GPT_MODEL = "gpt-4-1106-preview" # TODO: allow user to choose LLMs
+# TODO: allow user to choose both top-level and bottom-level agent LLMs
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", 6379)
 
@@ -89,7 +90,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# TODO: reorganize the order of class and function definitions
 class Query(BaseModel):
     text: str
     OpenAiAPIKey: str
@@ -105,7 +106,7 @@ redis_client = redis.Redis(
     host=REDIS_HOST, port=REDIS_PORT, db=0)
 
 
-async def listen_to_pubsub(pubsub):
+async def listen_to_pubsub(pubsub: PubSub):
     while True:
         message = pubsub.get_message()
         if message and message['type'] == 'message':
@@ -131,6 +132,8 @@ async def agent_stream(input_data: str,
         callbacks=[custom_callback_handler],
     )
 
+    # TODO: move all the tool defitions out of the function
+    # it is unnecessary to define them every time the function is called
     tools = [
         MPThermoExpert(llm=mp_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)),
@@ -149,7 +152,7 @@ async def agent_stream(input_data: str,
         MPSynthesisExpert(llm=mp_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)),
         MPStructureRetriever(llm=mp_llm).as_tool(
-            agent_kwargs=dict(return_intermediate_steps=True)),
+            agent_kwargs=dict(return_intermediate_steps=False)),
         arxiv,
         wikipedia,
     ]

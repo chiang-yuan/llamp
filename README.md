@@ -1,12 +1,26 @@
 # LLaMP - Large Language model Made Powerful :llama::crystal_ball:
 
+<center>
+<a href="https://arxiv.org/abs/2401.17244">
+  <img src="https://img.shields.io/badge/cs.CL-2401.17244-b31b1b?logo=arxiv&logoColor=white" alt="arXiv">
+</a>
+<a href="https://github.com/chiang-yuan/llamp/stargazers">
+  <img src="https://img.shields.io/github/stars/chiang-yuan/llamp?style=social" alt="Github Stars">
+</a>
+</center>
+
+[![PyPI download month](https://img.shields.io/pypi/dm/llamp.svg)](https://pypi.python.org/pypi/llamp/)
+
+
+
+
+
 ### **Introducing LLaMP: Large Language model Made Powerful** :rocket:
 
 We are sorry! LLaMP is actually a homonym of **Large Language model [Materials Project](https://materialsproject.org)**. :wink: It empowers LLMs with scientific knowledge and reduces the likelihood of hallucination for materials data distillation.
 
 LLaMP is a web-based assistant that allows you to explore and interact with materials data in a conversational and intuitive manner. It integrates the power of the Materials Project API and the intelligence of OpenAI's GPT-3.5 to offer a comprehensive and user-friendly solution for discovering and understanding computational materials data based on quantum mechanical calculations.
 
-Click [here](https://docs.google.com/presentation/d/e/2PACX-1vR1LjNO2gp_jVUkIX4qxdkAC0Q9PJ4c2vOvNY2HP6-HjlZCOAdiciw8yTpgZvpw9-a9tF7qT8oC6ntV/pub?start=false&loop=false&delayms=3000) for introduction slides.
 
 <img src="https://raw.githubusercontent.com/sveltejs/branding/master/svelte-horizontal.svg" height="30"/>
 <a href="https://elementari.janosh.dev/"><img src="https://raw.githubusercontent.com/janosh/elementari/main/static/favicon.svg" height="30"/></a>

@@ -163,6 +163,19 @@ class MPStructureRetriever(MPAgent):
     def tools(self):
         return [
             MaterialsStructureText(return_direct=True, handle_tool_error=True),
+            # MaterialsStructureVis(return_direct=True, handle_tool_error=True),
+        ]
+
+
+class MPStructureVisualizer(MPAgent):
+    """Structure expert who will retrieve the structure from Materials Project, save it to local storage for frontend visualization"""
+
+    def __init__(self, llm):
+        super().__init__(llm)
+
+    @property
+    def tools(self):
+        return [
             MaterialsStructureVis(return_direct=True, handle_tool_error=True),
         ]
 
