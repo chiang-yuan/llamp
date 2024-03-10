@@ -1,29 +1,26 @@
-# LLaMP - Large Language model Made Powerful :llama::crystal_ball:
-
 <center>
-<a href="https://arxiv.org/abs/2401.17244">
-  <img src="https://img.shields.io/badge/cs.CL-2401.17244-b31b1b?logo=arxiv&logoColor=white" alt="arXiv">
-</a>
-<a href="https://github.com/chiang-yuan/llamp/stargazers">
-  <img src="https://img.shields.io/github/stars/chiang-yuan/llamp?style=social" alt="Github Stars">
-</a>
+    <h1 align="center">
+        <b>LLaMP 🦙🔮</b>
+        <br>
+        <a href="https://arxiv.org/abs/2401.17244">
+          <img src="https://img.shields.io/badge/cs.CL-2401.17244-b31b1b?logo=arxiv&logoColor=white" alt="arXiv">
+        </a>
+        <a href="https://github.com/chiang-yuan/llamp/stargazers">
+          <img src="https://img.shields.io/github/stars/chiang-yuan/llamp?style=social" alt="Github Stars">
+        </a>
+    </h1>
+    <h4>Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation</h4>
 </center>
 
-[![PyPI download month](https://img.shields.io/pypi/dm/llamp.svg)](https://pypi.python.org/pypi/llamp/)
-
-
-
-
-
-### **Introducing LLaMP: Large Language model Made Powerful** :rocket:
+> TL;DR: LLaMP is a multimodal retrieval-augmented generation (RAG) framework of hiearchical ReAct agents that can dynamically and recursively interact with Materials Project to ground LLMs on high-fidelity materials informatics.
 
 We are sorry! LLaMP is actually a homonym of **Large Language model [Materials Project](https://materialsproject.org)**. :wink: It empowers LLMs with scientific knowledge and reduces the likelihood of hallucination for materials data distillation.
 
-LLaMP is a web-based assistant that allows you to explore and interact with materials data in a conversational and intuitive manner. It integrates the power of the Materials Project API and the intelligence of OpenAI's GPT-3.5 to offer a comprehensive and user-friendly solution for discovering and understanding computational materials data based on quantum mechanical calculations.
+<!-- LLaMP is a web-based assistant that allows you to explore and interact with materials data in a conversational and intuitive manner. It integrates the power of the Materials Project API and the intelligence of OpenAI's GPT-3.5 to offer a comprehensive and user-friendly solution for discovering and understanding computational materials data based on quantum mechanical calculations. -->
 
 
-<img src="https://raw.githubusercontent.com/sveltejs/branding/master/svelte-horizontal.svg" height="30"/>
-<a href="https://elementari.janosh.dev/"><img src="https://raw.githubusercontent.com/janosh/elementari/main/static/favicon.svg" height="30"/></a>
+<!-- <img src="https://raw.githubusercontent.com/sveltejs/branding/master/svelte-horizontal.svg" height="30"/>
+<a href="https://elementari.janosh.dev/"><img src="https://raw.githubusercontent.com/janosh/elementari/main/static/favicon.svg" height="30"/></a> -->
 
 ## :crystal_ball: Introduction
 
@@ -31,7 +28,7 @@ Discovering and understanding materials is a cornerstone of innovation across va
 
 LLaMP seamlessly integrates the power of the Materials Project API and the intelligence of OpenAI's GPT-3.5 to offer a comprehensive and intuitive solution for exploring, querying, and understanding materials data. Whether you're a seasoned materials scientist or an enthusiast curious about the properties of different materials, LLaMP empowers you with a dynamic and user-friendly platform to uncover valuable insights and answers.
 
-**:mag_right: Key Features of LLaMP**
+<!-- **:mag_right: Key Features of LLaMP**
 
 1. **Natural Language Interaction:** Say goodbye to complex queries and technical jargon. LLaMP understands human language, allowing you to communicate your materials-related questions in a conversational and intuitive manner.
 
@@ -49,7 +46,7 @@ LLaMP seamlessly integrates the power of the Materials Project API and the intel
 
 Whether you're a researcher, engineer, student, or anyone with a curiosity about materials, LLaMP is your indispensable companion on the journey of material exploration. It transforms the way we access and engage with materials data, making the pursuit of scientific knowledge more accessible and enjoyable than ever before.
 
-Experience the future of materials exploration with LLaMP – your intelligent guide to the world of materials science and discovery.
+Experience the future of materials exploration with LLaMP – your intelligent guide to the world of materials science and discovery. -->
 
 ## :hammer_and_wrench: Installation
 
@@ -83,38 +80,6 @@ This project is structured into various directories, each serving a specific pur
 
 The frontend of this application is built using SvelteKit and is contained within the `web/` directory. Detailed documentation regarding the frontend architecture, file structure, and development guidelines can be found in the [frontend README](web/README.md).
 
-[📖 Read the frontend documentation](web/README.md)
+<!-- [📖 Read the frontend documentation](web/README.md) -->
 
 ## :rocket: Usage
-
-## Resources
-
-### [Materials Project](https://materialsproject.org/)
-
-- [Materials Project API Doc](https://docs.materialsproject.org/)
-- [Materials Porject API Specs](https://api.materialsproject.org/docs)
-- [OpenAPI JSON](https://api.materialsproject.org/openapi.json)
-- [MP API usage examples](https://docs.materialsproject.org/downloading-data/using-the-api/examples)
-- [MP API github](https://github.com/materialsproject/api)
-
-### Langchain
-
-https://python.langchain.com/docs/modules/chains/additional/openapi
-
-- https://python.langchain.com/docs/integrations/retrievers/arxiv
-- https://python.langchain.com/docs/integrations/toolkits/openapi
-
-### OpenAI
-
-- [Function calling via ChatGPT API](https://www.youtube.com/watch?v=0-zlUy7VUjg&ab_channel=GregKamradt%28DataIndy%29)
-
-### Streamlit
-
-- [Text summerization with langchain openai and create a
-  streamlit app](https://alphasec.io/summarize-text-with-langchain-and-openai/)
-- [Twitter bot for arxiv summarization](https://levelup.gitconnected.com/build-a-twitter-bot-for-arxiv-paper-summarization-by-openai-and-langchain-in-10-minutes-e57de6b32e03)
-- [Langchaing: Build a Text Summarization app](https://blog.streamlit.io/langchain-tutorial-3-build-a-text-summarization-app/)
-
-### CyrstalToolkit, Dash, Plotly
-
-- [Dash ChatGPT App Challenge](https://community.plotly.com/t/dash-chatgpt-app-challenge/75763/26)
