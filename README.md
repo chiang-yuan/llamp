@@ -1,16 +1,14 @@
-<center>
-    <h1 align="center">
-        <b>LLaMP 🦙🔮</b>
-        <br>
-        <a href="https://arxiv.org/abs/2401.17244">
-          <img src="https://img.shields.io/badge/cs.CL-2401.17244-b31b1b?logo=arxiv&logoColor=white" alt="arXiv">
-        </a>
-        <a href="https://github.com/chiang-yuan/llamp/stargazers">
-          <img src="https://img.shields.io/github/stars/chiang-yuan/llamp?style=social" alt="Github Stars">
-        </a>
-    </h1>
-    <h4>Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation</h4>
-</center>
+<h1 align="center">
+    <b>LLaMP 🦙🔮</b>
+    <br>
+    <a href="https://arxiv.org/abs/2401.17244">
+      <img src="https://img.shields.io/badge/cs.CL-2401.17244-b31b1b?logo=arxiv&logoColor=white" alt="arXiv">
+    </a>
+    <a href="https://github.com/chiang-yuan/llamp/stargazers">
+      <img src="https://img.shields.io/github/stars/chiang-yuan/llamp?style=social" alt="Github Stars">
+    </a>
+</h1>
+<h4 align="center">Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation</h4>
 
 > TL;DR: LLaMP is a multimodal retrieval-augmented generation (RAG) framework of hiearchical ReAct agents that can dynamically and recursively interact with Materials Project to ground LLMs on high-fidelity materials informatics.
 
