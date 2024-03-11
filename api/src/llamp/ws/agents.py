@@ -42,7 +42,7 @@ class WSEventAgentExecutor(AgentExecutor):
             "default": "\033[0m",  # Default terminal color
             "bold": "\033[1m",
             "before_action": "\033[93m",  # Yellow
-            "after_action": "\033[33m"  # Brown
+            "after_action": "\033[33m",  # Brown
         }
 
         # Choose color based on event type or use default
@@ -65,8 +65,7 @@ class WSEventAgentExecutor(AgentExecutor):
         Override this to take control of how the agent makes and acts on choices.
         """
         try:
-            intermediate_steps = self._prepare_intermediate_steps(
-                intermediate_steps)
+            intermediate_steps = self._prepare_intermediate_steps(intermediate_steps)
 
             # Call the LLM to see what to do.
             output = self.agent.plan(
@@ -98,8 +97,7 @@ class WSEventAgentExecutor(AgentExecutor):
             elif callable(self.handle_parsing_errors):
                 observation = self.handle_parsing_errors(e)
             else:
-                raise ValueError(
-                    "Got unexpected type of `handle_parsing_errors`")
+                raise ValueError("Got unexpected type of `handle_parsing_errors`")
             output = AgentAction("_Exception", observation, text)
             if run_manager:
                 run_manager.on_agent_action(output, color="green")
@@ -119,7 +117,6 @@ class WSEventAgentExecutor(AgentExecutor):
         actions = [output] if isinstance(output, AgentAction) else output
         result = []
         for agent_action in actions:
-
             self.emit_event("before_action", {"tool": agent_action})
 
             if run_manager:
@@ -140,8 +137,9 @@ class WSEventAgentExecutor(AgentExecutor):
                     callbacks=run_manager.get_child() if run_manager else None,
                     **tool_run_kwargs,
                 )
-                self.emit_event("after_action", {
-                                "action": agent_action, "observation": observation})
+                self.emit_event(
+                    "after_action", {"action": agent_action, "observation": observation}
+                )
             else:
                 tool_run_kwargs = self.agent.tool_run_logging_kwargs()
                 observation = InvalidTool().run(
@@ -170,8 +168,7 @@ class WSEventAgentExecutor(AgentExecutor):
         Override this to take control of how the agent makes and acts on choices.
         """
         try:
-            intermediate_steps = self._prepare_intermediate_steps(
-                intermediate_steps)
+            intermediate_steps = self._prepare_intermediate_steps(intermediate_steps)
 
             # Call the LLM to see what to do.
             output = await self.agent.aplan(
@@ -203,8 +200,7 @@ class WSEventAgentExecutor(AgentExecutor):
             elif callable(self.handle_parsing_errors):
                 observation = self.handle_parsing_errors(e)
             else:
-                raise ValueError(
-                    "Got unexpected type of `handle_parsing_errors`")
+                raise ValueError("Got unexpected type of `handle_parsing_errors`")
             output = AgentAction("_Exception", observation, text)
             tool_run_kwargs = self.agent.tool_run_logging_kwargs()
             observation = await ExceptionTool().arun(
@@ -257,8 +253,9 @@ class WSEventAgentExecutor(AgentExecutor):
                     callbacks=run_manager.get_child() if run_manager else None,
                     **tool_run_kwargs,
                 )
-            self.emit_event("after_action", {
-                            "action": agent_action, "observation": observation})
+            self.emit_event(
+                "after_action", {"action": agent_action, "observation": observation}
+            )
 
             return agent_action, observation
 

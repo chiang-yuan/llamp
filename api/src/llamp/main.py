@@ -1,4 +1,3 @@
-
 import json
 import os
 import re
@@ -68,7 +67,10 @@ mp_tools = [
 ]
 
 mp_prompt = hub.pull("hwchase17/react-multi-input-json")
-mp_prompt.messages[0].prompt.template = "You are a helpful agent having access to materials data on Materials Project." + mp_prompt.messages[0].prompt.template
+mp_prompt.messages[0].prompt.template = (
+    "You are a helpful agent having access to materials data on Materials Project."
+    + mp_prompt.messages[0].prompt.template
+)
 mp_prompt = mp_prompt.partial(
     tools=render_text_description_and_args(mp_tools),
     tool_names=", ".join([t.name for t in mp_tools]),
@@ -118,12 +120,15 @@ mp_agent_executor = WSEventAgentExecutor(
     agent_kwargs={
         "system_message": SystemMessage(
             content=re.sub(
-                r"\s+", " ",
+                r"\s+",
+                " ",
                 """When you create function input arguments, follow MP API schema 
             strictcly and DO NOT hallucinate invalid arguments. Convert all acronyms 
             and abbreviations to valid arguments, especially chemical formula and 
-            isotopes (e.g. D2O should be H2O), composition, and systems."""
-            ).strip().replace("\n", " ")[0]
+            isotopes (e.g. D2O should be H2O), composition, and systems.""",
+            )
+            .strip()
+            .replace("\n", " ")[0]
         )
     },
     tools=mp_tools,
@@ -137,20 +142,13 @@ mp_agent_executor = WSEventAgentExecutor(
 @tool("MaterialsProject_React_Agent", return_direct=False)
 def mp_react_agent(input: str):
     """Materials Project ReAct Agent that has access to MP database."""
-    return mp_agent_executor.invoke(
-        {
-            "input": input
-        }
-    )#["output"]
+    return mp_agent_executor.invoke({"input": input})  # ["output"]
+
 
 # Top-level agent
 
 
-llm = ChatOpenAI(
-    temperature=0,
-    model=OPENAI_GPT_MODEL,
-    openai_api_key=OPENAI_API_KEY
-)
+llm = ChatOpenAI(temperature=0, model=OPENAI_GPT_MODEL, openai_api_key=OPENAI_API_KEY)
 
 wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
 arxiv = ArxivQueryRun(api_wrapper=ArxivAPIWrapper())
@@ -165,19 +163,21 @@ tools = [
 
 
 conversational_memory = ConversationBufferWindowMemory(
-    memory_key='memory',
-    k=5,
-    return_messages=True
+    memory_key="memory", k=5, return_messages=True
 )
 agent_kwargs = {
     "extra_prompt_messages": [MessagesPlaceholder(variable_name="memory")],
     "system_message": SystemMessage(
         content=re.sub(
-            r"\s+", " ",
+            r"\s+",
+            " ",
             """You are a data-aware agent that can consult Materials Project (MP) 
             agent who has access to MP database. Ask user for more details if needed
-            """).strip().replace("\n", " ")[0]
-    )
+            """,
+        )
+        .strip()
+        .replace("\n", " ")[0]
+    ),
 }
 
 agent_executor = initialize_ws_event_agent(
@@ -218,37 +218,50 @@ BASE_DIR = Path(__file__).resolve().parent
 
 
 def load_json(file_path: Path) -> Any:
-    with file_path.open('r') as file:
+    with file_path.open("r") as file:
         data = json.load(file)
     return data
 
 
 def load_structures(str: str) -> list[Any]:
-    str = str.replace('[structures]', '')
-    mp_list = str.split(',')
+    str = str.replace("[structures]", "")
+    mp_list = str.split(",")
     res = []
     for mp in mp_list:
-        fpath = BASE_DIR / f'mp/.tmp/{mp}.json'
+        fpath = BASE_DIR / f"mp/.tmp/{mp}.json"
         res.append(load_json(fpath))
         os.remove(fpath)
     return res
 
 
 def load_simulations(str: str) -> list[Any]:
-    str = str.replace('[simulation]', '').strip()
+    str = str.replace("[simulation]", "").strip()
     data = json.loads(str)
     print(data)
 
     df = pd.read_csv(  # noqa: PD901
-        data['log'],
-        delim_whitespace=True, skiprows=1, header=None,
-        names=['Time[ps]', 'Etot/N[eV]', 'Epot/N[eV]', 'Ekin/N[eV]', 'T[K]',
-            'stress_xx', 'stress_yy', 'stress_zz', 'stress_yz', 'stress_xz', 'stress_xy']
-        )
+        data["log"],
+        delim_whitespace=True,
+        skiprows=1,
+        header=None,
+        names=[
+            "Time[ps]",
+            "Etot/N[eV]",
+            "Epot/N[eV]",
+            "Ekin/N[eV]",
+            "T[K]",
+            "stress_xx",
+            "stress_yy",
+            "stress_zz",
+            "stress_yz",
+            "stress_xz",
+            "stress_xy",
+        ],
+    )
 
-    log_json = df.to_json(orient='records', date_format='iso')
+    log_json = df.to_json(orient="records", date_format="iso")
 
-    res = [load_json(Path(j)) for j in data['jsons'][0:10] if Path(j).exists()]
+    res = [load_json(Path(j)) for j in data["jsons"][0:10] if Path(j).exists()]
 
     return res, log_json
 
@@ -260,27 +273,27 @@ class MessageInput(BaseModel):
 
 
 async def process_request(data):
-    messages = data.get('messages')
+    messages = data.get("messages")
 
     # if isinstance(agent_executor.agent.llm, ChatOpenAI | OpenAI):
     #     agent_executor.agent.llm.openai_api_key = data.openAIKey
 
     if isinstance(llm, ChatOpenAI | OpenAI):
-        llm.openai_api_key = data.get('openAIKey')
-    
+        llm.openai_api_key = data.get("openAIKey")
+
     if isinstance(mp_llm, ChatOpenAI | OpenAI):
-        mp_llm.openai_api_key = data.get('openAIKey')
+        mp_llm.openai_api_key = data.get("openAIKey")
 
     for tool in agent_executor.tools:
         if isinstance(tool, MPTool):
-            tool.api_wrapper.set_api_key(data.get('mpAPIKey'))
+            tool.api_wrapper.set_api_key(data.get("mpAPIKey"))
 
     # Execute and handle the response
     try:
-        output = agent_executor.run(input=messages[-1].get('content'))
-        if output.startswith('[structures]'):
+        output = agent_executor.run(input=messages[-1].get("content"))
+        if output.startswith("[structures]"):
             return "", [*load_structures(output)], None
-        if output.startswith('[simulation]'):
+        if output.startswith("[simulation]"):
             return None, *load_simulations(output)
         return output, [], None
     except openai.error.AuthenticationError as e:
@@ -289,6 +302,7 @@ async def process_request(data):
     except Exception as e:
         # raise HTTPException(status_code=500, detail=e)
         return e, [], None
+
 
 @app.websocket("/ws")
 async def websocket_ask(websocket: WebSocket):
@@ -299,14 +313,18 @@ async def websocket_ask(websocket: WebSocket):
             data = await websocket.receive_json()
             try:
                 output, structures, simulation_data = await process_request(data)
-                await websocket.send_json({
-                    "messageType": "response-msg",
-                    "responses": [{'role': 'assistant', 'content': output}],
-                    "structures": structures,
-                    "simulation_data": simulation_data
-                })
+                await websocket.send_json(
+                    {
+                        "messageType": "response-msg",
+                        "responses": [{"role": "assistant", "content": output}],
+                        "structures": structures,
+                        "simulation_data": simulation_data,
+                    }
+                )
             except KeyError:
-                await websocket.send_text("[Key error] Missing 'messages' key in received data")
+                await websocket.send_text(
+                    "[Key error] Missing 'messages' key in received data"
+                )
             except HTTPException as e:
                 print(f"[HTTP error] {e.detail}")
                 await websocket.send_text(f"[error] HTTP error: {e.detail}")

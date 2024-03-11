@@ -6,7 +6,9 @@ from typing import Any
 
 
 class StreamingRedisCallbackHandler(AsyncCallbackHandler):
-    def __init__(self, redis_host='localhost', redis_port=6379, redis_channel='llm_stream'):
+    def __init__(
+        self, redis_host="localhost", redis_port=6379, redis_channel="llm_stream"
+    ):
         self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=0)
         self.redis_channel = redis_channel
 
@@ -32,5 +34,4 @@ class StreamingRedisCallbackHandler(AsyncCallbackHandler):
         **kwargs: Any,
     ) -> None:
         """Run on agent action."""
-        self.redis_client.publish(
-            self.redis_channel, f"AGENT_ACTION: {action}")
+        self.redis_client.publish(self.redis_channel, f"AGENT_ACTION: {action}")

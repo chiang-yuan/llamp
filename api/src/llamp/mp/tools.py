@@ -33,7 +33,9 @@ class MPTool(BaseTool):
 
     def _run(self, **query_params):
         _res = self.api_wrapper.run(
-            function_name=self.name, function_args=json.dumps(query_params), debug=self.verbose
+            function_name=self.name,
+            function_args=json.dumps(query_params),
+            debug=self.verbose,
         )
         # TODO: map reduce large response
         return _res
@@ -60,6 +62,7 @@ class MaterialsSummary(MPTool):
     )
     args_schema: type[SummarySchema] = SummarySchema
 
+
 class MaterialsStructureVis(MPTool):
     name: str = "search_materials_structure__get"
     description: str = (
@@ -69,7 +72,7 @@ class MaterialsStructureVis(MPTool):
             """useful when you need to save the pymatgen structures from Materials 
             Project into local storage and visualize them. Use 
             `search_materials_summary__get` tool instead to get statistics about all the
-            structures on MP."""
+            structures on MP.""",
         )
         .strip()
         .replace("\n", " ")[0]
@@ -80,17 +83,20 @@ class MaterialsStructureVis(MPTool):
         _response = super()._run(**query_params)
 
         for entry in _response:
-            material_id = entry['material_id']
-            structure = entry['structure']
+            material_id = entry["material_id"]
+            structure = entry["structure"]
 
-            out_dir = Path(__file__).parent.absolute() / '.tmp'
+            out_dir = Path(__file__).parent.absolute() / ".tmp"
             os.makedirs(out_dir, exist_ok=True)
-            fpath = out_dir / f'{material_id}.json'
+            fpath = out_dir / f"{material_id}.json"
 
-            with open(fpath, 'w') as f:
+            with open(fpath, "w") as f:
                 f.write(json.dumps(structure))
 
-        return '[structures]' + ','.join(list(map(lambda x: x['material_id'], _response)))
+        return "[structures]" + ",".join(
+            list(map(lambda x: x["material_id"], _response))
+        )
+
 
 class MaterialsStructureText(MPTool):
     name: str = "search_materials_structure__get"
@@ -99,7 +105,7 @@ class MaterialsStructureText(MPTool):
             r"\s+",
             " ",
             """useful when you need to get the pymatgen structures from Materials 
-            Project as JSON text for structure generation or manipulation."""
+            Project as JSON text for structure generation or manipulation.""",
         )
         .strip()
         .replace("\n", " ")[0]

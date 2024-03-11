@@ -1,4 +1,4 @@
-"""Util that calls Arxiv."""
+"""NOTE: this file is outdated. use llamps.utilities.mp instead"""
 import json
 import logging
 import os
@@ -84,8 +84,7 @@ class MPAPIWrapper(BaseModel):
     @property
     def material_functions(self):
         with open(
-            osp.join(Path(__file__).parent.resolve(),
-                     "material_functions.json")
+            osp.join(Path(__file__).parent.resolve(), "material_functions.json")
         ) as f:
             # NOTE: Using all functions available on MP consumes too many tokens.
             # Here we only use a subset of functions.
@@ -111,8 +110,7 @@ class MPAPIWrapper(BaseModel):
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         limit = query_params.pop("limit", None)
         if limit:
@@ -163,6 +161,13 @@ class MPAPIWrapper(BaseModel):
     def search_materials_summary(self, query_params: dict):
         query_params = self._process_query_params(query_params)
 
+        query_params["fields"] = query_params.get("fields", []) + [
+            "material_id",
+            "formula_pretty",
+            "symmetry",
+            "volume",
+        ]
+
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
@@ -172,8 +177,10 @@ class MPAPIWrapper(BaseModel):
         # but not a real mp-api endpoint
 
         query_params = self._process_query_params(query_params)
-        query_params["fields"] = query_params.get(
-            "fields", []) + ["structure", "material_id"]
+        query_params["fields"] = query_params.get("fields", []) + [
+            "structure",
+            "material_id",
+        ]
 
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
@@ -205,17 +212,13 @@ class MPAPIWrapper(BaseModel):
                 "condition_heating_atmosphere"
             ] = condition_heating_atmosphere.split(",")
 
-        condition_mixing_device = query_params.pop(
-            "condition_mixing_device", None)
+        condition_mixing_device = query_params.pop("condition_mixing_device", None)
         if condition_mixing_device:
-            query_params["condition_mixing_device"] = condition_mixing_device.split(
-                ",")
+            query_params["condition_mixing_device"] = condition_mixing_device.split(",")
 
-        condition_mixing_media = query_params.pop(
-            "condition_mixing_media", None)
+        condition_mixing_media = query_params.pop("condition_mixing_media", None)
         if condition_mixing_media:
-            query_params["condition_mixing_media"] = condition_mixing_media.split(
-                ",")
+            query_params["condition_mixing_media"] = condition_mixing_media.split(",")
 
         doc = self.mpr.materials.synthesis._search(**query_params)
 
@@ -276,30 +279,51 @@ class MPAPIWrapper(BaseModel):
     def search_materials_magnetism(self, query_params):
         query_params = self._process_query_params(query_params)
 
-        if "formula" in query_params:
+        if "formula" in query_params and isinstance(query_params["formula"], str):
             material_docs = self.mpr.materials.search(
                 formula=query_params.pop("formula").split(","), fields=["material_id"]
             )
 
             material_ids = [doc["material_id"] for doc in material_docs]
 
-            return self.mpr.materials.magnetism.search(
-                material_ids=material_ids,
-                fields=[
-                    "material_id",
-                    "formula_pretty",
-                    "ordering",
-                    "is_magnetic",
-                    "exchange_symmetry",
-                    "num_magnetic_sites",
-                    "num_unique_magnetic_sites",
-                    "types_of_magnetic_species",
-                    "magmoms",
-                    "total_magnetization",
-                    "total_magnetization_normalized_vol",
-                    "total_magnetization_normalized_formula_units",
-                ],
-            )
+            query_params["material_ids"] = material_ids
+
+            # return self.mpr.materials.magnetism.search(
+            #     material_ids=material_ids,
+            #     fields=",".join(query_params.pop("fields", [
+            #         "material_id",
+            #         "formula_pretty",
+            #         "ordering",
+            #         "is_magnetic",
+            #         "exchange_symmetry",
+            #         "num_magnetic_sites",
+            #         "num_unique_magnetic_sites",
+            #         "types_of_magnetic_species",
+            #         "magmoms",
+            #         "total_magnetization",
+            #         "total_magnetization_normalized_vol",
+            #         "total_magnetization_normalized_formula_units"
+            #         ]))
+            # )
+
+        query_params["fields"] = query_params.get("fields", []) + [
+            "material_id",
+            "formula_pretty",
+            "ordering",
+            "is_magnetic",
+            "exchange_symmetry",
+            "num_magnetic_sites",
+            "num_unique_magnetic_sites",
+            "types_of_magnetic_species",
+            "magmoms",
+            "total_magnetization",
+            "total_magnetization_normalized_vol",
+            "total_magnetization_normalized_formula_units",
+        ]
+
+        # NOTE:
+        query_params["fields"] = ",".join(query_params["fields"])
+        query_params["sort_fields"] = ",".join(query_params.get("sort_fields", []))
 
         return self.mpr.magnetism._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -450,9 +474,7 @@ class MPAPIWrapper(BaseModel):
     def validate_environment(cls, values: dict) -> dict:
         """Validate that the python package exists in environment."""
 
-        mp_api_key = get_from_dict_or_env(
-            values, "mp_api_key", "MP_API_KEY"
-        )
+        mp_api_key = get_from_dict_or_env(values, "mp_api_key", "MP_API_KEY")
 
         openai_api_key = get_from_dict_or_env(
             values, "openai_api_key", "OPENAI_API_KEY"
@@ -460,6 +482,7 @@ class MPAPIWrapper(BaseModel):
 
         try:
             import openai
+
             openai.api_key = openai_api_key
         except ImportError:
             raise ImportError(
@@ -469,12 +492,15 @@ class MPAPIWrapper(BaseModel):
         try:
             import mp_api
             import mp_api.client
+
             os.environ["MP_API_KEY"] = mp_api_key
 
             values["client"] = mp_api.client
             values["mpr"] = mp_api.client.MPRester(
-                api_key=mp_api_key, monty_decode=False, use_document_model=False,
-                headers={"X-API-KEY": mp_api_key, 'accept': 'application/json'}
+                api_key=mp_api_key,
+                monty_decode=False,
+                use_document_model=False,
+                headers={"X-API-KEY": mp_api_key, "accept": "application/json"},
             )
         except ImportError:
             raise ImportError(
@@ -498,21 +524,25 @@ class MPAPIWrapper(BaseModel):
         function_to_call = self.material_routes.get(function_name, None)
         if function_to_call is None:
             print(f"Function {function_name} is not supported yet.")
-            return re.sub(
-                r"\s+",
-                " ",
-                f"""
+            return (
+                re.sub(
+                    r"\s+",
+                    " ",
+                    f"""
                 I want to call {function_name} but it is not supported yet. 
                 Please rephrase or confine your request.
-                """
-            ).strip().replace("\n", " ")
+                """,
+                )
+                .strip()
+                .replace("\n", " ")
+            )
 
         try:
-            function_response = function_to_call(
-                query_params=json.loads(function_args))
+            function_response = function_to_call(query_params=json.loads(function_args))
         except Exception as e:
             raise ValueError(
-                f"Error on {function_name}: {e}. Please provide more information or try smaller request.")
+                f"Error on {function_name}: {e}. Please provide more detailed reqeust arguments or try smaller request by specifying 'limit' in request."
+            )
 
         if debug:
             # print("MP API response:", json.dumps(function_response))

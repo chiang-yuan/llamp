@@ -47,13 +47,19 @@ REACT_MULTI_JSON_PROMPT = hub.pull("hwchase17/react-multi-input-json")
 load_dotenv()
 HF_API_KEY = os.getenv("HF_API_KEY", None)
 
+
 class ArxivAgent:
-    """Agent that uses the arXiv API and PDF loader to answer questions about 
-    scientific papers and preprints. Instruct the agent to use "load_pdf_from_url" 
+    """Agent that uses the arXiv API and PDF loader to answer questions about
+    scientific papers and preprints. Instruct the agent to use "load_pdf_from_url"
     to load the PDF and summarize it when neccessary.
     """
 
-    def __init__(self, llm, hf_api_key=HF_API_KEY, embeddings_model_name="sentence-transformers/all-mpnet-base-v2"):
+    def __init__(
+        self,
+        llm,
+        hf_api_key=HF_API_KEY,
+        embeddings_model_name="sentence-transformers/all-mpnet-base-v2",
+    ):
         self.llm = llm
         # self.summary_chain = load_summarize_chain(self.llm, chain_type="map_reduce", verbose=True)
 
@@ -63,8 +69,7 @@ class ArxivAgent:
         reduce_prompt = hub.pull("rlm/map-prompt")
         reduce_chain = LLMChain(llm=llm, prompt=reduce_prompt)
         combine_documents_chain = StuffDocumentsChain(
-            llm_chain=reduce_chain, document_variable_name="docs",
-            verbose=True
+            llm_chain=reduce_chain, document_variable_name="docs", verbose=True
         )
         reduce_documents_chain = ReduceDocumentsChain(
             # This is final chain that is called.
@@ -85,12 +90,11 @@ class ArxivAgent:
             document_variable_name="docs",
             # Return the results of the map steps in the output
             return_intermediate_steps=False,
-            verbose=True
+            verbose=True,
         )
         self.embeddings = HuggingFaceInferenceAPIEmbeddings(
-            api_key=HF_API_KEY,
-            model_name=embeddings_model_name
-            )
+            api_key=HF_API_KEY, model_name=embeddings_model_name
+        )
         self.chain = (
             {
                 "input": lambda x: x["input"],
@@ -126,19 +130,21 @@ class ArxivAgent:
         # )
         # docs = retriever.get_relevant_documents(query)
         return self.summary_chain.run(pages)
-    
+
     @property
-    def tools(self) -> list[Tool]: 
+    def tools(self) -> list[Tool]:
         pdf_tool = StructuredTool.from_function(
             func=self.load_pdf_from_url,
             name="load_pdf_from_url",
             description=re.sub(
-                r"\s+", " ",
+                r"\s+",
+                " ",
                 """Load a PDF from a URL and return a list of documents relevant 
                 to the query. For example, the URL to a paper on arXiv.org has the
                 format https://arxiv.org/pdf/{arxiv_id}.pdf, where {arxiv_id} is
                 the arXiv identifier of the paper.
-                """).replace("\n", " "),
+                """,
+            ).replace("\n", " "),
             return_direct=False,
             args_schema=self.PDFLoaderInputSchema,
         )
@@ -154,15 +160,19 @@ class ArxivAgent:
             tools=render_text_description_and_args(self.tools),
             tool_names=", ".join([t.name for t in self.tools]),
         )
-        partial_prompt.messages[0].prompt.template = re.sub(
-                r"\s+", " ",
+        partial_prompt.messages[0].prompt.template = (
+            re.sub(
+                r"\s+",
+                " ",
                 f"""You are a helpful agent called {self.name} having access to 
                 papers and preprints on arXiv through arXiv API and PDF loaders. 
                 "Preprint" means the paper might not have been peer-reviewed yet. 
                 Be critical of the information you find. If you are asked to
                 read the paper, you must use "load_pdf_from_url" to load the PDF. 
-                Remember to keep arXiv ids in scratchpad for future reference."""
-            ).replace("\n", " ") + partial_prompt.messages[0].prompt.template
+                Remember to keep arXiv ids in scratchpad for future reference.""",
+            ).replace("\n", " ")
+            + partial_prompt.messages[0].prompt.template
+        )
         return partial_prompt
 
     def as_executor(
@@ -182,23 +192,27 @@ class ArxivAgent:
             handle_parsing_errors=handle_parsing_errors,
             **kwargs,
         )
-    
+
     class ChainInputSchema(BaseModel):
-        input: str = Field(..., description="Complete question to ask the assistatn agent. Should include all the context and details needed to answer the question holistically.")
+        input: str = Field(
+            ...,
+            description="Complete question to ask the assistatn agent. Should include all the context and details needed to answer the question holistically.",
+        )
         # agent_scratchpad: str = ""
 
     def as_tool(
-            self, 
-            return_direct=False,
-            agent_kwargs={},
-            tool_kwargs={},
-            ) -> Tool:
-        
+        self,
+        return_direct=False,
+        agent_kwargs={},
+        tool_kwargs={},
+    ) -> Tool:
         def run(input: str):
-            return self.as_executor(**agent_kwargs).invoke({
-                "input": input,
-            })
-        
+            return self.as_executor(**agent_kwargs).invoke(
+                {
+                    "input": input,
+                }
+            )
+
         return StructuredTool.from_function(
             func=run,
             name=self.name,

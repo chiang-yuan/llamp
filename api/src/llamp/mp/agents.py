@@ -46,7 +46,10 @@ REACT_MULTI_JSON_PROMPT = hub.pull("hwchase17/react-multi-input-json")
 
 
 class ChainInputSchema(BaseModel):
-    input: str = Field(..., description="Complete question to ask the assistatn agent. Should include all the context and details needed to answer the question holistically.")
+    input: str = Field(
+        ...,
+        description="Complete question to ask the assistatn agent. Should include all the context and details needed to answer the question holistically.",
+    )
     # agent_scratchpad: str = ""
 
 
@@ -88,16 +91,20 @@ class MPAgent:
             tools=render_text_description_and_args(self.tools),
             tool_names=", ".join([t.name for t in self.tools]),
         )
-        partial_prompt.messages[0].prompt.template = re.sub(
-            r"\s+", " ",
-            f"""You are a helpful agent called {self.name} having access to 
+        partial_prompt.messages[0].prompt.template = (
+            re.sub(
+                r"\s+",
+                " ",
+                f"""You are a helpful agent called {self.name} having access to 
                 materials data on Materials Project (MP). DO NOT be overconfident and 
                 request related MP API endpoint whenever possible. When you create 
                 function input arguments, ALWAYS follow MP API schema strictcly and 
                 DO NOT hallucinate invalid arguments. Convert all acronyms and abbreviations to valid 
                 arguments, especially chemical formula and isotopes (e.g. D2O should be 
-                H2O), composition, and systems. """
-        ).replace("\n", " ") + partial_prompt.messages[0].prompt.template
+                H2O), composition, and systems. """,
+            ).replace("\n", " ")
+            + partial_prompt.messages[0].prompt.template
+        )
         return partial_prompt
 
     def as_executor(
@@ -119,16 +126,17 @@ class MPAgent:
         )
 
     def as_tool(
-            self,
-            return_direct=False,
-            agent_kwargs={},
-            tool_kwargs={},
+        self,
+        return_direct=False,
+        agent_kwargs={},
+        tool_kwargs={},
     ) -> Tool:
-
         def run(input: str):
-            return self.as_executor(**agent_kwargs).invoke({
-                "input": input,
-            })
+            return self.as_executor(**agent_kwargs).invoke(
+                {
+                    "input": input,
+                }
+            )
 
         return StructuredTool.from_function(
             func=run,
@@ -241,8 +249,7 @@ class MPPiezoelectricExpert(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsPiezoelectric(return_direct=False,
-                                   handle_tool_error=True),
+            MaterialsPiezoelectric(return_direct=False, handle_tool_error=True),
         ]
 
 
@@ -260,8 +267,8 @@ class MPElectronicExpert(MPAgent):
 
 
 class MPSynthesisExpert(MPAgent):
-    """Materials synthesis expert that has access to Materials Project synthesis 
-    endpoint, where synthesis recipes are extracted  from scientific literature through 
+    """Materials synthesis expert that has access to Materials Project synthesis
+    endpoint, where synthesis recipes are extracted  from scientific literature through
     text mining and natural language processing approaches"""
 
     def __init__(self, llm):
