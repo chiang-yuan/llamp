@@ -28,8 +28,6 @@ dependencies = [
     "wikipedia",
     "pandas",
     "pypdf",
-    "transformers",
-    "accelerate",
 	"redis>=5.0.1,<5.1.0",
 ]
 requires-python = ">=3.9"
