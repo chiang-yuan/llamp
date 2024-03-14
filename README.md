@@ -28,6 +28,14 @@ Reducing hallucination of Large Language Models (LLMs) is imperative for use in 
 
 ## Installation
 
+### Python API
+
+Install from source:
+```shell
+cd api
+pip install .
+```
+
 ### Build the app locally
 
 ```shell
