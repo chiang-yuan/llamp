@@ -1,6 +1,8 @@
 from emmet.core.summary import HasProps
 from emmet.core.thermo import ThermoType
-from pydantic import BaseModel, Field
+
+# from pydantic import BaseModel, Field
+from langchain.pydantic_v1 import BaseModel, Field
 from pymatgen.analysis.magnetism.analyzer import Ordering
 
 

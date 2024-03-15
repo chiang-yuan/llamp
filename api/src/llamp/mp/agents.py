@@ -24,6 +24,7 @@ from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import StructuredTool, Tool, tool
 from langchain.tools.render import render_text_description_and_args
 
+# from pydantic import BaseModel, Field
 from llamp.mp.tools import (
     MaterialsBonds,
     MaterialsDielectric,
@@ -47,7 +48,6 @@ REACT_MULTI_JSON_PROMPT = hub.pull("hwchase17/react-multi-input-json")
 
 class ChainInputSchema(BaseModel):
     input: str = Field(
-        ...,
         description="Complete question to ask the assistatn agent. Should include all the context and details needed to answer the question holistically.",
     )
     # agent_scratchpad: str = ""
