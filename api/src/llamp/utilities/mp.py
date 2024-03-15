@@ -277,7 +277,7 @@ class MPAPIWrapper(BaseModel):
 
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[: query_params.get("_limit", 10)]
+        )
 
     def search_materials_structure(self, query_params: dict):
         # NOTE: this is a convenient function to retrieve pymatgen structure in JSON
@@ -298,7 +298,7 @@ class MPAPIWrapper(BaseModel):
 
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[: query_params.get("_limit", 10)]
+        )
 
     def search_materials_robocrys(self, query_params: dict):
         query_params = self._process_query_params(query_params)
@@ -354,10 +354,8 @@ class MPAPIWrapper(BaseModel):
         response = self.mpr.materials.synthesis._search(**query_params)
 
         # TODO: handle large response
-        first = min(query_params.get("_limit", 5), 5)
-        print(f"return first {first} synthesis results for now")
 
-        return response[:first]
+        return response
 
     def search_materials_oxidation_states(self, query_params: dict):
         query_params = self._process_query_params(query_params)
@@ -394,7 +392,7 @@ class MPAPIWrapper(BaseModel):
 
         return self.mpr.materials.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[: query_params.get("_limit", 10)]
+        )
 
     def search_materials_dielectric(self, query_params):
         query_params = self._process_query_params(query_params)
@@ -423,11 +421,11 @@ class MPAPIWrapper(BaseModel):
                 fields=query_params.get(
                     "fields", "material_id,formula_pretty,total,n,symmetry"
                 ).split(","),
-            )[: query_params.get("_limit", 10)]
+            )
 
         return self.mpr.materials.dielectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[: query_params.get("_limit", 10)]
+        )
 
     def search_materials_piezoelectric(self, query_params):
         query_params = self._process_query_params(query_params)
@@ -449,7 +447,7 @@ class MPAPIWrapper(BaseModel):
 
         return self.mpr.materials.piezoelectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[: query_params.get("_limit", 10)]
+        )
 
     def search_materials_magnetism(self, query_params):
         query_params = self._process_query_params(query_params)
@@ -485,7 +483,7 @@ class MPAPIWrapper(BaseModel):
 
         return self.mpr.magnetism._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[: query_params.get("_limit", 10)]
+        )
 
     def search_materials_elasticity(self, query_params):
         query_params = self._process_query_params(query_params)
@@ -527,7 +525,7 @@ class MPAPIWrapper(BaseModel):
 
         return self.mpr.materials.elasticity._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[: query_params.get("_limit", 10)]
+        )
 
     def search_materials_electronic_structure(self, query_params):
         query_params = self._process_query_params(query_params)
