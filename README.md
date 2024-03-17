@@ -10,6 +10,7 @@
 </h1>
 <h4 align="center">Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation</h4>
 
+> [!TIP]
 > TL;DR: LLaMP is a multimodal retrieval-augmented generation (RAG) framework of hiearchical ReAct agents that can dynamically and recursively interact with Materials Project to ground LLMs on high-fidelity materials informatics.
 
 We are sorry! LLaMP is actually a homonym of **Large Language model [Materials Project](https://materialsproject.org)**. :wink: It empowers LLMs with the largest computational materials database [Materials Project](https://materialsproject.org) to reduce the likelihood of hallucination for materials data.
