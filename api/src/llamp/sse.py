@@ -29,6 +29,7 @@ from llamp.mp.agents import (
     MPMagnetismExpert,
     MPPiezoelectricExpert,
     MPStructureRetriever,
+    MPStructureVisualizer,
     MPSummaryExpert,
     MPSynthesisExpert,
     MPThermoExpert,
@@ -115,8 +116,11 @@ async def listen_to_pubsub(pubsub: PubSub):
 async def agent_stream(
     input_data: str, chat_id: str, user_openai_api_key: str, user_mp_api_key: str
 ):
-    custom_callback_handler = StreamingRedisCallbackHandler(
+    top_level_cb = StreamingRedisCallbackHandler(
         redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel=chat_id
+    )
+    bottom_level_cb = StreamingRedisCallbackHandler(
+        redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel=chat_id, level=1
     )
 
     # TODO: set MP_API_KEY
@@ -126,7 +130,7 @@ async def agent_stream(
         openai_api_key=user_openai_api_key,
         max_retries=5,
         streaming=True,
-        callbacks=[custom_callback_handler],
+        callbacks=[bottom_level_cb],
     )
 
     # TODO: move all the tool defitions out of the function
@@ -156,9 +160,12 @@ async def agent_stream(
         MPSynthesisExpert(llm=mp_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        MPStructureRetriever(llm=mp_llm).as_tool(
-            agent_kwargs=dict(return_intermediate_steps=False)
+        MPStructureVisualizer(llm=mp_llm).as_tool(
+            agent_kwargs=dict(return_intermediate_steps=True)
         ),
+        # MPStructureRetriever(llm=mp_llm).as_tool(
+        #    agent_kwargs=dict(return_intermediate_steps=False)
+        # ),
         arxiv,
         wikipedia,
     ]
@@ -187,7 +194,7 @@ async def agent_stream(
         model=OPENAI_GPT_MODEL,
         openai_api_key=user_openai_api_key,
         streaming=True,
-        callbacks=[custom_callback_handler],
+        callbacks=[top_level_cb],
     )
 
     agent_executor = initialize_agent(
@@ -199,12 +206,14 @@ async def agent_stream(
         # memory=conversational_memory,
         # agent_kwargs=agent_kwargs,
         handle_parsing_errors=True,
-        callback_manager=BaseCallbackManager(handlers=[custom_callback_handler]),
+        callback_manager=BaseCallbackManager(
+            handlers=[top_level_cb]),
     )
     pubsub = redis_client.pubsub()
     pubsub.subscribe(chat_id)
 
-    ainvoke_task = asyncio.create_task(agent_executor.ainvoke({"input": input_data}))
+    ainvoke_task = asyncio.create_task(
+        agent_executor.ainvoke({"input": input_data}))
 
     async for message in listen_to_pubsub(pubsub):
         if message == "AGENT_FINISH":

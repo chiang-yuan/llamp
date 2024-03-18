@@ -2,15 +2,17 @@ import redis
 
 from langchain_core.callbacks.base import AsyncCallbackHandler
 from langchain_core.agents import AgentFinish, AgentAction
-from typing import Any
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, TypeVar, Union
+from uuid import UUID
 
 
 class StreamingRedisCallbackHandler(AsyncCallbackHandler):
     def __init__(
-        self, redis_host="localhost", redis_port=6379, redis_channel="llm_stream"
+        self, redis_host="localhost", redis_port=6379, redis_channel="llm_stream", level=0
     ):
         self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=0)
         self.redis_channel = redis_channel
+        self.level = level
 
     def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         """Run on new LLM token. Only available when streaming is enabled."""
@@ -34,4 +36,5 @@ class StreamingRedisCallbackHandler(AsyncCallbackHandler):
         **kwargs: Any,
     ) -> None:
         """Run on agent action."""
-        self.redis_client.publish(self.redis_channel, f"AGENT_ACTION: {action}")
+        self.redis_client.publish(
+            self.redis_channel, f"AGENT_ACTION: {action}")

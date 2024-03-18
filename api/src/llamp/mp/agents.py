@@ -184,7 +184,8 @@ class MPStructureVisualizer(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsStructureVis(return_direct=True, handle_tool_error=True),
+            # MaterialsStructureVis(return_direct=True, handle_tool_error=True),
+            MaterialsStructureVis(return_direct=False, handle_tool_error=True),
         ]
 
 
@@ -249,7 +250,8 @@ class MPPiezoelectricExpert(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsPiezoelectric(return_direct=False, handle_tool_error=True),
+            MaterialsPiezoelectric(return_direct=False,
+                                   handle_tool_error=True),
         ]
 
 

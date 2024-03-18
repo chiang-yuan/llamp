@@ -93,14 +93,18 @@
               if (currentSection.startsWith('{"simulation_data"')) {
                 return appendSimulation(JSON.parse(currentSection), []);
               } else {
-                appendResponses([
-                  {
-                    role: 'assistant',
-                    content: parseActionInput(currentSection),
-                    type: 'msg',
-                    timestamp: new Date()
-                  }
-                ]);
+                const content = parseActionInput(currentSection);
+
+                if (content.length > 0) {
+                  appendResponses([
+                    {
+                      role: 'assistant',
+                      content,
+                      type: 'msg',
+                      timestamp: new Date()
+                    }
+                  ]);
+                }
               }
               currentSection = ''; // Reset for the next section
             }

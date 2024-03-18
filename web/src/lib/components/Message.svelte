@@ -40,18 +40,26 @@
     color: 'primary'
   };
 
-  let parsedContent: HTMLPreElement;
+  let parsedContent: string;
   $: if (data && data.content) {
     const mpRegex = /mp-\d+/g;
-    function processLinks(content: string) {
-      return content.replace(mpRegex, (materialId: string) => {
+    function processLinks(content: string): string {
+      // Process the links first
+      content = content.replace(mpRegex, (materialId: string) => {
         const tailwindClasses = 'underline text-blue-600 hover:opacity-75';
         return `<a href="https://next-gen.materialsproject.org/materials/${materialId}"
-				class="${tailwindClasses}" target="_blank" rel="noopener noreferrer">${materialId}</a>`;
+        class="${tailwindClasses}" target="_blank" rel="noopener noreferrer">${materialId}</a>`;
       });
+
+      // Then replace <pre> tags to include the class
+      content = content.replace(/<pre>/g, '<pre class="whitespace-pre-wrap">');
+
+      return content;
     }
+
     parsedContent = processLinks(DOMPurify.sanitize(marked.parse(data.content)));
     messageType = getMessageType(data.content);
+    console.log(parsedContent);
   }
   $: typeColor =
     messageType === 'action'
@@ -61,8 +69,8 @@
         : undefined;
 </script>
 
-{#if data.type == 'msg' && data.content.length > 0}
-  <div class="flex gap-2 {user ? 'justify-end' : ''}">
+{#if data.type == 'msg' && data.content.length > 0 && !parsedContent.startsWith('<p> log=') && !parsedContent.includes('<pre class="whitespace-pre-wrap"><code class="language-AGENT_ACTION:">')}
+  <div class="flex gap-2 {user ? 'justify-end' : ''} text-wrap">
     <div>
       <Avatar
         width="w-14"
@@ -80,9 +88,46 @@
         {/if}
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
-      <pre
-        class="whitespace-pre-wrap {typeColor}"
-        bind:this={parsedContent}>{@html parsedContent}</pre>
+      {#if parsedContent.includes('"action": "Final Answer"')}
+        <p class="font-bold">Observation:</p>
+        {@html parsedContent
+          .replace('\n', '')
+          .replace('```json', '')
+          .replace(
+            `{
+  "action": "Final Answer",`,
+            ''
+          )
+          .replace(`"action_input": "`, '')
+          .replace(
+            `"
+}`,
+            ''
+          )
+          .trim()}
+      {:else if parsedContent.startsWith('<p>Action:</p>')}
+        {#each parsedContent.split('<pre')[1].split('\n') as line}
+          {#if line.includes('"action":')}
+            <p class="font-bold mt-2">🛠️ {@html line.split('"')[3]}</p>
+          {/if}
+          {#if line.includes('"input":')}
+            <p class="mt-2">"{@html line.split('"')[3]}"</p>
+          {/if}
+        {/each}
+      {:else if parsedContent.startsWith("<p>\\n```'Action:</p>")}
+        {#each parsedContent.split('<pre')[1].split('\n') as line}
+          {#if line.includes('"action":')}
+            <p class="mt-2">🔮 <strong>API Endpoint:</strong> {@html line.split('"')[3]}</p>
+          {/if}
+          {#if line.includes('"formula":')}
+            <p class="mt-2"><strong>Formula:</strong> {@html line.split('"')[3]}</p>
+          {/if}
+        {/each}
+      {:else}
+        <pre
+          class="whitespace-normal {typeColor}"
+          bind:this={parsedContent}>{@html parsedContent}</pre>
+      {/if}
     </div>
   </div>
 {:else if data.type == 'structures'}
