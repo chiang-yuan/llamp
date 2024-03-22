@@ -1,4 +1,3 @@
-import os
 import re
 
 from langchain import hub
@@ -177,15 +176,19 @@ class MPStructureRetriever(MPAgent):
 
 class MPStructureVisualizer(MPAgent):
     """Structure expert who will retrieve the structure from Materials Project, save it to local storage for frontend visualization"""
+    chat_id: str = ""
 
-    def __init__(self, llm):
+    def __init__(self, llm, chat_id):
         super().__init__(llm)
+        self.chat_id = chat_id
 
     @property
     def tools(self):
         return [
             # MaterialsStructureVis(return_direct=True, handle_tool_error=True),
-            MaterialsStructureVis(return_direct=False, handle_tool_error=True),
+            MaterialsStructureVis(return_direct=False,
+                                  handle_tool_error=True,
+                                  chat_id=self.chat_id),
         ]
 
 

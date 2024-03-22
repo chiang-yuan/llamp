@@ -80,6 +80,10 @@
       if (done) break;
 
       const tokens = decoder.decode(value, { stream: true });
+      if (tokens.startsWith('[structures]')) {
+        appendStructures(tokens.substring(12).split(','));
+        continue;
+      }
 
       for (let token of tokens) {
         if (token === '{') {
@@ -192,6 +196,7 @@
   }
 
   function appendStructures(structures: any[]) {
+    console.log('structures: ' + structures);
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats];
       const updatedMessages = [

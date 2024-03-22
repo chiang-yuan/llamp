@@ -2,8 +2,7 @@ import redis
 
 from langchain_core.callbacks.base import AsyncCallbackHandler
 from langchain_core.agents import AgentFinish, AgentAction
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, TypeVar, Union
-from uuid import UUID
+from typing import Any
 
 
 class StreamingRedisCallbackHandler(AsyncCallbackHandler):

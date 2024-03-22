@@ -59,7 +59,7 @@
 
     parsedContent = processLinks(DOMPurify.sanitize(marked.parse(data.content)));
     messageType = getMessageType(data.content);
-    console.log(parsedContent);
+    //console.log(parsedContent);
   }
   $: typeColor =
     messageType === 'action'

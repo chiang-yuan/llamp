@@ -160,7 +160,7 @@ async def agent_stream(
         MPSynthesisExpert(llm=mp_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        MPStructureVisualizer(llm=mp_llm).as_tool(
+        MPStructureVisualizer(llm=mp_llm, chat_id=chat_id).as_tool(
             agent_kwargs=dict(return_intermediate_steps=True)
         ),
         # MPStructureRetriever(llm=mp_llm).as_tool(

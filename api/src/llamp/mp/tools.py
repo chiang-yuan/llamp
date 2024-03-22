@@ -2,6 +2,8 @@ import json
 import os
 import re
 from pathlib import Path
+import redis
+from redis.client import Redis
 
 from langchain.pydantic_v1 import Field
 from langchain.tools import BaseTool
@@ -78,6 +80,12 @@ class MaterialsStructureVis(MPTool):
         .replace("\n", " ")[0]
     )
     args_schema: type[StructureSchema] = StructureSchema
+    chat_id: str = ""
+    redis_client: Redis = None
+
+    def __init__(self, *args, chat_id, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.chat_id = chat_id
 
     def _run(self, **query_params):
         _response = super()._run(**query_params)
@@ -92,10 +100,28 @@ class MaterialsStructureVis(MPTool):
 
             with open(fpath, "w") as f:
                 f.write(json.dumps(structure))
-
-        return "[structures]" + ",".join(
+        output = "[structures]" + ",".join(
             list(map(lambda x: x["material_id"], _response))
         )
+
+        if self.chat_id != "":
+            try:
+                REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+                REDIS_PORT = os.getenv("REDIS_PORT", 6379)
+                self.redis_client = redis.Redis(
+                    host=REDIS_HOST, port=REDIS_PORT, db=0)
+                if self.redis_client.ping():
+                    self.redis_client.publish(
+                        self.chat_id, output)
+                    self.redis_client.publish(
+                        self.chat_id, "AGENT_FINISH")
+                    return output
+                else:
+                    print("Failed to establish Redis connection.")
+            except redis.ConnectionError as e:
+                print(f"Redis connection error: {str(e)}")
+
+        return output
 
 
 class MaterialsStructureText(MPTool):
