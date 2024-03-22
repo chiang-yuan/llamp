@@ -11,10 +11,10 @@
   //  import { writable } from 'svelte/store';
   import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats, currentChatIndex } from '$lib/store';
 
-  const CHAT_ENDPOINT =
+  const BASE_URL =
     process.env.NODE_ENV === 'production'
-      ? 'http://ingress.llamp.development.svc.spin.nersc.org/chat'
-      : 'http://localhost:8000/chat';
+      ? 'http://ingress.llamp.development.svc.spin.nersc.org'
+      : 'http://localhost:8000';
 
   let loading = true;
 
@@ -53,7 +53,7 @@
   }
 
   async function getStream(message: ChatMessage) {
-    const response = await fetch(CHAT_ENDPOINT, {
+    const response = await fetch(`${BASE_URL}/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -195,8 +195,32 @@
     });
   }
 
-  function appendStructures(structures: any[]) {
-    console.log('structures: ' + structures);
+  async function loadStructures(materialIds: string[]): Promise<string[]> {
+    const structures = await Promise.all(
+      materialIds.map(async (materialId) => {
+        const response = await fetch(`${BASE_URL}/structures/${materialId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch structure');
+        }
+
+        const data = await response.json();
+        return data;
+      })
+    );
+
+    return structures as string[];
+  }
+
+  async function appendStructures(materialIds: string[]) {
+    // TODO: load structures from API
+    const structures = await loadStructures(materialIds);
+
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats];
       const updatedMessages = [

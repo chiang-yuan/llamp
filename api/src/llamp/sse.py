@@ -2,11 +2,12 @@ import asyncio
 import os
 import re
 import uuid
+import json
 
 import redis
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from langchain import hub
@@ -20,6 +21,7 @@ from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 from redis.client import PubSub
+from pathlib import Path
 
 from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
 from llamp.mp.agents import (
@@ -234,6 +236,20 @@ async def chat(query: Query):
         agent_stream(query.text, chat_id, query.OpenAiAPIKey, query.mpAPIKey),
         media_type="text/plain",
     )
+
+
+@app.get("/structures/{material_id}")
+async def get_structure(material_id: str):
+    out_dir = Path(__file__).parent.absolute() / "mp" / ".tmp"
+    print(out_dir)
+    fpath = out_dir / f"{material_id}.json"
+
+    if fpath.exists():
+        with open(fpath, "r") as f:
+            structure_data = json.load(f)
+        return structure_data
+    else:
+        raise HTTPException(status_code=404, detail="Structure not found")
 
 
 if __name__ == "__main__":
