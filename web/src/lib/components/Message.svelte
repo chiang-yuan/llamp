@@ -176,7 +176,9 @@
                 show_image_atoms={false}
                 show_bonds={true}
               />
-              <StructureCard structure={stc} />
+              <div style="max-width: 280px">
+                <StructureCard structure={stc} />
+              </div>
             </div>
           {/each}
         </div>
