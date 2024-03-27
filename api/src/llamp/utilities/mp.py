@@ -25,21 +25,6 @@ class MPAPIWrapper(BaseModel):
     """Wrapper around mp-api.
 
     To use, you should have the ``mp-api`` python package installed.
-
-    Attributes:
-
-    Example:
-        .. code-block:: python
-            # TODO: revise this example
-            from langchain.utilities.arxiv import ArxivAPIWrapper
-            arxiv = ArxivAPIWrapper(
-                top_k_results = 3,
-                ARXIV_MAX_QUERY_LENGTH = 300,
-                load_max_docs = 3,
-                load_all_available_meta = False,
-                doc_content_chars_max = 40000
-            )
-            arxiv.run("tree of thought llm)
     """
 
     mpr: Any = {}
