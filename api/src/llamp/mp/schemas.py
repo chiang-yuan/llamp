@@ -473,6 +473,14 @@ class SynthesisSchema(BaseModel):
         description="Maximum number of entries to return",
     )
 
+class SynthesisOperation(BaseModel):
+    reaction: str | None = Field(None, description="Reaction equation of this operation")
+    details: str | None = Field(None, description="Text details (conditions, instruments, time, etc.) of this operation")
+
+class SynthesisRecipe(BaseModel):
+    doi: str | None = Field(..., description="DOI of the synthesis recipe")
+    methods: list[str] | None = Field(None, description="List of methods/techniques used in the synthesis recipe")
+    operations: list[SynthesisOperation]
 
 class ThermoSchema(BaseModel):
     thermo_ids: str | None = Field(

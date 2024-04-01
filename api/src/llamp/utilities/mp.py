@@ -338,8 +338,6 @@ class MPAPIWrapper(BaseModel):
 
         response = self.mpr.materials.synthesis._search(**query_params)
 
-        # TODO: handle large response
-
         return response
 
     def search_materials_oxidation_states(self, query_params: dict):

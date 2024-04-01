@@ -2,11 +2,11 @@ import json
 import os
 import re
 from pathlib import Path
-import redis
-from redis.client import Redis
 
+import redis
 from langchain.pydantic_v1 import Field
 from langchain.tools import BaseTool
+from redis.client import Redis
 
 from llamp.mp.schemas import (
     BondsSchema,
@@ -169,6 +169,15 @@ class MaterialsSynthesis(MPTool):
         .replace("\n", " ")[0]
     )
     args_schema: type[SynthesisSchema] = SynthesisSchema
+
+    def _run(self, **query_params):
+        _res = self.api_wrapper.run(
+            function_name=self.name,
+            function_args=json.dumps(query_params),
+            debug=self.verbose,
+        )
+        # TODO: map reduce large response
+        return _res
 
 
 class MaterialsThermo(MPTool):
