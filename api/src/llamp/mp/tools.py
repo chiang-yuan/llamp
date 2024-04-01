@@ -60,7 +60,7 @@ class MaterialsSummary(MPTool):
         other tools""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[SummarySchema] = SummarySchema
 
@@ -77,7 +77,7 @@ class MaterialsStructureVis(MPTool):
             structures on MP.""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[StructureSchema] = StructureSchema
     chat_id: str = ""
@@ -134,7 +134,7 @@ class MaterialsStructureText(MPTool):
             Project as JSON text for structure generation or manipulation.""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[StructureSchema] = StructureSchema
 
@@ -151,7 +151,7 @@ class MaterialsElasticity(MPTool):
         qualified materials""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[ElasticitySchema] = ElasticitySchema
 
@@ -166,7 +166,7 @@ class MaterialsSynthesis(MPTool):
         precursors, targets, operations, conditions, required devices and references""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[SynthesisSchema] = SynthesisSchema
 
@@ -193,7 +193,7 @@ class MaterialsThermo(MPTool):
         material_ids""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[ThermoSchema] = ThermoSchema
 
@@ -210,7 +210,7 @@ class MaterialsMagnetism(MPTool):
         qualified materials.""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[MagnetismSchema] = MagnetismSchema
 
@@ -244,7 +244,7 @@ class MaterialsDielectric(MPTool):
         stresses are coupled""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[DielectricSchema] = DielectricSchema
 
@@ -269,7 +269,7 @@ class MaterialsPiezoelectric(MPTool):
         electric field or a mechanical load""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[PiezoSchema] = PiezoSchema
 
@@ -290,7 +290,7 @@ class MaterialsRobocrystallographer(MPTool):
             identification when generating a description""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[RobocrysSchema] = RobocrysSchema
 
@@ -307,7 +307,7 @@ class MaterialsOxidation(MPTool):
             for oxidation state prediction""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[OxidationSchema] = OxidationSchema
 
@@ -323,7 +323,7 @@ class MaterialsBonds(MPTool):
             and retrieve the qualified materials""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[BondsSchema] = BondsSchema
 
@@ -338,7 +338,7 @@ class MaterialsTasks(MPTool):
             results""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[TasksSchema] = TasksSchema
 
@@ -354,7 +354,7 @@ class MaterialsSimilarity(MPTool):
             `MaterialsSummary` tool first""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[SimilaritySchema] = SimilaritySchema
 
@@ -371,6 +371,6 @@ class MaterialsElectronic(MPTool):
             and retrieve the qualified materials""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[ElectronicSchema] = ElectronicSchema

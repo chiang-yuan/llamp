@@ -37,8 +37,8 @@ class MPAPIWrapper(BaseModel):
         self.mp_api_key = api_key
         self.mpr = mp_api.client.MPRester(
             api_key=api_key,
-            monty_decode=False,
-            use_document_model=False,
+            monty_decode=True,
+            use_document_model=True,
             headers={"X-API-KEY": api_key, "accept": "application/json"},
         )
 

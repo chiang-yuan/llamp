@@ -47,10 +47,10 @@ REACT_MULTI_JSON_PROMPT = hub.pull("hwchase17/react-multi-input-json")
 
 class ChainInputSchema(BaseModel):
     input: str = Field(
+        ...,
         description="Complete question to ask the assistatn agent. Should include all the context and details needed to answer the question holistically.",
     )
     # agent_scratchpad: str = ""
-
 
 class MPAgent:
     """Agent that uses the MP tools."""
@@ -68,7 +68,6 @@ class MPAgent:
             | self.prompt
             | self.llm.bind(stop=["Observation"])
             # TODO: add a summarizer to take care of large reponses
-            # | ReActSingleInputOutputParser()
             | JSONAgentOutputParser()
         )
 
@@ -94,13 +93,13 @@ class MPAgent:
             re.sub(
                 r"\s+",
                 " ",
-                f"""You are a helpful agent called {self.name} having access to 
+                f"""You are a helpful assitent called {self.name} having access to 
                 materials data on Materials Project (MP). DO NOT be overconfident and 
                 request related MP API endpoint whenever possible. When you create 
                 function input arguments, ALWAYS follow MP API schema strictcly and 
-                DO NOT hallucinate invalid arguments. Convert all acronyms and abbreviations to valid 
-                arguments, especially chemical formula and isotopes (e.g. D2O should be 
-                H2O), composition, and systems. """,
+                DO NOT hallucinate invalid arguments. Convert ALL acronyms and 
+                abbreviations to valid arguments, especially chemical formula and 
+                isotopes (e.g. D2O should be H2O), composition, and systems.""",
             ).replace("\n", " ")
             + partial_prompt.messages[0].prompt.template
         )
