@@ -51,10 +51,7 @@ def agent_setup():
         openai_organization=OPENAI_ORGANIZATION,
         # streaming=True,
         streaming=False,
-        callbacks=[StreamingStdOutCallbackHandler()],
     )
-
-    bottom_callback_handler = StreamingStdOutCallbackHandler()
 
     bottom_llm = ChatOpenAI(
         temperature=0,
@@ -64,7 +61,6 @@ def agent_setup():
         max_retries=5,
         # streaming=True,
         streaming=False,
-        callbacks=[bottom_callback_handler],
     )
 
 
@@ -156,11 +152,11 @@ def agent_setup():
         "early_stopping_method": "generate",
     }
 
-    return tools, top_llm, conversational_memory, agent_kwargs, bottom_callback_handler
+    return tools, top_llm, conversational_memory, agent_kwargs
 
     
 def agent_prompting(prompt):
-    tools, top_llm, conversational_memory, agent_kwargs, bottom_callback_handler = agent_setup()
+    tools, top_llm, conversational_memory, agent_kwargs = agent_setup()
 
     agent_executor = initialize_agent(
         agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
@@ -168,10 +164,9 @@ def agent_prompting(prompt):
         llm=top_llm,
         verbose=True,
         max_iterations=20,
-        memory=conversational_memory,
+        # memory=conversational_memory,
         agent_kwargs=agent_kwargs,
         handle_parsing_errors=True,
-        callback_manager=BaseCallbackManager(handlers=[bottom_callback_handler]),
     )
     llamp_response = agent_executor.invoke({"input": prompt,})["output"]
     print("llamp_response", llamp_response)
