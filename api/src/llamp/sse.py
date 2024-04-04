@@ -50,9 +50,9 @@ wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
 arxiv = ArxivQueryRun(api_wrapper=ArxivAPIWrapper())
 
 
-conversational_memory = ConversationBufferWindowMemory(
-    memory_key="chat_history", k=5, return_messages=True
-)
+# conversational_memory = ConversationBufferWindowMemory(
+#    memory_key="chat_history", k=5, return_messages=True
+# )
 
 agent_kwargs = {
     "handle_parsing_errors": True,
@@ -135,8 +135,6 @@ async def agent_stream(
         callbacks=[bottom_level_cb],
     )
 
-    # TODO: move all the tool defitions out of the function
-    # it is unnecessary to define them every time the function is called
     tools = [
         MPThermoExpert(llm=mp_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
@@ -165,9 +163,9 @@ async def agent_stream(
         MPStructureVisualizer(llm=mp_llm, chat_id=chat_id).as_tool(
             agent_kwargs=dict(return_intermediate_steps=True)
         ),
-        # MPStructureRetriever(llm=mp_llm).as_tool(
-        #    agent_kwargs=dict(return_intermediate_steps=False)
-        # ),
+        MPStructureRetriever(llm=mp_llm).as_tool(
+            agent_kwargs=dict(return_intermediate_steps=False)
+        ),
         arxiv,
         wikipedia,
     ]
@@ -206,7 +204,6 @@ async def agent_stream(
         verbose=True,
         max_iterations=5,
         # memory=conversational_memory,
-        # agent_kwargs=agent_kwargs,
         handle_parsing_errors=True,
         callback_manager=BaseCallbackManager(
             handlers=[top_level_cb]),
@@ -227,13 +224,20 @@ async def agent_stream(
     await ainvoke_task
 
 
+async def prepend_chat_id_to_stream(chat_id, stream_generator):
+    yield f"[chat_id]{chat_id}\n".encode()
+    async for data in stream_generator:
+        yield data
+
+
 @app.post("/chat")
 async def chat(query: Query):
     print(query.OpenAiAPIKey)
     print(query.mpAPIKey)
     chat_id = str(uuid.uuid4())
     return StreamingResponse(
-        agent_stream(query.text, chat_id, query.OpenAiAPIKey, query.mpAPIKey),
+        prepend_chat_id_to_stream(chat_id, agent_stream(
+            query.text, chat_id, query.OpenAiAPIKey, query.mpAPIKey)),
         media_type="text/plain",
     )
 

@@ -5,12 +5,15 @@
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faKey, faTrash } from '@fortawesome/free-solid-svg-icons';
   import { clearChats } from '$lib/chatUtils';
-  import { chats, currentChatIndex } from '$lib/store';
+  import { chats, currentChatIndex, current_chat_id } from '$lib/store';
 
   $: currentChat = $chats[$currentChatIndex]?.title;
 
   function setCurrentChat(index: number) {
     currentChatIndex.set(index);
+
+    const selectedChatId = $chats[index]?.chat_id;
+    current_chat_id.set(selectedChatId);
   }
 
   const modalStore = getModalStore();

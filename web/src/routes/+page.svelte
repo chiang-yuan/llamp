@@ -8,8 +8,14 @@
   import { faPaperPlane, faBars } from '@fortawesome/free-solid-svg-icons';
   import { onMount } from 'svelte';
   import { type Chat, type ChatMessage, syncChats, type SimulationDataItem } from '$lib/chatUtils';
-  //  import { writable } from 'svelte/store';
-  import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats, currentChatIndex } from '$lib/store';
+  import {
+    OpenAiAPIKey,
+    mpAPIKey,
+    keyNotSet,
+    chats,
+    currentChatIndex,
+    current_chat_id
+  } from '$lib/store';
 
   const BASE_URL =
     process.env.NODE_ENV === 'production'
@@ -80,6 +86,18 @@
       if (done) break;
 
       const tokens = decoder.decode(value, { stream: true });
+      if (tokens.startsWith('[chat_id]')) {
+        const chat_id = tokens.substring(9);
+        chats.update((currentChats: Chat[]) => {
+          if (!currentChats[$currentChatIndex].chat_id) {
+            currentChats[$currentChatIndex].chat_id = chat_id;
+          }
+          return currentChats;
+        });
+
+        current_chat_id.set(chat_id);
+        continue;
+      }
       if (tokens.startsWith('[structures]')) {
         appendStructures(tokens.substring(12).split(','));
         continue;
@@ -151,12 +169,6 @@
       }
       return updatedChats;
     });
-
-    const body = {
-      messages: $chats[$currentChatIndex].messages,
-      openAIKey: $OpenAiAPIKey,
-      mpAPIKey: $mpAPIKey
-    };
 
     currentMessage = '';
 
@@ -274,6 +286,7 @@
   function openDrawer() {
     drawerStore.open({ id: 'mobile-chats' });
   }
+  $: console.log('current chat id: ', $current_chat_id);
 </script>
 
 <svelte:head>
