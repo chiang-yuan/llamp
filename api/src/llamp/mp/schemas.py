@@ -81,10 +81,10 @@ class SummarySchema(BaseModel):
     density_max: float | None = Field(None, description="Maximum density in g/cm^3")
     density_min: float | None = Field(None, description="Minimum density in g/cm^3")
     density_atomic_max: float | None = Field(
-        None, description="Maximum atomic density in atoms/Å^3"
+        None, description="Maximum volume per atom in Å^3/atom"
     )
     density_atomic_min: float | None = Field(
-        None, description="Minimum atomic density in atoms/Å^3"
+        None, description="Minimum volume per atom in Å^3/atom"
     )
     uncorrected_energy_per_atom_max: float | None = Field(
         None, description="Maximum uncorrected energy per atom in eV/atom"
@@ -482,8 +482,8 @@ class ThermoSchema(BaseModel):
         None, description="Comma-separated list of material_id to query on"
     )
     thermo_types: list[ThermoType | str] | None = Field(
-        default=[ThermoType.GGA_GGA_U_R2SCAN],
-        description="List of thermo types to query on",
+        default=[ThermoType.R2SCAN],
+        description=f"List of thermo types to query on: {', '.join([t.value for t in ThermoType]) }",
     )
     formula: str | None = Field(
         None,
