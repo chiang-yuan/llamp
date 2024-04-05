@@ -68,7 +68,7 @@ class Query(BaseModel):
     chat_id: str = None
 
 
-@app.get("/health")
+@app.get("/api/health")
 async def health():
     return {"status": "ok"}
 
@@ -240,7 +240,7 @@ async def prepend_chat_id_to_stream(chat_id, stream_generator):
         yield data
 
 
-@app.post("/chat")
+@app.post("/api/chat")
 async def chat(query: Query):
     chat_id = query.chat_id
     if query.chat_id is None or query.chat_id == "":
@@ -254,7 +254,7 @@ async def chat(query: Query):
     )
 
 
-@app.get("/structures/{material_id}")
+@app.get("/api/structures/{material_id}")
 async def get_structure(material_id: str):
     out_dir = Path(__file__).parent.absolute() / "mp" / ".tmp"
     print(out_dir)
