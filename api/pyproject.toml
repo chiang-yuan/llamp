@@ -29,6 +29,7 @@ dependencies = [
     "pandas",
     "pypdf",
 	"redis>=5.0.1,<5.1.0",
+	"langchain-experimental==0.0.56"
 ]
 requires-python = ">=3.9"
 
