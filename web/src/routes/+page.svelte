@@ -7,9 +7,15 @@
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faPaperPlane, faBars } from '@fortawesome/free-solid-svg-icons';
   import { onMount } from 'svelte';
-  import { type Chat, type ChatMessage, syncChats, type SimulationDataItem } from '$lib/chatUtils';
-  //  import { writable } from 'svelte/store';
-  import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats, currentChatIndex } from '$lib/store';
+  import { type Chat, type ChatMessage } from '$lib/chatUtils';
+  import {
+    OpenAiAPIKey,
+    mpAPIKey,
+    keyNotSet,
+    chats,
+    currentChatIndex,
+    current_chat_id
+  } from '$lib/store';
 
   const BASE_URL =
     process.env.NODE_ENV === 'production'
@@ -20,6 +26,9 @@
 
   onMount(() => {
     loading = false;
+    if ($chats[0].chat_id) {
+      current_chat_id.set($chats[0].chat_id);
+    }
   });
 
   function addMessage(newMessage: ChatMessage) {
@@ -37,6 +46,7 @@
 
   let currentMessage = '';
   let processing = false;
+  //  let updated_chat_id = '';
 
   function parseActionInput(input: string): string {
     const prefix = 'Final Output: Action:';
@@ -61,7 +71,8 @@
       body: JSON.stringify({
         text: message.content,
         OpenAiAPIKey: $OpenAiAPIKey,
-        mpAPIKey: $mpAPIKey
+        mpAPIKey: $mpAPIKey,
+        chat_id: $current_chat_id
       })
     });
 
@@ -74,12 +85,18 @@
 
     const stack = [];
     let currentSection = '';
+    let newChatId: string = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       const tokens = decoder.decode(value, { stream: true });
+      if (tokens.startsWith('[chat_id]')) {
+        newChatId = tokens.substring(9).trim();
+        continue;
+      }
+
       if (tokens.startsWith('[structures]')) {
         appendStructures(tokens.substring(12).split(','));
         continue;
@@ -121,9 +138,15 @@
         }
       }
     }
+    current_chat_id.set(newChatId);
+    chats.update((currentChats: Chat[]) => {
+      if (!currentChats[$currentChatIndex].chat_id) {
+        currentChats[$currentChatIndex].chat_id = newChatId;
+      }
+      return currentChats;
+    });
 
     if (currentSection !== '') {
-      // Handle any remaining incomplete section if necessary
       console.error('Incomplete section encountered at the end of the stream');
     }
   }
@@ -152,17 +175,21 @@
       return updatedChats;
     });
 
-    const body = {
-      messages: $chats[$currentChatIndex].messages,
-      openAIKey: $OpenAiAPIKey,
-      mpAPIKey: $mpAPIKey
-    };
-
     currentMessage = '';
 
     try {
       processing = true;
       await getStream(newMessage);
+
+      // Update chat_id
+      //  chats.update((currentChats: Chat[]) => {
+      //    if (!currentChats[$currentChatIndex].chat_id) {
+      //      currentChats[$currentChatIndex].chat_id = updated_chat_id;
+      //    }
+      //    return updated_chat_id;
+      //  });
+
+      //current_chat_id.set(updated_chat_id);
     } catch (error) {
       console.error('Error while asking question:', error);
     } finally {
@@ -218,7 +245,6 @@
   }
 
   async function appendStructures(materialIds: string[]) {
-    // TODO: load structures from API
     const structures = await loadStructures(materialIds);
 
     chats.update((currentChats: Chat[]) => {
@@ -265,6 +291,7 @@
     };
     chats.update((currentChats: Chat[]) => [newChat, ...currentChats]);
     $currentChatIndex = 0;
+    current_chat_id.set(undefined);
   }
 
   $: isCurrentChatEmpty =

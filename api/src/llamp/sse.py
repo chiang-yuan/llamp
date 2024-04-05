@@ -1,6 +1,5 @@
 import asyncio
 import os
-import re
 import uuid
 import json
 
@@ -10,13 +9,10 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from langchain import hub
 from langchain.agents import AgentType, initialize_agent
 from langchain.callbacks.base import BaseCallbackManager
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain.prompts import MessagesPlaceholder
+from langchain.memory import RedisChatMessageHistory, ConversationBufferMemory
 from langchain.tools import ArxivQueryRun, WikipediaQueryRun
-from langchain.tools.render import render_text_description_and_args
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
@@ -50,35 +46,6 @@ wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
 arxiv = ArxivQueryRun(api_wrapper=ArxivAPIWrapper())
 
 
-conversational_memory = ConversationBufferWindowMemory(
-    memory_key="chat_history", k=5, return_messages=True
-)
-
-agent_kwargs = {
-    "handle_parsing_errors": True,
-    "extra_prompt_messages": [
-        MessagesPlaceholder(variable_name="chat_history"),
-    ],
-}
-
-agent_kwargs = {
-    "handle_parsing_errors": True,
-    "extra_prompt_messages": [
-        MessagesPlaceholder(variable_name="chat_history"),
-        # SystemMessage(content=re.sub(
-        #     r"\s+", " ",
-        #     """You are a helpful data-aware agent that can consult materials-related
-        #     data through Materials Project (MP) database, arXiv, and Wikipedia. Ask
-        #     user to clarify their queries if needed. Please note that you don't have
-        #     direct control to MP but through multiple assistant agents to help you.
-        #     You need to provide complete context for them to do their job.
-        #     """).replace("\n", " ")
-        # )
-    ],
-    "early_stopping_method": "generate",
-}
-
-
 app = FastAPI()
 
 origins = ["*"]
@@ -97,6 +64,7 @@ class Query(BaseModel):
     text: str
     OpenAiAPIKey: str
     mpAPIKey: str
+    chat_id: str = None
 
 
 @app.get("/health")
@@ -135,8 +103,6 @@ async def agent_stream(
         callbacks=[bottom_level_cb],
     )
 
-    # TODO: move all the tool defitions out of the function
-    # it is unnecessary to define them every time the function is called
     tools = [
         MPThermoExpert(llm=mp_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
@@ -165,30 +131,20 @@ async def agent_stream(
         MPStructureVisualizer(llm=mp_llm, chat_id=chat_id).as_tool(
             agent_kwargs=dict(return_intermediate_steps=True)
         ),
-        # MPStructureRetriever(llm=mp_llm).as_tool(
-        #    agent_kwargs=dict(return_intermediate_steps=False)
-        # ),
+        MPStructureRetriever(llm=mp_llm).as_tool(
+            agent_kwargs=dict(return_intermediate_steps=False)
+        ),
         arxiv,
         wikipedia,
     ]
-    prompt = hub.pull("hwchase17/react-multi-input-json")
-    prompt.messages[0].prompt.template = (
-        re.sub(
-            r"\s+",
-            " ",
-            """You are a data-aware agent that can consult materials-related
-        data through Materials Project (MP) database, arXiv, and Wikipedia. Ask 
-        user to clarify their queries if needed. Please note that you don't have 
-        direct control over MP but through multiple assistant agents to help you. 
-        You need to provide complete context in the input for them to do their job.
-        """,
-        ).replace("\n", " ")
-        + prompt.messages[0].prompt.template
-    )
-
-    prompt = prompt.partial(
-        tools=render_text_description_and_args(tools),
-        tool_names=", ".join([t.name for t in tools]),
+    chat_id = chat_id.strip()
+    conversation_redis_memory = ConversationBufferMemory(
+        memory_key=chat_id,
+        chat_memory=RedisChatMessageHistory(
+            url=f"redis://{REDIS_HOST}:{REDIS_PORT}/0",
+            session_id=chat_id,
+        ),
+        return_messages=True
     )
 
     llm = ChatOpenAI(
@@ -199,17 +155,25 @@ async def agent_stream(
         callbacks=[top_level_cb],
     )
 
+    SUFFIX = f"""
+    Chat History {{{chat_id}}}
+    Begin!
+    Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.
+    Thought:"""
+
     agent_executor = initialize_agent(
         agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
         tools=tools,
         llm=llm,
         verbose=True,
         max_iterations=5,
-        # memory=conversational_memory,
-        # agent_kwargs=agent_kwargs,
         handle_parsing_errors=True,
         callback_manager=BaseCallbackManager(
             handlers=[top_level_cb]),
+        memory=conversation_redis_memory,
+        agent_kwargs={
+            'suffix': SUFFIX,
+        }
     )
     pubsub = redis_client.pubsub()
     pubsub.subscribe(chat_id)
@@ -227,13 +191,25 @@ async def agent_stream(
     await ainvoke_task
 
 
+async def prepend_chat_id_to_stream(chat_id, stream_generator):
+    yield f"[chat_id]{chat_id}\n".encode()
+    async for data in stream_generator:
+        yield data
+
+
 @app.post("/chat")
 async def chat(query: Query):
     print(query.OpenAiAPIKey)
     print(query.mpAPIKey)
-    chat_id = str(uuid.uuid4())
+    print(f"chat_id: {query.chat_id}")
+    chat_id = query.chat_id
+    if query.chat_id is None or query.chat_id == "":
+        # TODO: check if exists in redis
+        chat_id = str(uuid.uuid4())
+
     return StreamingResponse(
-        agent_stream(query.text, chat_id, query.OpenAiAPIKey, query.mpAPIKey),
+        prepend_chat_id_to_stream(chat_id, agent_stream(
+            query.text, chat_id, query.OpenAiAPIKey, query.mpAPIKey)),
         media_type="text/plain",
     )
 
