@@ -1,7 +1,8 @@
 import asyncio
+import json
 import os
 import uuid
-import json
+from pathlib import Path
 
 import redis
 import uvicorn
@@ -9,15 +10,15 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from langchain.agents import AgentType, initialize_agent
+from langchain.agents import AgentType, initialize_agent, load_tools
 from langchain.callbacks.base import BaseCallbackManager
-from langchain.memory import RedisChatMessageHistory, ConversationBufferMemory
+from langchain.memory import ConversationBufferMemory, RedisChatMessageHistory
 from langchain.tools import ArxivQueryRun, WikipediaQueryRun
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
+from langchain_experimental.tools import PythonREPLTool
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 from redis.client import PubSub
-from pathlib import Path
 
 from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
 from llamp.mp.agents import (
@@ -103,6 +104,8 @@ async def agent_stream(
         callbacks=[bottom_level_cb],
     )
 
+    tools = load_tools(["llm-math"], llm=bottom_llm)
+    tools += [PythonREPLTool()]
     tools = [
         MPThermoExpert(llm=mp_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
@@ -221,7 +224,7 @@ async def get_structure(material_id: str):
     fpath = out_dir / f"{material_id}.json"
 
     if fpath.exists():
-        with open(fpath, "r") as f:
+        with open(fpath) as f:
             structure_data = json.load(f)
         return structure_data
     else:
