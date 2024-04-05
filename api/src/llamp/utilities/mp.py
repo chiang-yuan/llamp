@@ -38,8 +38,8 @@ class MPAPIWrapper(BaseModel):
         self.mp_api_key = api_key
         self.mpr = mp_api.client.MPRester(
             api_key=api_key,
-            monty_decode=False,
-            use_document_model=False,
+            monty_decode=True,
+            use_document_model=True,
             headers={"X-API-KEY": api_key, "accept": "application/json"},
         )
 
@@ -352,9 +352,7 @@ class MPAPIWrapper(BaseModel):
 
         response = self.mpr.materials.synthesis._search(**query_params)
 
-        # TODO: handle large response
-
-        return response
+        return response[:5]
 
     def search_materials_oxidation_states(self, query_params: dict):
         query_params = self._process_query_params(query_params)
