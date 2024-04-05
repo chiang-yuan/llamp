@@ -20,7 +20,7 @@
   const BASE_URL =
     process.env.NODE_ENV === 'production'
       ? 'http://ingress.llamp.development.svc.spin.nersc.org/api'
-      : 'http://localhost:8000';
+      : 'http://localhost:8000/api';
 
   let loading = true;
 
