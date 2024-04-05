@@ -31,7 +31,8 @@ class MPAPIWrapper(BaseModel):
     mp_api_key: str = Field("", alias="mpApiKey")
 
     max_tokens: int | None = 4096
-    spec_path: Path | str = Path(__file__).parent.resolve() / "mp_openapi_selected.json"
+    spec_path: Path | str = Path(
+        __file__).parent.resolve() / "mp_openapi_selected.json"
 
     def set_api_key(self, api_key: str):
         self.mp_api_key = api_key
@@ -46,20 +47,20 @@ class MPAPIWrapper(BaseModel):
     def validate_environment(cls, values: dict) -> dict:
         """Validate that the python package exists in environment."""
 
-        mp_api_key = get_from_dict_or_env(values, "mp_api_key", "MP_API_KEY")
+        mp_api_key = get_from_dict_or_env(
+            values, "mp_api_key", "MP_API_KEY", "MP_API_KEY_PLACEHOLDER")
 
         try:
             import mp_api
             import mp_api.client
-
-            os.environ["MP_API_KEY"] = mp_api_key
 
             values["client"] = mp_api.client
             values["mpr"] = mp_api.client.MPRester(
                 api_key=mp_api_key,
                 monty_decode=False,
                 use_document_model=False,
-                headers={"X-API-KEY": mp_api_key, "accept": "application/json"},
+                headers={"X-API-KEY": mp_api_key,
+                         "accept": "application/json"},
             )
         except ImportError:
             raise ImportError(
@@ -99,7 +100,8 @@ class MPAPIWrapper(BaseModel):
         try:
             if debug:
                 print(function_args)
-            function_response = function_to_call(query_params=json.loads(function_args))
+            function_response = function_to_call(
+                query_params=json.loads(function_args))
         except Exception as e:
             error_response = f"Error on {function_name}: {e}. Please provide more detailed reqeust arguments or try smaller request by specifying 'limit' in request."
             return error_response
@@ -183,7 +185,8 @@ class MPAPIWrapper(BaseModel):
     @property
     def material_functions(self):
         with open(
-            osp.join(Path(__file__).parent.resolve(), "material_functions.json")
+            osp.join(Path(__file__).parent.resolve(),
+                     "material_functions.json")
         ) as f:
             # NOTE: Using all functions available on MP consumes too many tokens.
             # Here we only use a subset of functions.
@@ -209,7 +212,8 @@ class MPAPIWrapper(BaseModel):
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get(
+                "fields", []) + _fields.split(",")
         query_params["_limit"] = query_params.pop("limit", DEFAULT_LIMIT)
         all_fields = query_params.pop("all_fields", None)
         if all_fields:
@@ -255,10 +259,12 @@ class MPAPIWrapper(BaseModel):
         assert "fields" in query_params, "`fields` must be specified in the query"
 
         if "material_id" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["material_id"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
 
         if "formula_pretty" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["formula_pretty"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["formula_pretty"]
 
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -271,10 +277,12 @@ class MPAPIWrapper(BaseModel):
         query_params = self._process_query_params(query_params)
 
         if "material_id" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["material_id"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
 
         if "structure" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["structure"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["structure"]
 
         # query_params["fields"] = query_params.get(
         #     "fields", []) + ["structure", "material_id"]
@@ -289,10 +297,12 @@ class MPAPIWrapper(BaseModel):
         query_params = self._process_query_params(query_params)
 
         if "material_id" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["material_id"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
 
         if "description" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["description"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["description"]
 
         if "material_ids" in query_params:
             return self.mpr.materials.robocrys._search(
@@ -328,13 +338,17 @@ class MPAPIWrapper(BaseModel):
                 "condition_heating_atmosphere"
             ] = condition_heating_atmosphere.split(",")
 
-        condition_mixing_device = query_params.pop("condition_mixing_device", None)
+        condition_mixing_device = query_params.pop(
+            "condition_mixing_device", None)
         if condition_mixing_device:
-            query_params["condition_mixing_device"] = condition_mixing_device.split(",")
+            query_params["condition_mixing_device"] = condition_mixing_device.split(
+                ",")
 
-        condition_mixing_media = query_params.pop("condition_mixing_media", None)
+        condition_mixing_media = query_params.pop(
+            "condition_mixing_media", None)
         if condition_mixing_media:
-            query_params["condition_mixing_media"] = condition_mixing_media.split(",")
+            query_params["condition_mixing_media"] = condition_mixing_media.split(
+                ",")
 
         response = self.mpr.materials.synthesis._search(**query_params)
 
@@ -381,14 +395,17 @@ class MPAPIWrapper(BaseModel):
         query_params = self._process_query_params(query_params)
 
         query_params["fields"] = query_params.get(
-            "fields", ["material_id", "formula_pretty", "total", "n", "symmetry"]
+            "fields", ["material_id", "formula_pretty",
+                       "total", "n", "symmetry"]
         )
 
         if "material_id" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["material_id"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
 
         if "formula_pretty" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["formula_pretty"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["formula_pretty"]
 
         if "formula" in query_params:
             material_docs = self.mpr.materials.summary.search(
@@ -514,13 +531,16 @@ class MPAPIWrapper(BaseModel):
         query_params = self._process_query_params(query_params)
 
         if "material_id" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["material_id"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
 
         if "formula_pretty" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["formula_pretty"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["formula_pretty"]
 
         if "band_gap" not in query_params.get("fields", []):
-            query_params["fields"] = query_params.get("fields", []) + ["band_gap"]
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["band_gap"]
 
         return self.mpr.materials.electronic_structure._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params

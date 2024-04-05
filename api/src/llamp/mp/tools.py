@@ -33,6 +33,9 @@ class MPTool(BaseTool):
     name: str = None
     api_wrapper: MPAPIWrapper = Field(default_factory=MPAPIWrapper)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def _run(self, **query_params):
         _res = self.api_wrapper.run(
             function_name=self.name,
