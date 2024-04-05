@@ -260,6 +260,7 @@ async def get_structure(material_id: str):
     if fpath.exists():
         with open(fpath) as f:
             structure_data = json.load(f)
+            os.remove(fpath) # TODO: temporarily remove file everytime after loading
         return structure_data
     else:
         raise HTTPException(status_code=404, detail="Structure not found")
