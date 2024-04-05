@@ -1,6 +1,6 @@
-
 import json
 import logging
+import os
 import os.path as osp
 import re
 from pathlib import Path
@@ -11,36 +11,24 @@ import mp_api.client
 import requests
 from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
 from langchain.tools.json.tool import JsonSpec
-from pydantic import BaseModel, Field
+from langchain.utils import get_from_dict_or_env
+from pydantic import BaseModel, Field, root_validator
 
 logger = logging.getLogger(__name__)
 
 # NOTE: https://python.langchain.com/docs/modules/agents/tools/custom_tools
+
+DEFAULT_LIMIT = 10
 
 
 class MPAPIWrapper(BaseModel):
     """Wrapper around mp-api.
 
     To use, you should have the ``mp-api`` python package installed.
-
-    Attributes:
-
-    Example:
-        .. code-block:: python
-            # TODO: revise this example
-            from langchain.utilities.arxiv import ArxivAPIWrapper
-            arxiv = ArxivAPIWrapper(
-                top_k_results = 3,
-                ARXIV_MAX_QUERY_LENGTH = 300,
-                load_max_docs = 3,
-                load_all_available_meta = False,
-                doc_content_chars_max = 40000
-            )
-            arxiv.run("tree of thought llm)
     """
 
     mpr: Any = {}
-    mp_api_key: str = Field('', alias='mpApiKey')
+    mp_api_key: str = Field("", alias="mpApiKey")
 
     max_tokens: int | None = 4096
     spec_path: Path | str = Path(
@@ -49,8 +37,37 @@ class MPAPIWrapper(BaseModel):
     def set_api_key(self, api_key: str):
         self.mp_api_key = api_key
         self.mpr = mp_api.client.MPRester(
-            api_key=api_key, monty_decode=False, use_document_model=False,
-            headers={"X-API-KEY": api_key, 'accept': 'application/json'})
+            api_key=api_key,
+            monty_decode=True,
+            use_document_model=True,
+            headers={"X-API-KEY": api_key, "accept": "application/json"},
+        )
+
+    @root_validator(pre=True)
+    def validate_environment(cls, values: dict) -> dict:
+        """Validate that the python package exists in environment."""
+
+        mp_api_key = get_from_dict_or_env(
+            values, "mp_api_key", "MP_API_KEY", "MP_API_KEY_PLACEHOLDER")
+
+        try:
+            import mp_api
+            import mp_api.client
+
+            values["client"] = mp_api.client
+            values["mpr"] = mp_api.client.MPRester(
+                api_key=mp_api_key,
+                monty_decode=False,
+                use_document_model=False,
+                headers={"X-API-KEY": mp_api_key,
+                         "accept": "application/json"},
+            )
+        except ImportError:
+            raise ImportError(
+                "Could not import `mp_api` python package. "
+                "Please install it with `pip install mp_api`."
+            )
+        return values
 
     def run(self, function_name: str, function_args: str, debug: bool = False) -> str:
         """
@@ -67,22 +84,26 @@ class MPAPIWrapper(BaseModel):
         function_to_call = self.material_routes.get(function_name, None)
         if function_to_call is None:
             print(f"Function {function_name} is not supported yet.")
-            return re.sub(
-                r"\s+",
-                " ",
-                f"""
+            return (
+                re.sub(
+                    r"\s+",
+                    " ",
+                    f"""
                 I want to call {function_name} but it is not supported yet. 
                 Please rephrase or confine your request.
-                """
-            ).strip().replace("\n", " ")
+                """,
+                )
+                .strip()
+                .replace("\n", " ")
+            )
 
         try:
+            if debug:
+                print(function_args)
             function_response = function_to_call(
-                query_params=json.loads(function_args)
-            )
+                query_params=json.loads(function_args))
         except Exception as e:
-            error_response =  f"Error on {function_name}: {e}. Please provide more information or try smaller request."
-            print(error_response)
+            error_response = f"Error on {function_name}: {e}. Please provide more detailed reqeust arguments or try smaller request by specifying 'limit' in request."
             return error_response
 
         if debug:
@@ -193,7 +214,7 @@ class MPAPIWrapper(BaseModel):
         if _fields:
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
-        query_params["_limit"] = query_params.pop("limit", 10)
+        query_params["_limit"] = query_params.pop("limit", DEFAULT_LIMIT)
         all_fields = query_params.pop("all_fields", None)
         if all_fields:
             query_params["_all_fields"] = all_fields
@@ -211,7 +232,7 @@ class MPAPIWrapper(BaseModel):
     def fetch_materials_similarity(self, query_params: dict):
         query_params = self._process_query_params(query_params)
         return self.mpr.materials.get_data_by_id(
-            document_id=query_params.pop('material_id'), **query_params
+            document_id=query_params.pop("material_id"), **query_params
         )
 
     def search_materials_bonds(self, query_params: dict):
@@ -235,13 +256,19 @@ class MPAPIWrapper(BaseModel):
     def search_materials_summary(self, query_params: dict):
         query_params = self._process_query_params(query_params)
 
+        assert "fields" in query_params, "`fields` must be specified in the query"
+
         if "material_id" not in query_params.get("fields", []):
             query_params["fields"] = query_params.get(
                 "fields", []) + ["material_id"]
 
+        if "formula_pretty" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["formula_pretty"]
+
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[:query_params.get("_limit", 10)]
+        )
 
     def search_materials_structure(self, query_params: dict):
         # NOTE: this is a convenient function to retrieve pymatgen structure in JSON
@@ -264,12 +291,33 @@ class MPAPIWrapper(BaseModel):
 
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[:query_params.get("_limit", 10)]
+        )
 
     def search_materials_robocrys(self, query_params: dict):
         query_params = self._process_query_params(query_params)
-        return self.mpr.materials.robocrys._search(
-            num_chunks=None, chunk_size=1000, all_fields=True, **query_params
+
+        if "material_id" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
+
+        if "description" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["description"]
+
+        if "material_ids" in query_params:
+            return self.mpr.materials.robocrys._search(
+                num_chunks=None, all_fields=False, **query_params
+            )
+
+        return self.mpr.materials.robocrys.text_query_resource(
+            criteria={
+                "keywords": query_params.pop("keywords"),
+                "_limit": query_params.get("_limit", 10),
+            },
+            suburl="text_search",
+            use_document_model=False,
+            chunk_size=1000,
+            num_chunks=None,
         )
 
     def search_materials_synthesis(self, query_params: dict):
@@ -304,11 +352,7 @@ class MPAPIWrapper(BaseModel):
 
         response = self.mpr.materials.synthesis._search(**query_params)
 
-        # TODO
-        first = min(query_params.get("_limit", 5), 5)
-        print(f"return first {first} synthesis results for now")
-
-        return response[:first]
+        return response[:5]
 
     def search_materials_oxidation_states(self, query_params: dict):
         query_params = self._process_query_params(query_params)
@@ -341,12 +385,19 @@ class MPAPIWrapper(BaseModel):
         if thermo_types:
             query_params.update({"thermo_types": ",".join(thermo_types)})
 
+        assert "fields" in query_params, "fields must be specified"
+
         return self.mpr.materials.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[:query_params.get("_limit", 10)]
+        )
 
     def search_materials_dielectric(self, query_params):
         query_params = self._process_query_params(query_params)
+
+        query_params["fields"] = query_params.get(
+            "fields", ["material_id", "formula_pretty",
+                       "total", "n", "symmetry"]
+        )
 
         if "material_id" not in query_params.get("fields", []):
             query_params["fields"] = query_params.get(
@@ -368,12 +419,13 @@ class MPAPIWrapper(BaseModel):
             return self.mpr.materials.dielectric.search(
                 material_ids=material_ids,
                 fields=query_params.get(
-                    "fields", "material_id,formula_pretty,total,n,symmetry").split(",")
-            )[:query_params.get("_limit", 10)]
+                    "fields", "material_id,formula_pretty,total,n,symmetry"
+                ).split(","),
+            )
 
         return self.mpr.materials.dielectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[:query_params.get("_limit", 10)]
+        )
 
     def search_materials_piezoelectric(self, query_params):
         query_params = self._process_query_params(query_params)
@@ -388,12 +440,14 @@ class MPAPIWrapper(BaseModel):
             return self.mpr.materials.piezoelectric.search(
                 material_ids=material_ids,
                 fields=query_params.get(
-                    "fields", "material_id,formula_pretty,total,ionic,electronic,e_ij_max,max_direction,strain_for_max").split(",")
+                    "fields",
+                    "material_id,formula_pretty,total,ionic,electronic,e_ij_max,max_direction,strain_for_max",
+                ).split(","),
             )
 
         return self.mpr.materials.piezoelectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[:query_params.get("_limit", 10)]
+        )
 
     def search_materials_magnetism(self, query_params):
         query_params = self._process_query_params(query_params)
@@ -404,46 +458,89 @@ class MPAPIWrapper(BaseModel):
 
             material_ids = [doc["material_id"] for doc in material_docs]
 
-            return self.mpr.materials.magnetism.search(
-                material_ids=material_ids,
-                fields=query_params.get(
-                    "fields", "material_id,formula_pretty,ordering,is_magnetic,exchange_symmetry,magmoms,types_of_magnetic_species,total_magnetization").split(",")
-            )
+            query_params["material_ids"] = material_ids
+
+            # return self.mpr.materials.magnetism.search(
+            #     material_ids=material_ids,
+            #     fields=query_params.get(
+            #         "fields", "material_id,formula_pretty,ordering,is_magnetic,exchange_symmetry,magmoms,types_of_magnetic_species,total_magnetization").split(",")
+            # )
+
+        query_params["fields"] = query_params.get("fields", []) + [
+            "material_id",
+            "formula_pretty",
+            "ordering",
+            "is_magnetic",
+            "exchange_symmetry",
+            "num_magnetic_sites",
+            "num_unique_magnetic_sites",
+            "types_of_magnetic_species",
+            "magmoms",
+            "total_magnetization",
+            "total_magnetization_normalized_vol",
+            "total_magnetization_normalized_formula_units",
+        ]
 
         return self.mpr.magnetism._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[:query_params.get("_limit", 10)]
+        )
 
     def search_materials_elasticity(self, query_params):
         query_params = self._process_query_params(query_params)
 
+        # if "elasticity" not in query_params.get("fields", []):
+        #     query_params["fields"] = query_params.get(
+        #         "fields", []) + ["elasticity"]
+
+        query_params["fields"] = query_params.get("fields", []) + [
+            "material_id",
+            "formula_pretty",
+            "elastic_tensor",
+        ]
+
         if "formula" in query_params:
             material_docs = self.mpr.materials.summary.search(
-                formula=query_params["formula"].split(","), fields=["material_id"]
+                formula=query_params.pop("formula"), fields=["material_id"]
             )
 
-            elastic_docs = []
-            for doc in material_docs:
-                try:
-                    elastic_doc = self.mpr.materials.elasticity.get_data_by_id(
-                        document_id=doc["material_id"],
-                        fields=["pretty_formula", "elasticity", "task_id"],
-                    )
+            matereial_ids = [doc["material_id"] for doc in material_docs]
+            query_params["material_ids"] = ",".join(matereial_ids)
 
-                    # print(elastic_doc)
-                    elastic_docs.append(elastic_doc)
+        # # BUG: mp-api does not support get elastic properties by material_ids
+        # if "material_ids" in query_params:
+        #     material_ids = query_params["material_ids"].split(",")
+        #     elastic_docs = []
+        #     for material_id in material_ids:
+        #         try:
+        #             elastic_doc = self.mpr.materials.elasticity.get_data_by_id(
+        #                 document_id=material_id,
+        #                 fields=["pretty_formula", "elasticity", "task_id"],
+        #             )
+        #             elastic_docs.append(elastic_doc)
 
-                except Exception:
-                    continue
+        #         except Exception:
+        #             continue
 
-            return elastic_docs[:query_params.get("_limit", 10)]
+        #     return elastic_docs[:query_params.get("_limit", 10)]
 
         return self.mpr.materials.elasticity._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[:query_params.get("_limit", 10)]
+        )
 
     def search_materials_electronic_structure(self, query_params):
         query_params = self._process_query_params(query_params)
+
+        if "material_id" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["material_id"]
+
+        if "formula_pretty" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["formula_pretty"]
+
+        if "band_gap" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["band_gap"]
 
         return self.mpr.materials.electronic_structure._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params

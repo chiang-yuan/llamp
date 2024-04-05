@@ -49,8 +49,7 @@ class MultiLLaMP(BaseMultiActionAgent):
         if len(intermediate_steps) == 0:
             return [
                 AgentAction(tool="Search", tool_input=kwargs["input"], log=""),
-                AgentAction(tool="RandomWord",
-                            tool_input=kwargs["input"], log=""),
+                AgentAction(tool="RandomWord", tool_input=kwargs["input"], log=""),
             ]
         else:
             return AgentFinish(return_values={"output": "bar"}, log="")
@@ -71,8 +70,7 @@ class MultiLLaMP(BaseMultiActionAgent):
         if len(intermediate_steps) == 0:
             return [
                 AgentAction(tool="Search", tool_input=kwargs["input"], log=""),
-                AgentAction(tool="RandomWord",
-                            tool_input=kwargs["input"], log=""),
+                AgentAction(tool="RandomWord", tool_input=kwargs["input"], log=""),
             ]
         else:
             return AgentFinish(return_values={"output": "bar"}, log="")
@@ -101,8 +99,10 @@ class MPLLM:
         openai.api_key = openai_api_key
 
         self.mpr = MPRester(
-            api_key=mp_api_key, monty_decode=False, use_document_model=False,
-            headers={"X-API-KEY": mp_api_key, 'accept': 'application/json'}
+            api_key=mp_api_key,
+            monty_decode=False,
+            use_document_model=False,
+            headers={"X-API-KEY": mp_api_key, "accept": "application/json"},
         )
         self.max_tokens = max_tokens
         self._messages: list[dict[str, str]] = []
@@ -146,8 +146,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.materials._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -159,8 +158,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.materials.similarity.get_data_by_id(
             document_id=material_id, **query_params
@@ -172,8 +170,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.materials.bonds._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -185,8 +182,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.materials.chemenv._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -198,8 +194,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.materials.eos._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -211,12 +206,11 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         # query_params["fields"] = query_params.get("fields", []) + [
-        #     "material_id", 
-        #     "formula_pretty", 
+        #     "material_id",
+        #     "formula_pretty",
         #     "task_ids"
         #     ]
 
@@ -224,7 +218,7 @@ class MPLLM:
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
         return response
-    
+
         # TODO: move 5 to settings, use tiktoken
         # if len(response) < 100:
         #     return response
@@ -311,8 +305,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
         return self.mpr.materials.robocrys._search(
             num_chunks=None, chunk_size=1000, all_fields=True, **query_params
         )
@@ -334,17 +327,13 @@ class MPLLM:
                 "condition_heating_atmosphere"
             ] = condition_heating_atmosphere.split(",")
 
-        condition_mixing_device = query_params.pop(
-            "condition_mixing_device", None)
+        condition_mixing_device = query_params.pop("condition_mixing_device", None)
         if condition_mixing_device:
-            query_params["condition_mixing_device"] = condition_mixing_device.split(
-                ",")
+            query_params["condition_mixing_device"] = condition_mixing_device.split(",")
 
-        condition_mixing_media = query_params.pop(
-            "condition_mixing_media", None)
+        condition_mixing_media = query_params.pop("condition_mixing_media", None)
         if condition_mixing_media:
-            query_params["condition_mixing_media"] = condition_mixing_media.split(
-                ",")
+            query_params["condition_mixing_media"] = condition_mixing_media.split(",")
 
         doc = self.mpr.materials.synthesis._search(**query_params)
 
@@ -359,8 +348,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         # FIXME
         if "possible_species" not in query_params["fields"]:
@@ -376,8 +364,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
         return self.mpr.materials.provenance._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
@@ -388,8 +375,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.materials.tasks._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -401,12 +387,11 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         # FIXME: _limit is not a valid query parameter for thermo search
         query_params["_limit"] = query_params.pop("limit", None)
-        
+
         return self.mpr.materials.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
@@ -417,8 +402,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.materials.dielectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -430,8 +414,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.materials.piezoelectric._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -443,8 +426,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         if "formula" in query_params:
             material_docs = self.mpr.materials.search(
@@ -487,8 +469,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         if "formula" in query_params:
             material_docs = self.mpr.materials.search(
@@ -521,8 +502,7 @@ class MPLLM:
             query_params["fields"] = fields.split(",")
         _fields = query_params.pop("_fields", None)
         if _fields:
-            query_params["fields"] = query_params.get(
-                "fields", []) + _fields.split(",")
+            query_params["fields"] = query_params.get("fields", []) + _fields.split(",")
 
         return self.mpr.materials.electronic_structure._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
@@ -593,8 +573,7 @@ class MPLLM:
     @property
     def material_functions(self):
         with open(
-            osp.join(Path(__file__).parent.resolve(),
-                     "material_functions.json")
+            osp.join(Path(__file__).parent.resolve(), "material_functions.json")
         ) as f:
             # NOTE: Using all functions available on MP consumes too many tokens.
             # Here we only use a subset of functions.
@@ -669,7 +648,7 @@ class MPLLM:
         total_tokens = 0
         for message in self.messages:
             for word in message["content"].split():
-                total_tokens += len(word)/4.0
+                total_tokens += len(word) / 4.0
 
         # total_tokens = sum(len(message["content"].split())
         #                    for message in self.messages)
@@ -698,7 +677,7 @@ class MPLLM:
                 .replace("\n", " "),
             },
             self.messages[-1],
-            response
+            response,
         ]
 
         try:
@@ -710,7 +689,6 @@ class MPLLM:
             response = {}
 
         return response
-
 
     def general_reponse(
         self, message: dict[str, str], model="gpt-3.5-turbo-0613", debug: bool = False
@@ -810,7 +788,7 @@ class MPLLM:
                 .replace("\n", " "),
             },
             *self.messages,
-            message
+            message,
         ]
 
         try:
@@ -845,10 +823,9 @@ class MPLLM:
         debug: bool = False,
     ) -> ChatMessage:
         message = messages[-1]
-        self.set_messages([{
-            'role': msg.role,
-            'content': msg.content
-        } for msg in messages[:-1]])
+        self.set_messages(
+            [{"role": msg.role, "content": msg.content} for msg in messages[:-1]]
+        )
         self.trim_messages(debug=debug)
 
         gen_reponse = self.general_reponse(
@@ -871,8 +848,7 @@ class MPLLM:
                 print("LLaMP Function Calling:", mat_reponse)
             # type: ignore
             mat_reponse_msg = mat_reponse["choices"][0]["message"]
-            function_name = mat_reponse_msg.get(
-                "function_call", {}).get("name", None)
+            function_name = mat_reponse_msg.get("function_call", {}).get("name", None)
 
             print("LLaMP:", mat_reponse_msg)
 
@@ -894,18 +870,17 @@ class MPLLM:
                             f"""
                             I want to call {function_name} but it is not supported yet. 
                             Please rephrase your request.
-                            """
+                            """,
                         )
                         .strip()
-                        .replace("\n", " ")                        
+                        .replace("\n", " ")
                     )
 
                 function_args = json.loads(
                     mat_reponse_msg["function_call"]["arguments"]
                 )
                 try:
-                    function_response = function_to_call(
-                        query_params=function_args)
+                    function_response = function_to_call(query_params=function_args)
                 except Exception as e:
                     print("Error:", e)
                     # print("Please provide more information or try smaller request.")
@@ -986,8 +961,7 @@ class MPLLM:
 
                     function_to_call = self.material_routes.get(function_name)
                     if function_to_call is None:
-                        print(
-                            f"Function {function_name} is not supported yet.")
+                        print(f"Function {function_name} is not supported yet.")
                         user_input = None
                         continue
 
@@ -995,12 +969,10 @@ class MPLLM:
                         mat_reponse_msg["function_call"]["arguments"]
                     )
                     try:
-                        function_response = function_to_call(
-                            query_params=function_args)
+                        function_response = function_to_call(query_params=function_args)
                     except Exception as e:
                         print("Error:", e)
-                        print(
-                            "Please provide more information or try smaller request.")
+                        print("Please provide more information or try smaller request.")
                         user_input = None
                         continue
 

@@ -7,18 +7,28 @@
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
   import { faPaperPlane, faBars } from '@fortawesome/free-solid-svg-icons';
   import { onMount } from 'svelte';
-  import { type Chat, type ChatMessage, syncChats, type SimulationDataItem } from '$lib/chatUtils';
-  import { OpenAiAPIKey, mpAPIKey, keyNotSet, chats, currentChatIndex } from '$lib/store';
+  import { type Chat, type ChatMessage } from '$lib/chatUtils';
+  import {
+    OpenAiAPIKey,
+    mpAPIKey,
+    keyNotSet,
+    chats,
+    currentChatIndex,
+    current_chat_id
+  } from '$lib/store';
 
-  const API_ENDPOINT =
+  const BASE_URL =
     process.env.NODE_ENV === 'production'
-      ? 'http://ingress.llamp.development.svc.spin.nersc.org/api'
-      : 'http://localhost:8000/api';
+      ? 'http://ingress.llamp.development.svc.spin.nersc.org'
+      : 'http://localhost:8000';
 
   let loading = true;
 
   onMount(() => {
     loading = false;
+    if ($chats[0].chat_id) {
+      current_chat_id.set($chats[0].chat_id);
+    }
   });
 
   function addMessage(newMessage: ChatMessage) {
@@ -36,9 +46,115 @@
 
   let currentMessage = '';
   let processing = false;
+  //  let updated_chat_id = '';
+
+  function parseActionInput(input: string): string {
+    const prefix = 'Final Output: Action:';
+    if (!input.startsWith(prefix)) {
+      return input;
+    }
+    const jsonPart = input.substring(prefix.length).trim();
+    const match = /"action_input"\s*:\s*"((?:\\.|[^"\\])*)"/.exec(jsonPart);
+
+    if (!match || match.length < 2) {
+      return input;
+    }
+    return match[1].replace(/\\n/g, '\n');
+  }
+
+  async function getStream(message: ChatMessage) {
+    const response = await fetch(`${BASE_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: message.content,
+        OpenAiAPIKey: $OpenAiAPIKey,
+        mpAPIKey: $mpAPIKey,
+        chat_id: $current_chat_id
+      })
+    });
+
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+
+    const stack = [];
+    let currentSection = '';
+    let newChatId: string = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const tokens = decoder.decode(value, { stream: true });
+      if (tokens.startsWith('[chat_id]')) {
+        newChatId = tokens.substring(9).trim();
+        continue;
+      }
+
+      if (tokens.startsWith('[structures]')) {
+        appendStructures(tokens.substring(12).split(','));
+        continue;
+      }
+
+      for (let token of tokens) {
+        if (token === '{') {
+          stack.push(token);
+          currentSection += token;
+        } else if (token === '}') {
+          if (stack.length > 0 && stack[stack.length - 1] === '{') {
+            stack.pop();
+            currentSection += token;
+            if (stack.length === 0) {
+              if (currentSection.startsWith('{"simulation_data"')) {
+                return appendSimulation(JSON.parse(currentSection), []);
+              } else {
+                const content = parseActionInput(currentSection);
+
+                if (content.length > 0) {
+                  appendResponses([
+                    {
+                      role: 'assistant',
+                      content,
+                      type: 'msg',
+                      timestamp: new Date()
+                    }
+                  ]);
+                }
+              }
+              currentSection = ''; // Reset for the next section
+            }
+          } else {
+            // Handle mismatched closing brace if necessary
+            console.error('Mismatched closing brace encountered');
+          }
+        } else {
+          currentSection += token;
+        }
+      }
+    }
+    current_chat_id.set(newChatId);
+    chats.update((currentChats: Chat[]) => {
+      if (!currentChats[$currentChatIndex].chat_id) {
+        currentChats[$currentChatIndex].chat_id = newChatId;
+      }
+      return currentChats;
+    });
+
+    if (currentSection !== '') {
+      console.error('Incomplete section encountered at the end of the stream');
+    }
+  }
 
   async function askQuestion() {
-    if (!currentMessage || processing) return;
+    if (!currentMessage || processing) {
+      return;
+    }
 
     const newMessage: ChatMessage = {
       role: 'user',
@@ -59,48 +175,21 @@
       return updatedChats;
     });
 
-    const body = {
-      messages: $chats[$currentChatIndex].messages,
-      openAIKey: $OpenAiAPIKey,
-      mpAPIKey: $mpAPIKey
-    };
-
     currentMessage = '';
 
     try {
       processing = true;
-      const response = await fetch(`${API_ENDPOINT}/ask`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      });
+      await getStream(newMessage);
 
-      const result = await response.json();
-      const responses: ChatMessage[] = result.responses.map((r: ChatMessage) => ({
-        ...r
-      }));
-      appendResponse(responses);
-      const structures = result.structures;
+      // Update chat_id
+      //  chats.update((currentChats: Chat[]) => {
+      //    if (!currentChats[$currentChatIndex].chat_id) {
+      //      currentChats[$currentChatIndex].chat_id = updated_chat_id;
+      //    }
+      //    return updated_chat_id;
+      //  });
 
-      let simulation_data = result.simulation_data;
-      if (simulation_data?.length > 0) {
-        simulation_data = JSON.parse(simulation_data);
-        simulation_data = simulation_data
-          .map((r: SimulationDataItem) => ({
-            time: r['Time[ps]'],
-            Etot: r['Etot/N[eV]']
-          }))
-          .slice(0, 10);
-
-        appendSimulation(simulation_data, structures);
-      } else if (structures?.length > 0) {
-        appendStructures(structures);
-      }
-      console.log('structures: ', structures);
-
-      syncChats();
+      //current_chat_id.set(updated_chat_id);
     } catch (error) {
       console.error('Error while asking question:', error);
     } finally {
@@ -133,7 +222,31 @@
     });
   }
 
-  function appendStructures(structures: any[]) {
+  async function loadStructures(materialIds: string[]): Promise<string[]> {
+    const structures = await Promise.all(
+      materialIds.map(async (materialId) => {
+        const response = await fetch(`${BASE_URL}/structures/${materialId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch structure');
+        }
+
+        const data = await response.json();
+        return data;
+      })
+    );
+
+    return structures as string[];
+  }
+
+  async function appendStructures(materialIds: string[]) {
+    const structures = await loadStructures(materialIds);
+
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats];
       const updatedMessages = [
@@ -151,7 +264,7 @@
     });
   }
 
-  function appendResponse(responses: ChatMessage[]) {
+  function appendResponses(responses: ChatMessage[]) {
     chats.update((currentChats: Chat[]) => {
       const updatedChats = [...currentChats];
       const updatedMessages = [
@@ -178,6 +291,7 @@
     };
     chats.update((currentChats: Chat[]) => [newChat, ...currentChats]);
     $currentChatIndex = 0;
+    current_chat_id.set(undefined);
   }
 
   $: isCurrentChatEmpty =

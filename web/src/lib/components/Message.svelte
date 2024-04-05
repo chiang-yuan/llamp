@@ -3,10 +3,21 @@
   import { Avatar } from '@skeletonlabs/skeleton';
   import { Structure, StructureCard } from 'elementari';
   import Carousel from 'svelte-carousel';
+  import * as marked from 'marked';
+  import DOMPurify from 'dompurify';
   export let data: ChatMessage;
 
   $: user = data.role === 'user';
   let w: number;
+  let messageType: string | null = null;
+  function getMessageType(content: string): string | null {
+    if (content.includes('⌛️ Action')) {
+      return 'action';
+    } else if (content.includes('🔎 Observation')) {
+      return 'observation';
+    }
+    return null;
+  }
 
   interface MessageFeed {
     id: number;
@@ -28,10 +39,38 @@
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla euismod, nisl eget ultricies aliquam, quam libero ultricies nunc, nec aliquet nisl nunc eu nunc. Nulla facil',
     color: 'primary'
   };
+
+  let parsedContent: string;
+  $: if (data && data.content) {
+    const mpRegex = /mp-\d+/g;
+    function processLinks(content: string): string {
+      // Process the links first
+      content = content.replace(mpRegex, (materialId: string) => {
+        const tailwindClasses = 'underline text-blue-600 hover:opacity-75';
+        return `<a href="https://next-gen.materialsproject.org/materials/${materialId}"
+        class="${tailwindClasses}" target="_blank" rel="noopener noreferrer">${materialId}</a>`;
+      });
+
+      // Then replace <pre> tags to include the class
+      content = content.replace(/<pre>/g, '<pre class="whitespace-pre-wrap">');
+
+      return content;
+    }
+
+    parsedContent = processLinks(DOMPurify.sanitize(marked.parse(data.content)));
+    messageType = getMessageType(data.content);
+    //console.log(parsedContent);
+  }
+  $: typeColor =
+    messageType === 'action'
+      ? 'text-pink-800 dark:text-pink-500'
+      : messageType === 'observation'
+        ? 'text-green-800 dark:text-lime-500'
+        : undefined;
 </script>
 
-{#if data.type == 'msg' && data.content.length > 0}
-  <div class="flex gap-2 {user ? 'justify-end' : ''}">
+{#if data.type == 'msg' && data.content.length > 0 && !parsedContent.startsWith('<p> log=') && !parsedContent.includes('<pre class="whitespace-pre-wrap"><code class="language-AGENT_ACTION:">')}
+  <div class="flex gap-2 {user ? 'justify-end' : ''} text-wrap">
     <div>
       <Avatar
         width="w-14"
@@ -49,7 +88,59 @@
         {/if}
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
-      <pre class="whitespace-pre-wrap">{data.content}</pre>
+      {#if parsedContent.startsWith("<p>\\n```'") && !parsedContent.startsWith("<p>\\n```'Action:</p>")}
+        <p class="font-bold">🤔 Thought:</p>
+        <p>
+          {parsedContent.split("<p>\\n```'")[0]}
+          {@html parsedContent.split("<p>\\n```'")[1].split('</p>').join('').split('<p>')[0]}
+        </p>
+      {:else if parsedContent.includes('"action": "Final Answer"')}
+        <p class="font-bold">
+          {#if parsedContent.includes('```')}
+            ✅ Final Answer:
+          {:else}
+            🔎 Observation:
+          {/if}
+        </p>
+        {@html parsedContent
+          .replace('\n', '')
+          .replace('```json', '')
+          .replace(
+            `{
+  "action": "Final Answer",`,
+            ''
+          )
+          .replace(`"action_input": "`, '')
+          .replace(
+            `"
+}`,
+            ''
+          )
+          .replace('<code class="language-Action:">', '')
+          .trim()}
+      {:else if parsedContent.startsWith('<p>Action:</p>')}
+        {#each parsedContent.split('<pre')[1].split('\n') as line}
+          {#if line.includes('"action":')}
+            <p class="font-bold mt-2">🛠️ {@html line.split('"')[3]}</p>
+          {/if}
+          {#if line.includes('"input":')}
+            <p class="mt-2">"{@html line.split('"')[3]}"</p>
+          {/if}
+        {/each}
+      {:else if parsedContent.startsWith("<p>\\n```'Action:</p>")}
+        {#each parsedContent.split('<pre')[1].split('\n') as line}
+          {#if line.includes('"action":')}
+            <p class="mt-2">🔮 <strong>API Endpoint:</strong> {@html line.split('"')[3]}</p>
+          {/if}
+          {#if line.includes('"formula":')}
+            <p class="mt-2"><strong>Formula:</strong> {@html line.split('"')[3]}</p>
+          {/if}
+        {/each}
+      {:else}
+        <pre
+          class="whitespace-normal {typeColor}"
+          bind:this={parsedContent}>{@html parsedContent}</pre>
+      {/if}
     </div>
   </div>
 {:else if data.type == 'structures'}
@@ -85,7 +176,9 @@
                 show_image_atoms={false}
                 show_bonds={true}
               />
-              <StructureCard structure={stc} />
+              <div style="max-width: 280px">
+                <StructureCard structure={stc} />
+              </div>
             </div>
           {/each}
         </div>
@@ -112,7 +205,7 @@
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
       <div class="max-w-lg">
-        <pre class="whitespace-pre-wrap">{data.content}</pre>
+        <pre class="whitespace-pre-wrap" bind:this={parsedContent}>{@html parsedContent}</pre>
         <Carousel
           autoplay
           duration={500}
@@ -155,7 +248,7 @@
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
       <div class="max-w-lg">
-        <pre class="whitespace-pre-wrap">{data.content}</pre>
+        <pre class="whitespace-pre-wrap" bind:this={parsedContent}>{@html parsedContent}</pre>
         <path stroke="none" fill-opacity="0" class="voronoi-cell" d={data.similation_data} />
       </div>
     </div>

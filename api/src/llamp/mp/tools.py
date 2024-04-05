@@ -3,13 +3,16 @@ import os
 import re
 from pathlib import Path
 
+import redis
 from langchain.pydantic_v1 import Field
 from langchain.tools import BaseTool
+from redis.client import Redis
 
 from llamp.mp.schemas import (
     BondsSchema,
     DielectricSchema,
     ElasticitySchema,
+    ElectronicSchema,
     MagnetismSchema,
     OxidationSchema,
     PiezoSchema,
@@ -30,27 +33,18 @@ class MPTool(BaseTool):
     name: str = None
     api_wrapper: MPAPIWrapper = Field(default_factory=MPAPIWrapper)
 
-    def _count_token(self, response) -> int:
-        '''TODO'''
-        pass
-
-    def _too_large(self, response) -> bool:
-        '''TODO'''
-        return self._count_token(response) > 200
-
-    def _summarize(self, response) -> str:
-        '''summarize w/ anthropic'''
-        pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        mp_api_key = kwargs.get('mp_api_key')
+        self.api_wrapper.set_api_key(mp_api_key)
 
     def _run(self, **query_params):
         _res = self.api_wrapper.run(
-            function_name=self.name, function_args=json.dumps(query_params), debug=False
+            function_name=self.name,
+            function_args=json.dumps(query_params),
+            debug=self.verbose,
         )
-        '''
-        while self._too_large(_res):
-            _res = self._summarize(_res)
-        return _res
-        '''
+        # TODO: map reduce large response
         return _res
 
     async def _arun(self, function_name: str, function_args: str) -> str:
@@ -71,42 +65,84 @@ class MaterialsSummary(MPTool):
         other tools""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[SummarySchema] = SummarySchema
 
 
-class MaterialsStructure(MPTool):
+class MaterialsStructureVis(MPTool):
     name: str = "search_materials_structure__get"
     description: str = (
         re.sub(
             r"\s+",
             " ",
-            """useful when you need to get the pymatgen structures on Materials 
-            Project, can be used with filters like chemical system, formula, etc. Use
-            `search_materials_summary__get` tool instread to get statistics about all the
-            structures on MP."""
+            """useful when you need to save the pymatgen structures from Materials 
+            Project into local storage and visualize them. Use 
+            `search_materials_summary__get` tool instead to get statistics about all the
+            structures on MP.""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[StructureSchema] = StructureSchema
+    chat_id: str = ""
+    redis_client: Redis = None
+
+    def __init__(self, *args, chat_id, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.chat_id = chat_id
 
     def _run(self, **query_params):
         _response = super()._run(**query_params)
 
         for entry in _response:
-            material_id = entry['material_id']
-            structure = entry['structure']
+            material_id = entry["material_id"]
+            structure = entry["structure"]
 
-            out_dir = Path(__file__).parent.absolute() / '.tmp'
+            out_dir = Path(__file__).parent.absolute() / ".tmp"
             os.makedirs(out_dir, exist_ok=True)
-            fpath = out_dir / f'{material_id}.json'
+            fpath = out_dir / f"{material_id}.json"
 
-            with open(fpath, 'w') as f:
+            with open(fpath, "w") as f:
                 f.write(json.dumps(structure))
+        output = "[structures]" + ",".join(
+            list(map(lambda x: x["material_id"], _response))
+        )
 
-        return '[structures]' + ','.join(list(map(lambda x: x['material_id'], _response)))
+        if self.chat_id != "":
+            try:
+                REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+                REDIS_PORT = os.getenv("REDIS_PORT", 6379)
+                REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
+                self.redis_client = redis.Redis(
+                    host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASSWORD)
+                if self.redis_client.ping():
+                    self.redis_client.publish(
+                        self.chat_id, output)
+                    self.redis_client.publish(
+                        self.chat_id, "AGENT_FINISH")
+                    return output
+                else:
+                    print("Failed to establish Redis connection.")
+            except redis.ConnectionError as e:
+                print(f"Redis connection error: {str(e)}")
+
+        return output
+
+
+class MaterialsStructureText(MPTool):
+    name: str = "search_materials_structure__get"
+    description: str = (
+        re.sub(
+            r"\s+",
+            " ",
+            """useful when you need to get the pymatgen structures from Materials 
+            Project as JSON text for structure generation or manipulation.""",
+        )
+        .strip()
+        .replace("\n", " ")
+    )
+    args_schema: type[StructureSchema] = StructureSchema
 
 
 class MaterialsElasticity(MPTool):
@@ -121,7 +157,7 @@ class MaterialsElasticity(MPTool):
         qualified materials""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[ElasticitySchema] = ElasticitySchema
 
@@ -136,9 +172,19 @@ class MaterialsSynthesis(MPTool):
         precursors, targets, operations, conditions, required devices and references""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[SynthesisSchema] = SynthesisSchema
+
+    def _run(self, **query_params):
+        _res = self.api_wrapper.run(
+            function_name=self.name,
+            function_args=json.dumps(query_params),
+            debug=self.verbose,
+        )
+        # TODO: map reduce large response
+
+        return _res
 
 
 class MaterialsThermo(MPTool):
@@ -154,7 +200,7 @@ class MaterialsThermo(MPTool):
         material_ids""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[ThermoSchema] = ThermoSchema
 
@@ -171,7 +217,7 @@ class MaterialsMagnetism(MPTool):
         qualified materials.""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[MagnetismSchema] = MagnetismSchema
 
@@ -205,7 +251,7 @@ class MaterialsDielectric(MPTool):
         stresses are coupled""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[DielectricSchema] = DielectricSchema
 
@@ -230,7 +276,7 @@ class MaterialsPiezoelectric(MPTool):
         electric field or a mechanical load""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[PiezoSchema] = PiezoSchema
 
@@ -242,14 +288,16 @@ class MaterialsRobocrystallographer(MPTool):
             r"\s+",
             " ",
             """Robocrystallographer is a tool to generate text descriptions of crystal 
-            structures. Similar to how a real-life crystallographer would analyse a 
+            structures. User this more than 'search_materials_summary__get' if the 
+            question is more qualitative and descriptive. 
+            Similar to how a real-life crystallographer would analyse a 
             structure, robocrystallographer looks at the symmetry, local coordination 
             and polyhedral type, polyhedral connectivity, octahedral tilt angles, 
             component-dimensionality, and molecule-within-crystal and fuzzy prototype 
             identification when generating a description""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[RobocrysSchema] = RobocrysSchema
 
@@ -266,7 +314,7 @@ class MaterialsOxidation(MPTool):
             for oxidation state prediction""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[OxidationSchema] = OxidationSchema
 
@@ -282,7 +330,7 @@ class MaterialsBonds(MPTool):
             and retrieve the qualified materials""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[BondsSchema] = BondsSchema
 
@@ -297,7 +345,7 @@ class MaterialsTasks(MPTool):
             results""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[TasksSchema] = TasksSchema
 
@@ -313,6 +361,23 @@ class MaterialsSimilarity(MPTool):
             `MaterialsSummary` tool first""",
         )
         .strip()
-        .replace("\n", " ")[0]
+        .replace("\n", " ")
     )
     args_schema: type[SimilaritySchema] = SimilaritySchema
+
+
+class MaterialsElectronic(MPTool):
+    name: str = "search_materials_electronic_structure__get"
+    description: str = (
+        re.sub(
+            r"\s+",
+            " ",
+            """useful when you need electronic structure properties like band gap, 
+            fermi energy, band structure, density of states, also useful when 
+            you need to perform filtering and sorting electronic structure properties 
+            and retrieve the qualified materials""",
+        )
+        .strip()
+        .replace("\n", " ")
+    )
+    args_schema: type[ElectronicSchema] = ElectronicSchema
