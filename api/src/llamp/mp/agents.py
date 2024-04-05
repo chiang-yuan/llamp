@@ -318,7 +318,7 @@ class SyntheisCallbackHandler(BaseCallbackHandler):
         print("on_tool_end:", type(output), len(output), output)
         return self.extractor.batch(
             [{"input": recipe} for recipe in output],
-            {"max_concurrency": 10},
+            {"max_concurrency": 100},
         )
 
 class MPSynthesisExpert(MPAgent):
@@ -334,6 +334,6 @@ class MPSynthesisExpert(MPAgent):
         return [
             MaterialsSynthesis(
                 return_direct=False, handle_tool_error=True,
-                callbacks=[SyntheisCallbackHandler(llm=self.llm)]
+                # callbacks=[SyntheisCallbackHandler(llm=self.llm)]
                 ),
         ]
