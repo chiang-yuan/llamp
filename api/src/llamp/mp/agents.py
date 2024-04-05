@@ -3,27 +3,15 @@ import re
 from langchain import hub
 from langchain.agents import (
     AgentExecutor,
-    AgentType,
-    BaseSingleActionAgent,
-    Tool,
-    initialize_agent,
-    load_tools,
 )
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import (
     JSONAgentOutputParser,
-    ReActSingleInputOutputParser,
 )
-from langchain.agents.schema import AgentAction
-from langchain.chains.summarize import load_summarize_chain
-from langchain.chat_models import ChatOpenAI
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.llms import OpenAI
 from langchain.pydantic_v1 import BaseModel, Field
-from langchain.tools import StructuredTool, Tool, tool
+from langchain.tools import StructuredTool, Tool
 from langchain.tools.render import render_text_description_and_args
 
-# from pydantic import BaseModel, Field
 from llamp.mp.tools import (
     MaterialsBonds,
     MaterialsDielectric,
@@ -55,8 +43,9 @@ class ChainInputSchema(BaseModel):
 class MPAgent:
     """Agent that uses the MP tools."""
 
-    def __init__(self, llm):
+    def __init__(self, llm, mp_api_key=None):
         self.llm = llm
+        self.mp_api_key = mp_api_key
         # self.summary_chain = load_summarize_chain(self.llm, chain_type="map_reduce", verbose=True)
         self.chain = (
             {
@@ -150,9 +139,6 @@ class MPAgent:
 class MPSummaryExpert(MPAgent):
     """Summary expert that has access to Materials Project summary endpoint"""
 
-    def __init__(self, llm):
-        super().__init__(llm)
-
     @property
     def tools(self):
         return [
@@ -162,9 +148,6 @@ class MPSummaryExpert(MPAgent):
 
 class MPStructureRetriever(MPAgent):
     """Structure expert who will retrieve the structure from Materials Project as a JSON text or save it to a local file for frontend visualization"""
-
-    def __init__(self, llm):
-        super().__init__(llm)
 
     @property
     def tools(self):
@@ -178,8 +161,8 @@ class MPStructureVisualizer(MPAgent):
     """Structure expert who will retrieve the structure from Materials Project, save it to local storage for frontend visualization"""
     chat_id: str = ""
 
-    def __init__(self, llm, chat_id):
-        super().__init__(llm)
+    def __init__(self, llm, chat_id, mp_api_key=None):
+        super().__init__(llm, mp_api_key=mp_api_key)
         self.chat_id = chat_id
 
     @property
@@ -195,9 +178,6 @@ class MPStructureVisualizer(MPAgent):
 class MPThermoExpert(MPAgent):
     """Theromodynamics expert that has access to Materials Project thermo endpoint"""
 
-    def __init__(self, llm):
-        super().__init__(llm)
-
     @property
     def tools(self):
         return [
@@ -207,9 +187,6 @@ class MPThermoExpert(MPAgent):
 
 class MPElasticityExpert(MPAgent):
     """Elasticity expert that has access to Materials Project elasticity endpoint, including bulk, shear, and young's modulus, poisson ratio, and universal anisotropy index"""
-
-    def __init__(self, llm):
-        super().__init__(llm)
 
     @property
     def tools(self):
@@ -221,9 +198,6 @@ class MPElasticityExpert(MPAgent):
 class MPMagnetismExpert(MPAgent):
     """Magnetism expert that has access to Materials Project magnetism endpoint"""
 
-    def __init__(self, llm):
-        super().__init__(llm)
-
     @property
     def tools(self):
         return [
@@ -234,9 +208,6 @@ class MPMagnetismExpert(MPAgent):
 class MPDielectricExpert(MPAgent):
     """Dielectric expert that has access to Materials Project dielectric endpoint"""
 
-    def __init__(self, llm):
-        super().__init__(llm)
-
     @property
     def tools(self):
         return [
@@ -246,9 +217,6 @@ class MPDielectricExpert(MPAgent):
 
 class MPPiezoelectricExpert(MPAgent):
     """Piezoelectric expert that has access to Materials Project piezoelectric endpoint"""
-
-    def __init__(self, llm):
-        super().__init__(llm)
 
     @property
     def tools(self):
@@ -261,9 +229,6 @@ class MPPiezoelectricExpert(MPAgent):
 class MPElectronicExpert(MPAgent):
     """Electronic expert that has access to Materials Project electronic endpoint"""
 
-    def __init__(self, llm):
-        super().__init__(llm)
-
     @property
     def tools(self):
         return [
@@ -275,9 +240,6 @@ class MPSynthesisExpert(MPAgent):
     """Materials synthesis expert that has access to Materials Project synthesis
     endpoint, where synthesis recipes are extracted  from scientific literature through
     text mining and natural language processing approaches"""
-
-    def __init__(self, llm):
-        super().__init__(llm)
 
     @property
     def tools(self):

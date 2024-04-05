@@ -59,7 +59,6 @@ app.add_middleware(
 )
 
 
-# TODO: reorganize the order of class and function definitions
 class Query(BaseModel):
     text: str
     OpenAiAPIKey: str
@@ -98,40 +97,42 @@ async def agent_stream(
         temperature=0,
         model=OPENAI_GPT_MODEL,
         openai_api_key=user_openai_api_key,
+        # TODO: organization
+        organization=None,
         max_retries=5,
         streaming=True,
         callbacks=[bottom_level_cb],
     )
 
     tools = [
-        MPThermoExpert(llm=mp_llm).as_tool(
+        MPThermoExpert(llm=mp_llm, mp_api_key=user_mp_api_key).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        MPElasticityExpert(llm=mp_llm).as_tool(
+        MPElasticityExpert(llm=mp_llm, mp_api_key=user_mp_api_key).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        MPDielectricExpert(llm=mp_llm).as_tool(
+        MPDielectricExpert(llm=mp_llm, mp_api_key=user_mp_api_key).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        MPMagnetismExpert(llm=mp_llm).as_tool(
+        MPMagnetismExpert(llm=mp_llm, mp_api_key=user_mp_api_key).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        MPElectronicExpert(llm=mp_llm).as_tool(
+        MPElectronicExpert(llm=mp_llm, mp_api_key=user_mp_api_key).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        MPPiezoelectricExpert(llm=mp_llm).as_tool(
+        MPPiezoelectricExpert(llm=mp_llm, mp_api_key=user_mp_api_key).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        MPSummaryExpert(llm=mp_llm).as_tool(
+        MPSummaryExpert(llm=mp_llm, mp_api_key=user_mp_api_key).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        MPSynthesisExpert(llm=mp_llm).as_tool(
+        MPSynthesisExpert(llm=mp_llm, mp_api_key=user_mp_api_key).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        MPStructureVisualizer(llm=mp_llm, chat_id=chat_id).as_tool(
+        MPStructureVisualizer(llm=mp_llm, chat_id=chat_id, mp_api_key=user_mp_api_key).as_tool(
             agent_kwargs=dict(return_intermediate_steps=True)
         ),
-        MPStructureRetriever(llm=mp_llm).as_tool(
+        MPStructureRetriever(llm=mp_llm, mp_api_key=user_mp_api_key).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
         arxiv,
@@ -150,6 +151,8 @@ async def agent_stream(
     llm = ChatOpenAI(
         temperature=0,
         model=OPENAI_GPT_MODEL,
+        # TODO: organization
+        organization=None,
         openai_api_key=user_openai_api_key,
         streaming=True,
         callbacks=[top_level_cb],
@@ -160,6 +163,37 @@ async def agent_stream(
     Begin!
     Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.
     Thought:"""
+
+    # SUFFIX = f"""
+    # Chat History {{{{chat_id}}}}
+    # Begin!
+    # Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate.
+
+    # For each action, format the output as follows:
+    # - For tool actions, use the [Tool] tag, followed by the tool name in angle brackets and the tool input in a separate tag.
+    # - For API actions, use the [Api] tag, followed by the API endpoint in angle brackets and the JSON parameters enclosed in triple backticks.
+    # - For observations, use the [Observation] tag, followed by the observation text.
+    # - For final answers, use the [Final Answer] tag, followed by the answer text.
+
+    # Example:
+    # [Tool]
+    # <tool-name>MPElasticityExpert</tool-name>
+    # <tool-input>
+    # What is the bulk modulus of iron (Fe)?
+    # </tool-input>
+
+    # [Api]
+    # <api-endpoint>search_materials_elasticity__get</api-endpoint>
+    # ```json
+    # {{
+    # "formula": "Fe"
+    # }}
+
+    # [Observation]
+    # Observation Result
+    # [Final Answer]
+    # Example Final Answer
+    # """
 
     agent_executor = initialize_agent(
         agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
