@@ -105,7 +105,7 @@ async def agent_stream(
         callbacks=[bottom_level_cb],
     )
 
-    tools = load_tools(["llm-math"], llm=bottom_llm)
+    tools = load_tools(["llm-math"], llm=mp_llm)
     tools += [PythonREPLTool()]
     tools = [
         MPThermoExpert(llm=mp_llm, mp_api_key=user_mp_api_key).as_tool(
@@ -260,6 +260,7 @@ async def get_structure(material_id: str):
     if fpath.exists():
         with open(fpath) as f:
             structure_data = json.load(f)
+            os.remove(fpath) # TODO: temporarily remove file everytime after loading
         return structure_data
     else:
         raise HTTPException(status_code=404, detail="Structure not found")
