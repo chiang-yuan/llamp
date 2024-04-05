@@ -113,8 +113,9 @@ class MaterialsStructureVis(MPTool):
             try:
                 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
                 REDIS_PORT = os.getenv("REDIS_PORT", 6379)
+                REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
                 self.redis_client = redis.Redis(
-                    host=REDIS_HOST, port=REDIS_PORT, db=0)
+                    host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASSWORD)
                 if self.redis_client.ping():
                     self.redis_client.publish(
                         self.chat_id, output)

@@ -41,6 +41,7 @@ OPENAI_GPT_MODEL = "gpt-4-1106-preview"  # TODO: allow user to choose LLMs
 # TODO: allow user to choose both top-level and bottom-level agent LLMs
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", 6379)
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
 
 
 wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
@@ -72,7 +73,8 @@ async def health():
     return {"status": "ok"}
 
 
-redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+redis_client = redis.Redis(
+    host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASSWORD)
 
 
 async def listen_to_pubsub(pubsub: PubSub):
@@ -87,10 +89,10 @@ async def agent_stream(
     input_data: str, chat_id: str, user_openai_api_key: str, user_mp_api_key: str
 ):
     top_level_cb = StreamingRedisCallbackHandler(
-        redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel=chat_id
+        redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel=chat_id, redis_password=REDIS_PASSWORD
     )
     bottom_level_cb = StreamingRedisCallbackHandler(
-        redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel=chat_id, level=1
+        redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel=chat_id, redis_password=REDIS_PASSWORD, level=1,
     )
 
     mp_llm = ChatOpenAI(
@@ -141,10 +143,15 @@ async def agent_stream(
         wikipedia,
     ]
     chat_id = chat_id.strip()
+    REDIS_URL = ""
+    if REDIS_PASSWORD is not None:
+        REDIS_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
+    else:
+        REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
     conversation_redis_memory = ConversationBufferMemory(
         memory_key=chat_id,
         chat_memory=RedisChatMessageHistory(
-            url=f"redis://{REDIS_HOST}:{REDIS_PORT}/0",
+            url=REDIS_URL,
             session_id=chat_id,
         ),
         return_messages=True
@@ -235,9 +242,6 @@ async def prepend_chat_id_to_stream(chat_id, stream_generator):
 
 @app.post("/chat")
 async def chat(query: Query):
-    print(query.OpenAiAPIKey)
-    print(query.mpAPIKey)
-    print(f"chat_id: {query.chat_id}")
     chat_id = query.chat_id
     if query.chat_id is None or query.chat_id == "":
         # TODO: check if exists in redis
