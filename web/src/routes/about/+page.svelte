@@ -4,6 +4,7 @@
   import ychiang from '$lib/images/ychiang.jpg';
   import ccchou from '$lib/images/ccchou.jpg';
   import janosh from '$lib/images/janosh.jpg';
+  import elvis from '$lib/images/elvis.jpg';
   import { CodeBlock } from '@skeletonlabs/skeleton';
 
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
