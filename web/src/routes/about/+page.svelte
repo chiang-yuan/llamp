@@ -112,8 +112,7 @@
     </div>
 
     <section class="mb-12">
-      <!-- <h3 class="h3 font-bold mb-4">Meet Our Team</h3> -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div class="text-center">
           <a href="https://chiang-yuan.github.io" target="_blank" class="text-blue-500">
             <img src={ychiang} alt="Yuan Chiang" class="mx-auto w-32 h-32 rounded-full mb-2" />
@@ -128,7 +127,6 @@
             <FontAwesomeIcon icon={faEnvelope} />
           </a>
         </div>
-        <!-- Repeat for other members -->
         <div class="text-center">
           <a href="https://github.com/knhn1004" target="_blank" class="text-blue-500">
             <img src={ccchou} alt="Chia Hong Chou" class="mx-auto w-32 h-32 rounded-full mb-2" />
@@ -267,12 +265,11 @@
         <h3 class="h3 font-bold mb-4">Citation</h3>
         <CodeBlock
           code={`
-@software{llamp2023,
-  author={Yuan Chiang, Chia-Hong Chou, Janosh Riebesell},
-  title={LLaMP: Large Language model for Materials Project},
-  url={http://ingress.llamp.development.svc.spin.nersc.org/},
-  version={0.1.0},
-  date={2023-11-06},
+@article{chiang2024llamp,
+  title={LLaMP: Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation},
+  author={Chiang, Yuan and Chou, Chia-Hong and Riebesell, Janosh},
+  journal={arXiv preprint arXiv:2401.17244},
+  year={2024}
 }
 		`}
         />
