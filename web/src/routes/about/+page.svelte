@@ -139,6 +139,16 @@
           </a>
         </div>
         <div class="text-center">
+          <a href="https://www.linkedin.com/in/elvis-hsieh/" target="_blank" class="text-blue-500">
+            <img src={elvis} alt="Elvis Hsieh" class="mx-auto w-32 h-32 rounded-full mb-2" />
+            <p class="font-semibold text-xl">Elvis Hsieh</p>
+            <p class="text-gray-500 text-md">UC Berkeley</p>
+          </a>
+          <a href="https://github.com/Ht2214" target="_blank" class="text-purple-600">
+            <FontAwesomeIcon icon={faGithub} />
+          </a>
+        </div>
+        <div class="text-center">
           <a href="https://janosh.dev" class="text-blue-500">
             <img
               src={janosh}

@@ -20,7 +20,7 @@ COPY ./src/ ./
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache -e .
 
 # Expose the port on which the FastAPI application will run
 EXPOSE 8000
