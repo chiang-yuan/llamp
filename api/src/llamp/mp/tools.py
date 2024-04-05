@@ -35,6 +35,8 @@ class MPTool(BaseTool):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        mp_api_key = kwargs.get('mp_api_key')
+        self.api_wrapper.set_api_key(mp_api_key)
 
     def _run(self, **query_params):
         _res = self.api_wrapper.run(
@@ -180,7 +182,7 @@ class MaterialsSynthesis(MPTool):
             debug=self.verbose,
         )
         # TODO: map reduce large response
-        
+
         return _res
 
 

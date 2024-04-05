@@ -151,7 +151,8 @@ class MPSummaryExpert(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsSummary(return_direct=False, handle_tool_error=True),
+            MaterialsSummary(
+                return_direct=False, handle_tool_error=True, mp_api_key=self.mp_api_key),
         ]
 
 
@@ -161,7 +162,8 @@ class MPStructureRetriever(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsStructureText(return_direct=True, handle_tool_error=True),
+            MaterialsSummary(
+                return_direct=False, handle_tool_error=True, mp_api_key=self.mp_api_key),
             # MaterialsStructureVis(return_direct=True, handle_tool_error=True),
         ]
 
@@ -180,7 +182,8 @@ class MPStructureVisualizer(MPAgent):
             # MaterialsStructureVis(return_direct=True, handle_tool_error=True),
             MaterialsStructureVis(return_direct=False,
                                   handle_tool_error=True,
-                                  chat_id=self.chat_id),
+                                  chat_id=self.chat_id,
+                                  mp_api_key=self.mp_api_key),
         ]
 
 
@@ -190,7 +193,8 @@ class MPThermoExpert(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsThermo(return_direct=False, handle_tool_error=True),
+            MaterialsThermo(return_direct=False,
+                            handle_tool_error=True, mp_api_key=self.mp_api_key),
         ]
 
 
@@ -200,7 +204,8 @@ class MPElasticityExpert(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsElasticity(return_direct=False, handle_tool_error=True),
+            MaterialsElasticity(
+                return_direct=False, handle_tool_error=True, mp_api_key=self.mp_api_key),
         ]
 
 
@@ -210,7 +215,8 @@ class MPMagnetismExpert(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsMagnetism(return_direct=False, handle_tool_error=True),
+            MaterialsMagnetism(
+                return_direct=False, handle_tool_error=True, mp_api_key=self.mp_api_key),
         ]
 
 
@@ -220,7 +226,8 @@ class MPDielectricExpert(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsDielectric(return_direct=False, handle_tool_error=True),
+            MaterialsDielectric(
+                return_direct=False, handle_tool_error=True, mp_api_key=self.mp_api_key),
         ]
 
 
@@ -231,7 +238,8 @@ class MPPiezoelectricExpert(MPAgent):
     def tools(self):
         return [
             MaterialsPiezoelectric(return_direct=False,
-                                   handle_tool_error=True),
+                                   handle_tool_error=True,
+                                   mp_api_key=self.mp_api_key),
         ]
 
 
@@ -241,7 +249,8 @@ class MPElectronicExpert(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsElectronic(return_direct=False, handle_tool_error=True),
+            MaterialsElectronic(
+                return_direct=False, handle_tool_error=True, mp_api_key=self.mp_api_key),
         ]
 
 
@@ -298,6 +307,7 @@ class MPSynthesisExpert(MPAgent):
         return [
             MaterialsSynthesis(
                 return_direct=False, handle_tool_error=True,
+                mp_api_key=self.mp_api_key,
                 # callbacks=[SyntheisCallbackHandler(llm=self.llm)]
             ),
         ]

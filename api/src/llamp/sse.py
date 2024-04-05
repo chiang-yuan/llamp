@@ -92,7 +92,6 @@ async def agent_stream(
         redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel=chat_id, level=1
     )
 
-    # TODO: set MP_API_KEY
     mp_llm = ChatOpenAI(
         temperature=0,
         model=OPENAI_GPT_MODEL,
