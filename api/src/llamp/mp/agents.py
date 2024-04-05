@@ -1,4 +1,8 @@
+import ast
+import json
 import re
+from typing import Any, Optional
+from uuid import UUID
 
 from langchain import hub
 from langchain.agents import (
@@ -22,6 +26,11 @@ from langchain.llms import OpenAI
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import StructuredTool, Tool, tool
 from langchain.tools.render import render_text_description_and_args
+from langchain_core.callbacks import BaseCallbackHandler
+from langchain_core.language_models import LLM
+from langchain_core.prompts import ChatPromptTemplate
+
+from llamp.mp.schemas import SynthesisRecipe
 
 # from pydantic import BaseModel, Field
 from llamp.mp.tools import (
@@ -56,7 +65,7 @@ class MPAgent:
     """Agent that uses the MP tools."""
 
     def __init__(self, llm):
-        self.llm = llm
+        self.llm: LLM = llm
         # self.summary_chain = load_summarize_chain(self.llm, chain_type="map_reduce", verbose=True)
         self.chain = (
             {
@@ -270,6 +279,48 @@ class MPElectronicExpert(MPAgent):
         ]
 
 
+class SyntheisCallbackHandler(BaseCallbackHandler):
+
+    def __init__(self, llm):
+        super().__init__()
+        self.llm: LLM = llm
+
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system", re.sub(
+                        r"\s+", " ", """You are a summarizer agent that proceses a 
+                        batch of synthesis recipes. You should summarize the synthesis 
+                        recipes in a concise and informativeformat that conforms the 
+                        output schema."""
+                    ).strip().replace("\n", " ")
+                ),
+                (
+                    "assistant", "here are the synthesis recipes from MP: {input}"
+                )
+            ]
+        )
+
+        self.extractor = self.prompt | self.llm.with_structured_output(
+            schema=SynthesisRecipe,
+            include_raw=False
+        )
+
+    def on_tool_end(self, 
+                    output: Any, 
+                    *, 
+                    run_id: UUID, 
+                    parent_run_id: UUID | None = None, 
+                    **kwargs: Any) -> Any:
+        
+        # output = json.loads(output)
+        output = ast.literal_eval(output)
+        print("on_tool_end:", type(output), len(output), output)
+        return self.extractor.batch(
+            [{"input": recipe} for recipe in output],
+            {"max_concurrency": 10},
+        )
+
 class MPSynthesisExpert(MPAgent):
     """Materials synthesis expert that has access to Materials Project synthesis
     endpoint, where synthesis recipes are extracted  from scientific literature through
@@ -281,5 +332,8 @@ class MPSynthesisExpert(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsSynthesis(return_direct=False, handle_tool_error=True),
+            MaterialsSynthesis(
+                return_direct=False, handle_tool_error=True,
+                callbacks=[SyntheisCallbackHandler(llm=self.llm)]
+                ),
         ]
