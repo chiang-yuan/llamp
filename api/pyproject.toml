@@ -9,6 +9,7 @@ description = ""
 authors = [
     {name = "Yuan Chiang", email = "cyrusyc@lbl.gov" },
     {name = "Oliver Chou", email = "49494541+knhn1004@users.noreply.github.com" }
+    {name = "Elvis Hsieh", email = "htelvis92@berkeley.edu" }
 ]
 license = { file = "LICENSE" }
 dependencies = [

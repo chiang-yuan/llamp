@@ -10,7 +10,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y build-essential git
 
 # Copy the requirements file and install dependencies
-COPY ./pyproject.toml ./rq.txt /app/
+COPY ./pyproject.toml /app/
 
 # Change directory to where your FastAPI application code is located
 WORKDIR /app/src
