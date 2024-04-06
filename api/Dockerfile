@@ -10,7 +10,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y build-essential git
 
 # Copy the requirements file and install dependencies
-COPY ./pyproject.toml ./rq.txt /app/
+COPY ./pyproject.toml /app/
 
 # Change directory to where your FastAPI application code is located
 WORKDIR /app/src
@@ -20,7 +20,7 @@ COPY ./src/ ./
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache -e .
 
 # Expose the port on which the FastAPI application will run
 EXPOSE 8000
