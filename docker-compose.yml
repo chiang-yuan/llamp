@@ -32,3 +32,6 @@ services:
     image: 'redis:alpine'
     ports:
       - '6379:6379'
+    env_file:
+      - .env.local
+    entrypoint: redis-server --requirepass secret

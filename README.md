@@ -7,15 +7,17 @@
     <a href="https://github.com/chiang-yuan/llamp/stargazers">
       <img src="https://img.shields.io/github/stars/chiang-yuan/llamp?style=social" alt="Github Stars">
     </a>
+    <a href="http://colab.research.google.com/github/chiang-yuan/llamp/blob/main/experiments/00-notebook-chat.ipynb">
+      <img src="https://camo.githubusercontent.com/f5e0d0538a9c2972b5d413e0ace04cecd8efd828d133133933dfffec282a4e1b/68747470733a2f2f636f6c61622e72657365617263682e676f6f676c652e636f6d2f6173736574732f636f6c61622d62616467652e737667">
+    </a>
 </h1>
 <h4 align="center">Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation</h4>
+
 
 > [!TIP]
 > TL;DR: LLaMP is a multimodal retrieval-augmented generation (RAG) framework of hiearchical ReAct agents that can dynamically and recursively interact with Materials Project to ground LLMs on high-fidelity materials informatics.
 
 We are sorry! LLaMP is actually a homonym of **Large Language model [Materials Project](https://materialsproject.org)**. :wink: It empowers LLMs with the largest computational materials database [Materials Project](https://materialsproject.org) to reduce the likelihood of hallucination for materials data.
-
-<!-- LLaMP is a web-based assistant that allows you to explore and interact with materials data in a conversational and intuitive manner. It integrates the power of the Materials Project API and the intelligence of OpenAI's GPT-3.5 to offer a comprehensive and user-friendly solution for discovering and understanding computational materials data based on quantum mechanical calculations. -->
 
 <h4 align="center">
   <img src="https://raw.githubusercontent.com/sveltejs/branding/master/svelte-horizontal.svg" height="30"/>

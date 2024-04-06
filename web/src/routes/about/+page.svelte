@@ -4,6 +4,7 @@
   import ychiang from '$lib/images/ychiang.jpg';
   import ccchou from '$lib/images/ccchou.jpg';
   import janosh from '$lib/images/janosh.jpg';
+  import elvis from '$lib/images/elvis.jpg';
   import { CodeBlock } from '@skeletonlabs/skeleton';
 
   import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -111,8 +112,7 @@
     </div>
 
     <section class="mb-12">
-      <!-- <h3 class="h3 font-bold mb-4">Meet Our Team</h3> -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div class="text-center">
           <a href="https://chiang-yuan.github.io" target="_blank" class="text-blue-500">
             <img src={ychiang} alt="Yuan Chiang" class="mx-auto w-32 h-32 rounded-full mb-2" />
@@ -127,7 +127,6 @@
             <FontAwesomeIcon icon={faEnvelope} />
           </a>
         </div>
-        <!-- Repeat for other members -->
         <div class="text-center">
           <a href="https://github.com/knhn1004" target="_blank" class="text-blue-500">
             <img src={ccchou} alt="Chia Hong Chou" class="mx-auto w-32 h-32 rounded-full mb-2" />
@@ -135,6 +134,16 @@
             <p class="text-gray-500 text-md">Foothill College</p>
           </a>
           <a href="https://github.com/knhn1004" target="_blank" class="text-purple-600">
+            <FontAwesomeIcon icon={faGithub} />
+          </a>
+        </div>
+        <div class="text-center">
+          <a href="https://www.linkedin.com/in/elvis-hsieh/" target="_blank" class="text-blue-500">
+            <img src={elvis} alt="Elvis Hsieh" class="mx-auto w-32 h-32 rounded-full mb-2" />
+            <p class="font-semibold text-xl">Elvis Hsieh</p>
+            <p class="text-gray-500 text-md">UC Berkeley</p>
+          </a>
+          <a href="https://github.com/Ht2214" target="_blank" class="text-purple-600">
             <FontAwesomeIcon icon={faGithub} />
           </a>
         </div>
@@ -157,11 +166,14 @@
       </div>
     </section>
 
+    <div class="text-center">
+      <p><strong><a href="https://arxiv.org/abs/2401.17244" target="_blank" style="color:blue;">Paper</a></strong> | <strong><a href="link_to_github_repo" target="_blank" style="color:blue;">GitHub</a></strong> | <strong><a href="http://colab.research.google.com/github/chiang-yuan/llamp/blob/main/experiments/00-notebook-chat.ipynb" target="_blank" class="text-blue-500">Colab Notebook</a></strong></p>
+    </div>
+
     <section class="mb-12">
       <h3 class="h3 font-bold mb-4">Abstract</h3>
       <p>
-        Reducing hallucination of Large Language Models (LLMs) should be the top priority of any attempt to make LLMs useful and reliable for scientific applications. However, LLMs suffer from the lack of long-term memory and it is nontrivial and inevitably biased to fine-tune LLMs against pre-selected literature or documents. Here we present LLaMP, a <i>retrieval augmented generation</i> (RAG) framework to build a data-aware agent that interacts with computational and experimental data on Materials Project (<a href="https://materialsproject.org" class="text-blue-500">https://materialsproject.org</a>). Without any fine-tuning, the agent can understand complex materials science concepts,
-        fetch relevant data stores on-the-fly, process higher-order data (such as crystal structures and dielectric tensors), and summarize multi-step procedures for solid-state synthesis. We envision that the framework lays the foundation for a future autonomous laboratory where multiple LLM agents communicate and cooperate in synergy with robotics to drive materials synthesis without hard-coded human logic and intervention.
+        Reducing hallucination of Large Language Models (LLMs) is imperative for use in the sciences where accuracy and reproducibility is crucial. However, LLMs inherently lack long-term memory, making it a nontrivial, <i>ad hoc</i>, and inevitably biased task to fine-tune them on domain-specific literature and data. Here we introduce LLaMP, a multimodal retrieval-augmented generation (RAG) framework of multiple data-aware reasoning-and-acting (ReAct) agents that dynamically interact with computational and experimental data on <a href="https://materialsproject.org" class="text-blue-500" target="_blank">Materials Project (MP)</a>. Without fine-tuning, LLaMP demonstrates an ability to comprehend and integrate various modalities of materials science concepts, fetch relevant data stores on the fly, process higher-order data (such as crystal structures and elastic tensors), and summarize multi-step procedures for solid-state synthesis. The proposed framework offers an intuitive and nearly hallucination-free approach to exploring materials informatics and establishes a pathway for knowledge distillation and fine-tuning other language models.
       </p>
     </section>
 
@@ -181,9 +193,7 @@
       <h3 class="h3 font-bold mb-4">Preprint</h3>
       <ul class="space-y-4">
         <li class="border p-4 rounded shadow">
-          <h3 class="text-xl font-bold">Coming soon</h3>
-          <!-- <p>Abstract of Paper 1.</p> -->
-          <!-- <a href="#" class="text-blue-500">Read More</a> -->
+          <h3 class="text-xl font-bold">Chiang, Yuan, Chia-Hong Chou, and Janosh Riebesell. "LLaMP: Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation." arXiv preprint arXiv:2401.17244 (2024).</h3>
         </li>
         <!-- Repeat for other papers -->
       </ul>
@@ -256,19 +266,18 @@
         <h3 class="h3 font-bold mb-4">Citation</h3>
         <CodeBlock
           code={`
-@software{llamp2023,
-  author={Yuan Chiang, Chia-Hong Chou, Janosh Riebesell},
-  title={LLaMP: Large Language model for Materials Project},
-  url={http://ingress.llamp.development.svc.spin.nersc.org/},
-  version={0.1.0},
-  date={2023-11-06},
+@article{chiang2024llamp,
+  title={LLaMP: Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation},
+  author={Chiang, Yuan and Chou, Chia-Hong and Riebesell, Janosh},
+  journal={arXiv preprint arXiv:2401.17244},
+  year={2024}
 }
 		`}
         />
       </div>
       <div class="md:w-1/2 p-4">
         <h3 class="h3 font-bold mb-4">Acknowledgements</h3>
-        <p>We thank Matthew McDermott, Jordan Burns for early test and input, and Karlo Berket for helpful discussion.</p>
+        <p>We thank Matthew McDermott, Jordan Burns for early test and input, and Dr. Anubhav Jain and Dr. Karlo Berket for helpful discussion.</p>
       </div>
     </section>
 
