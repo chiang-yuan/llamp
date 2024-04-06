@@ -20,46 +20,65 @@
 > [!TIP]
 > TL;DR: LLaMP is a multimodal retrieval-augmented generation (RAG) framework of hiearchical ReAct agents that can dynamically and recursively interact with Materials Project to ground LLMs on high-fidelity materials informatics.
 
-We are sorry! LLaMP is actually a homonym of **Large Language model [Materials Project](https://materialsproject.org)**. :wink: It empowers LLMs with the largest computational materials database [Materials Project](https://materialsproject.org) to reduce the likelihood of hallucination for materials data.
+This repository accompanies our paper [**LLaMP: Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation**](https://arxiv.org/abs/2401.17244). Our codebase is built upon [LangChain](https://github.com/langchain-ai/langchain) and is designed to be modular and extensible, and can be used to reproduce the experiments in the paper, as well as to develop new experiments.
+
+We are sorry! LLaMP is actually a homonym of **Large Language model [Materials Project](https://materialsproject.org)**. :wink: It empowers LLMs with the largest computational materials database [Materials Project](https://materialsproject.org) to reduce the likelihood of hallucination for materials informatics. 
 
 <h4 align="center">
   <img src="https://raw.githubusercontent.com/sveltejs/branding/master/svelte-horizontal.svg" height="30"/>
   <a href="https://elementari.janosh.dev/"><img src="https://raw.githubusercontent.com/janosh/elementari/main/static/favicon.svg" height="30"/></a>
+  <a href="https://www.skeleton.dev/"><img src="https://user-images.githubusercontent.com/1509726/199282306-7454adcb-b765-4618-8438-67655a7dee47.png" height="30"/></a>
 </h4>
 
-## Introduction
+## 🔮 Quick Start
 
-Reducing hallucination of Large Language Models (LLMs) is imperative for use in the sciences where reproducibility is crucial. However, LLMs inherently lack long-term memory, making it a nontrivial, ad hoc, and inevitably biased task to fine-tune them on domain-specific literature and data. Here we introduce LLaMP, a multimodal retrieval-augmented generation (RAG) framework of multiple data-aware reasoning-and-acting (ReAct) agents that dynamically interact with computational and experimental data on Materials Project (MP). Without fine-tuning, LLaMP demonstrates an ability to comprehend and integrate various modalities of materials science concepts, fetch relevant data stores on the fly, process higher-order data (such as crystal structures and elastic tensors), and summarize multi-step procedures for solid-state synthesis. The proposed framework offers an intuitive and nearly hallucination free approach to exploring materials informatics and establishes a pathway for knowledge distillation and fine-tuning other language models.
+#### Python API
 
-
-## Installation
-
-### Python API
-
-Install from source:
 ```shell
+git clone https://github.com/chiang-yuan/llamp.git
 cd api
 pip install .
 ```
 
-### Build the app locally
+#### (Optional) Docker Web Interface 
 
 ```shell
 docker-compose up --build
 ```
 
-## Contributing
+## 👋 Contributing
 
-### Environment Variables for development
+We understand sometime it is difficult to navigate Materials Project database! We want everyone to be able to access materials informatics through conversational AI. We are looking for contributors to help us build a more powerful and user-friendly LLaMP to support more MP API endpoints or external datastore and agents.
 
+To contirbute to LLaMP, please follow these steps:
+
+1. Fork the repository
+2. Set up environment variables
+    ```shell
+    cp .env.example .env.local
+    ```
+3. Deploy local development environment 
+    ```shell
+    docker-compose up
+    ```
+4. Make changes and submit a pull request
+
+## 🌟 Authors and Citation
+
+Authors: Yuan Chiang (@chiang-yuan), Oliver Chou (@knhn1004), Janosh Riebesell (@janosh), Elvis Hsieh (@Ht2214)
+
+If you use LLaMP, our code and data in your research, please cite our paper:
+
+```bibtex
+@article{chiang2024llamp,
+  title={LLaMP: Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation},
+  author={Chiang, Yuan and Chou, Chia-Hong and Riebesell, Janosh},
+  journal={arXiv preprint arXiv:2401.17244},
+  year={2024}
+}
 ```
-cp .env.example .env.local
-```
 
-### Spinning up Development Environment
+## 🤗 Acknowledgements
 
-Please set the env vars using the above instructions before running
+We thank Matthew McDermott (@mattmcdermott), Jordan Burns in Materials Science and Engineering at UC Berkeley for their valuable feedback and suggestions. We also thank the [Materials Project](https://materialsproject.org) team for their support and for providing the data used in this work. We also thank Dr. Karlo Berket (@kbuma) and Dr. Anubhav Jain (@computron) for their advice and guidance.
 
-```
-docker-compose up
-```
