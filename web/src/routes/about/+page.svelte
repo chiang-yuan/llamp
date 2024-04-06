@@ -189,15 +189,14 @@
       </iframe>
     </section>
 
-    <section class="mb-12">
+    <!-- <section class="mb-12">
       <h3 class="h3 font-bold mb-4">Preprint</h3>
       <ul class="space-y-4">
         <li class="border p-4 rounded shadow">
           <h3 class="text-xl font-bold">Chiang, Yuan, Chia-Hong Chou, and Janosh Riebesell. "LLaMP: Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation." arXiv preprint arXiv:2401.17244 (2024).</h3>
         </li>
-        <!-- Repeat for other papers -->
       </ul>
-    </section>
+    </section> -->
 
     <section class="mb-12">
       <h3 class="h3 font-bold mb-4">Demo Conversations</h3>
@@ -277,10 +276,10 @@
       </div>
       <div class="md:w-1/2 p-4">
         <h3 class="h3 font-bold mb-4">Acknowledgements</h3>
-        <p>We thank Matthew McDermott, Jordan Burns for early test and input, and Dr. Anubhav Jain and Dr. Karlo Berket for helpful discussion.</p>
+        <p>We thank Matthew McDermott, Jordan Burns for early test and input, and Dr. Anubhav Jain and Dr. Karlo Berket for helpful discussion. We appreciate OpenAI for granting API credits.</p>
       </div>
     </section>
 
-    <footer class="text-center mt-8">© 2023 LLaMP. All Rights Reserved.</footer>
+    <footer class="text-center mt-8">© 2024 LLaMP. All Rights Reserved.</footer>
   </div>
 {/if}
