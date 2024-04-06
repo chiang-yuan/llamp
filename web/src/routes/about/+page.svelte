@@ -167,7 +167,7 @@
     </section>
 
     <div class="text-center">
-      <p><strong><a href="https://arxiv.org/abs/2401.17244" target="_blank" style="color:blue;">Paper</a></strong> | <strong><a href="link_to_github_repo" target="_blank" style="color:blue;">GitHub</a></strong> | <strong><a href="http://colab.research.google.com/github/chiang-yuan/llamp/blob/main/experiments/00-notebook-chat.ipynb" target="_blank" class="text-blue-500">Colab Notebook</a></strong></p>
+      <p><strong><a href="https://arxiv.org/abs/2401.17244" target="_blank" style="color:blue;">Paper</a></strong> | <strong><a href="https://github.com/chiang-yuan/llamp" target="_blank" style="color:blue;">GitHub</a></strong> | <strong><a href="http://colab.research.google.com/github/chiang-yuan/llamp/blob/main/experiments/00-notebook-chat.ipynb" target="_blank" class="text-blue-500">Colab Notebook</a></strong></p>
     </div>
 
     <section class="mb-12">
