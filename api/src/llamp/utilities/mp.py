@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import os.path as osp
 import re
 from pathlib import Path
@@ -12,7 +11,7 @@ import requests
 from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
 from langchain.tools.json.tool import JsonSpec
 from langchain.utils import get_from_dict_or_env
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, model_validator
 
 logger = logging.getLogger(__name__)
 
@@ -38,30 +37,18 @@ class MPAPIWrapper(BaseModel):
         self.mp_api_key = api_key
         self.mpr = mp_api.client.MPRester(
             api_key=api_key,
-            monty_decode=True,
-            use_document_model=True,
+            monty_decode=False,
+            use_document_model=False,
             headers={"X-API-KEY": api_key, "accept": "application/json"},
         )
 
-    @root_validator(pre=True)
+    @model_validator(mode="after")
     def validate_environment(cls, values: dict) -> dict:
         """Validate that the python package exists in environment."""
 
-        mp_api_key = get_from_dict_or_env(
-            values, "mp_api_key", "MP_API_KEY", "MP_API_KEY_PLACEHOLDER")
-
         try:
             import mp_api
-            import mp_api.client
 
-            values["client"] = mp_api.client
-            values["mpr"] = mp_api.client.MPRester(
-                api_key=mp_api_key,
-                monty_decode=False,
-                use_document_model=False,
-                headers={"X-API-KEY": mp_api_key,
-                         "accept": "application/json"},
-            )
         except ImportError:
             raise ImportError(
                 "Could not import `mp_api` python package. "
