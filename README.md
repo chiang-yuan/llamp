@@ -4,6 +4,9 @@
     <a href="https://arxiv.org/abs/2401.17244">
       <img src="https://img.shields.io/badge/cs.CL-2401.17244-b31b1b?logo=arxiv&logoColor=white" alt="arXiv">
     </a>
+    <a href="http://ingress.llamp.development.svc.spin.nersc.org/about">
+      <img src="https://img.shields.io/badge/web-demo-magenta?style=flat&link=http%3A%2F%2Fingress.llamp.development.svc.spin.nersc.org%2Fabout" alt="Website">
+    </a>
     <a href="https://github.com/chiang-yuan/llamp/stargazers">
       <img src="https://img.shields.io/github/stars/chiang-yuan/llamp?style=social" alt="Github Stars">
     </a>
