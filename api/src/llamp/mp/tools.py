@@ -35,7 +35,7 @@ class MPTool(BaseTool):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        mp_api_key = kwargs.get('mp_api_key')
+        mp_api_key = os.getenv("MP_API_KEY", kwargs.get('mp_api_key'))
         self.api_wrapper.set_api_key(mp_api_key)
 
     def _run(self, **query_params):
