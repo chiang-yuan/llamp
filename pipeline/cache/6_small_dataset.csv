@@ -1,0 +1,235 @@
+prompt,formula,material_id,total_magnetization_normalized_formula_units,ordering,llamp_output,gpt_output,llamp_magnetic_ordering,llamp_mp_id,llamp_magnetization_unit,gpt_magnetic_ordering,gpt_mp_id,gpt_magnetization_unit
+"What is the magnetic ordering of Pr(BRu)4? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit.
+        After you reason through, please output it in the format of python dictionary below
+        
+        ""magnetic_ordering"": [your answer for mass density],
+        ""magnetization_per_formula_unit"": [your answer for magnetization per formula unit],
+        ""material_id"": [your answer for material_id],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+
+        ",Pr(BRu)4,mp-1200756,1.3925e-05,NM,"{
+  ""action"": ""Final Answer"",
+  ""action_input"": {
+    ""magnetic_ordering"": ""non-magnetic"",
+    ""magnetization_per_formula_unit"": 5.57e-05,
+    ""material_id"": ""mp-1018673""
+  }
+}","The magnetic ordering of Pr(BRu)4 is ferromagnetic. The most stable magnetic ordering is ""FM"" with a material_id of mp-569809, space group of Pnma, and magnetization per formula unit of 4.01 μB.
+
+{
+  ""magnetic_ordering"": ""FM"",
+  ""magnetization_per_formula_unit"": ""4.01 μB"",
+  ""material_id"": ""mp-569809""
+}",NM,mp-1018673,5.57e-05,FM,mp-569809,4.01
+"What is the magnetic ordering of Ce6Ni20P13? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit.
+        After you reason through, please output it in the format of python dictionary below
+        
+        ""magnetic_ordering"": [your answer for mass density],
+        ""magnetization_per_formula_unit"": [your answer for magnetization per formula unit],
+        ""material_id"": [your answer for material_id],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+
+        ",Ce6Ni20P13,mp-1214139,0.4921217,FM,"{
+  ""magnetic_ordering"": ""ferromagnetic (FM)"",
+  ""magnetization_per_formula_unit"": 0.492,
+  ""material_id"": ""mp-570034""
+}","The magnetic ordering of Ce6Ni20P13 is ferromagnetic, with a material id of mp-569048, space group P6_3/mmc, and magnetization per formula unit of 0.61 μB.
+
+{
+  ""magnetic_ordering"": ""ferromagnetic"",
+  ""magnetization_per_formula_unit"": ""0.61 μB"",
+  ""material_id"": ""mp-569048""
+}",FM,mp-570034,0.492,FM,mp-569048,0.61
+"What is the magnetic ordering of Cr7C3? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit.
+        After you reason through, please output it in the format of python dictionary below
+        
+        ""magnetic_ordering"": [your answer for mass density],
+        ""magnetization_per_formula_unit"": [your answer for magnetization per formula unit],
+        ""material_id"": [your answer for material_id],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+
+        ",Cr7C3,mp-1196316,0.06442165,NM,"I have retrieved the information for you. The magnetic ordering of Cr7C3 is non-magnetic (NM). The material has no magnetic sites and is not magnetic.
+
+{
+  ""magnetic_ordering"": ""non-magnetic (NM)"",
+  ""magnetization_per_formula_unit"": ""0"",
+  ""material_id"": ""mp-569398""
+}","The magnetic ordering of Cr7C3 is antiferromagnetic with a material id of mp-570065, space group of P6_3/mmc, and a magnetization per formula unit of 3.00 Bohr magneton. 
+
+{
+  ""magnetic_ordering"": ""antiferromagnetic"",
+  ""magnetization_per_formula_unit"": ""3.00 Bohr magneton"",
+  ""material_id"": ""mp-570065""
+}",NM,mp-569398,0.0,AFM,mp-570065,3.0
+"What is the magnetic ordering of Y(CuGe)2? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit.
+        After you reason through, please output it in the format of python dictionary below
+        
+        ""magnetic_ordering"": [your answer for mass density],
+        ""magnetization_per_formula_unit"": [your answer for magnetization per formula unit],
+        ""material_id"": [your answer for material_id],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+
+        ",Y(CuGe)2,mp-4520,0.0,NM,"{
+  ""action"": ""Final Answer"",
+  ""action_input"": {
+    ""magnetic_ordering"": ""Non-magnetic"",
+    ""magnetization_per_formula_unit"": ""0.0 Bohr magnetons"",
+    ""material_id"": ""mp-1018104""
+  }
+}","The magnetic ordering of Y(CuGe)2 is non-magnetic. 
+The material id is mp-569869.
+The space group is P6_3/mmc.
+The magnetization per formula unit is 0 emu/g. 
+
+{
+""magnetic_ordering"": ""non-magnetic"",
+""magnetization_per_formula_unit"": ""0 emu/g"",
+""material_id"": ""mp-569869""
+}",NM,mp-1018104,0.0,NM,mp-569869,0.0
+"What is the magnetic ordering of As2Rh? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit.
+        After you reason through, please output it in the format of python dictionary below
+        
+        ""magnetic_ordering"": [your answer for mass density],
+        ""magnetization_per_formula_unit"": [your answer for magnetization per formula unit],
+        ""material_id"": [your answer for material_id],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+
+        ",As2Rh,mp-15954,0.0,NM,"{
+  ""action"": ""Final Answer"",
+  ""action_input"": {
+    ""magnetic_ordering"": ""non-magnetic (NM)"",
+    ""magnetization_per_formula_unit"": ""0"",
+    ""material_id"": ""mp-570035""
+  }
+}","The most stable magnetic ordering of As2Rh is ferromagnetic with a material id of mp-570755, space group Pnma, and magnetization per formula unit of 0.067 μB.
+
+{
+""magnetic_ordering"": ""ferromagnetic"",
+""magnetization_per_formula_unit"": ""0.067 μB"",
+""material_id"": ""mp-570755""
+}",NM,mp-570035,0.0,FM,mp-570755,0.067
+"What is the magnetic ordering of YGaCo? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit.
+        After you reason through, please output it in the format of python dictionary below
+        
+        ""magnetic_ordering"": [your answer for mass density],
+        ""magnetization_per_formula_unit"": [your answer for magnetization per formula unit],
+        ""material_id"": [your answer for material_id],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+
+        ",YGaCo,mp-1102926,0.00214055,NM,"{
+  ""action"": ""Final Answer"",
+  ""action_input"": {
+    ""magnetic_ordering"": ""non-magnetic"",
+    ""magnetization_per_formula_unit"": 0.00214055,
+    ""material_id"": ""mp-1102926""
+  }
+}","The magnetic ordering of YGaCo is ferromagnetic with a material id of mp-1018142, space group of Pnma, and a magnetization per formula unit of 2.000 µB.
+
+{
+  ""magnetic_ordering"": ""ferromagnetic"",
+  ""magnetization_per_formula_unit"": ""2.000 µB"",
+  ""material_id"": ""mp-1018142""
+}",NM,mp-1102926,0.00214055,FM,mp-1018142,2.0
+"What is the magnetic ordering of Re2O7? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit.
+        After you reason through, please output it in the format of python dictionary below
+        
+        ""magnetic_ordering"": [your answer for mass density],
+        ""magnetization_per_formula_unit"": [your answer for magnetization per formula unit],
+        ""material_id"": [your answer for material_id],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+
+        ",Re2O7,mp-1016092,0.00017085,NM,"{
+  ""magnetic_ordering"": ""non-magnetic (NM)"",
+  ""magnetization_per_formula_unit"": 0.108137,
+  ""material_id"": ""mp-1183113""
+}","The magnetic ordering of Re2O7 is antiferromagnetic. The most stable magnetic ordering has a material id of mp-866826, space group of P21/c, and magnetization per formula unit of 0 emu/g.
+
+{
+  ""magnetic_ordering"": ""antiferromagnetic"",
+  ""magnetization_per_formula_unit"": ""0 emu/g"",
+  ""material_id"": ""mp-866826""
+}",NM,mp-1183113,0.108137,AFM,mp-866826,0.0
+"What is the magnetic ordering of Ti? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit.
+        After you reason through, please output it in the format of python dictionary below
+        
+        ""magnetic_ordering"": [your answer for mass density],
+        ""magnetization_per_formula_unit"": [your answer for magnetization per formula unit],
+        ""material_id"": [your answer for material_id],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+
+        ",Ti,mp-72,2.4533333333333334e-05,NM,"{
+  ""magnetic_ordering"": ""Non-magnetic"",
+  ""magnetization_per_formula_unit"": 6.442e-06,
+  ""material_id"": ""mp-1245164""
+}","The most stable magnetic ordering of Ti is non-magnetic. 
+Therefore, the output in the format of python dictionary is:
+
+{
+ ""magnetic_ordering"": ""non-magnetic"",
+ ""magnetization_per_formula_unit"": 0,
+ ""material_id"": ""mp-13""
+}",NM,mp-1245164,6.442e-06,NM,mp-13,0.0
+"What is the magnetic ordering of La3Ni2Sn7? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit.
+        After you reason through, please output it in the format of python dictionary below
+        
+        ""magnetic_ordering"": [your answer for mass density],
+        ""magnetization_per_formula_unit"": [your answer for magnetization per formula unit],
+        ""material_id"": [your answer for material_id],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+
+        ",La3Ni2Sn7,mp-13093,3e-07,NM,"{
+  ""action"": ""Final Answer"",
+  ""action_input"": {
+    ""magnetic_ordering"": ""non-magnetic (NM)"",
+    ""magnetization_per_formula_unit"": ""0"",
+    ""material_id"": ""mp-570034""
+  }
+}","The magnetic ordering of La3Ni2Sn7 is antiferromagnetic with a material id of mp-568303, a space group of I4/mmm, and a magnetization per formula unit of 0 emu/g.
+        
+        {
+        ""magnetic_ordering"": ""antiferromagnetic"",
+        ""magnetization_per_formula_unit"": ""0 emu/g"",
+        ""material_id"": ""mp-568303""
+        }",NM,mp-570034,0,AFM,mp-568303,0
+"What is the magnetic ordering of Lu4Ni2C5? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit.
+        After you reason through, please output it in the format of python dictionary below
+        
+        ""magnetic_ordering"": [your answer for mass density],
+        ""magnetization_per_formula_unit"": [your answer for magnetization per formula unit],
+        ""material_id"": [your answer for material_id],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+
+        ",Lu4Ni2C5,mp-1207163,9e-07,NM,"{
+  ""action"": ""Final Answer"",
+  ""action_input"": {
+    ""magnetic_ordering"": ""Non-magnetic"",
+    ""magnetization_per_formula_unit"": ""9e-07 Bohr magnetons/formula unit"",
+    ""material_id"": ""mp-570852""
+  }
+}","The magnetic ordering of Lu4Ni2C5 is ferromagnetic. The most stable magnetic ordering has the material id ""mp-570786"", space group ""P-62m"", and magnetization per formula unit of 0.34 μB.
+
+{
+   ""magnetic_ordering"": ""ferromagnetic"",
+   ""magnetization_per_formula_unit"": ""0.34 μB"",
+   ""material_id"": ""mp-570786""
+}",NM,mp-570852,9e-07,FM,mp-570786,0.34

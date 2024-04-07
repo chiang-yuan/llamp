@@ -24,13 +24,11 @@ from langchain.chains import (
     StuffDocumentsChain,
 )
 from langchain.chains.summarize import load_summarize_chain
-from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_transformers import (
     LongContextReorder,
 )
 from langchain.embeddings import HuggingFaceInferenceAPIEmbeddings, OpenAIEmbeddings
-from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.text_splitter import CharacterTextSplitter

@@ -19,15 +19,17 @@ from langchain.agents.output_parsers import (
     JSONAgentOutputParser,
 )
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain.chat_models import ChatOpenAI
-from langchain.llms import OpenAI
+# from langchain.chat_models import ChatOpenAI
+# from langchain.llms import OpenAI
+from langchain_openai import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import MessagesPlaceholder
 from langchain.schema import ChatMessage, SystemMessage
 from langchain.tools import ArxivQueryRun, WikipediaQueryRun, tool
 from langchain.tools.render import render_text_description_and_args
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
-from pydantic import BaseModel
+# from pydantic import BaseModel
+from langchain.pydantic_v1 import BaseModel
 from starlette.websockets import WebSocketState
 
 from llamp.mp.tools import (
