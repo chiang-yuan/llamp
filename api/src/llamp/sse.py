@@ -248,8 +248,8 @@ async def prepend_chat_id_to_stream(chat_id, stream_generator):
 async def chat(query: Query):
     chat_id = query.chat_id
     if query.chat_id is None or query.chat_id == "":
-        # TODO: check if exists in redis
-        chat_id = str(uuid.uuid4())
+        while redis_client.exists(chat_id := str(uuid.uuid4())):
+            pass
 
     return StreamingResponse(
         prepend_chat_id_to_stream(chat_id, agent_stream(
