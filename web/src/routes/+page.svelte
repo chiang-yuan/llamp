@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { OpenAiOrg } from './../lib/store.ts';
   import SideBar from '$lib/components/SideBar.svelte';
 
   import Message from '../lib/components/Message.svelte';
@@ -72,6 +73,7 @@
         text: message.content,
         OpenAiAPIKey: $OpenAiAPIKey,
         mpAPIKey: $mpAPIKey,
+        OpenAiOrg: $OpenAiOrg,
         chat_id: $current_chat_id
       })
     });

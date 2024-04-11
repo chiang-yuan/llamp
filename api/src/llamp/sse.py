@@ -36,7 +36,6 @@ from llamp.mp.agents import (
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
 OPENAI_GPT_MODEL = "gpt-4-1106-preview"  # TODO: allow user to choose LLMs
 # TODO: allow user to choose both top-level and bottom-level agent LLMs
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
@@ -66,6 +65,7 @@ class Query(BaseModel):
     OpenAiAPIKey: str
     mpAPIKey: str
     chat_id: str = None
+    OpenAiOrg: str = None
 
 
 @app.get("/api/health")
@@ -90,7 +90,7 @@ async def listen_to_pubsub(pubsub: PubSub):
 
 
 async def agent_stream(
-    input_data: str, chat_id: str, user_openai_api_key: str, user_mp_api_key: str
+    input_data: str, chat_id: str, user_openai_api_key: str, user_mp_api_key: str, user_openai_org: str
 ):
     top_level_cb = StreamingRedisCallbackHandler(
         redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel=chat_id, redis_password=REDIS_PASSWORD
@@ -103,8 +103,7 @@ async def agent_stream(
         temperature=0,
         model=OPENAI_GPT_MODEL,
         openai_api_key=user_openai_api_key,
-        # TODO: organization
-        organization=None,
+        organization=user_openai_org,
         max_retries=5,
         streaming=True,
         callbacks=[bottom_level_cb],
@@ -164,8 +163,7 @@ async def agent_stream(
     llm = ChatOpenAI(
         temperature=0,
         model=OPENAI_GPT_MODEL,
-        # TODO: organization
-        organization=None,
+        organization=user_openai_org,
         openai_api_key=user_openai_api_key,
         streaming=True,
         callbacks=[top_level_cb],
@@ -253,7 +251,7 @@ async def chat(query: Query):
 
     return StreamingResponse(
         prepend_chat_id_to_stream(chat_id, agent_stream(
-            query.text, chat_id, query.OpenAiAPIKey, query.mpAPIKey)),
+            query.text, chat_id, query.OpenAiAPIKey, query.mpAPIKey, query.OpenAiOrg)),
         media_type="text/plain",
     )
 

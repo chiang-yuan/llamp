@@ -4,6 +4,7 @@ import type { Chat } from '$lib/chatUtils';
 
 export const mpAPIKey: Writable<string> = localStorageStore('mpAPIKey', '');
 export const OpenAiAPIKey: Writable<string> = localStorageStore('openAiAPIKey', '');
+export const OpenAiOrg: Writable<string> = localStorageStore('openAiOrg', '');
 export const chats: Writable<Chat[]> = localStorageStore('chats', [
   {
     question: '',
