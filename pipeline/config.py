@@ -4,10 +4,12 @@ from dataclasses import dataclass, field
 @dataclass
 class PromptingConfig:
     task: int = 7
-    gpt_model : str = "gpt-3.5-turbo-1106"
+    # gpt_model : str = "gpt-3.5-turbo-1106"
+    gpt_model : str = "gpt-4"
     evaluator_model : str = "gpt-4"
     # TODO: Possible chice: "gpt-4-1106-preview", "gpt-4"
-    csv_path: str = f"cache/{task}_small_dataset.csv"
+    type: str = "eval"
+    csv_path: str = f"cache/{task}_{type}_dataset.csv"
     # TODO: specify small or full dataset to use
     eval_prompt: dict = field(default_factory=lambda: {
         # 6: magnetism ordering benchmark, prompt: What is the magnetic ordering of {formula}? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit

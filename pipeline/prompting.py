@@ -4,6 +4,7 @@ import warnings
 import pandas as pd
 import sys
 from query_llm import construct_openai_message, call_openai
+import time
 
 # Suppress specific deprecation warning
 warnings.filterwarnings("ignore")
@@ -38,12 +39,11 @@ from llamp.mp.agents import (
     MPSynthesisExpert,
     MPStructureRetriever,
 )
-# from llamp.arxiv.agents import ArxivAgent
+from llamp.arxiv.agents import ArxivAgent
 
 load_dotenv()
 from config import PromptingConfig
 
-# load_dotenv()
 
 def agent_setup():
     top_llm = ChatOpenAI(
@@ -125,17 +125,9 @@ def agent_setup():
 
     conversational_memory = ConversationBufferWindowMemory(
         memory_key="chat_history", k=5, return_messages=True
-    ) # TODO: can disable
+    )
 
     agent = create_react_agent(top_llm, tools, prompt)
-
-    # agent_kwargs = {
-    #     "handle_parsing_errors": True,
-    #     "extra_prompt_messages": [
-    #         MessagesPlaceholder(variable_name="chat_history"),
-    #     ],
-    #     "early_stopping_method": "generate",
-    # }
 
     return tools, top_llm, conversational_memory, agent
 
@@ -149,19 +141,8 @@ def agent_prompting(prompt):
         memory=conversational_memory,
     )
 
-    # agent_executor = initialize_agent(
-    #     agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-    #     tools=tools,
-    #     llm=top_llm,
-    #     verbose=True,
-    #     max_iterations=20,
-    #     # memory=conversational_memory,
-    #     agent_kwargs=agent_kwargs,
-    #     handle_parsing_errors=True,
-    # )
+
     llamp_response = agent_executor.invoke({"input": prompt,})["output"]
-    #llamp_response.content or 
-    # TODO: check the attribute
     print("llamp_response", llamp_response)
 
 
@@ -278,10 +259,13 @@ if __name__ == "__main__":
     else:
         print("File not found. Creating a new one with basic structure.")
 
+    starting_index =  66 #TODO: find a way to print out the stopping index from the pipeline
     # Iterate over the DataFrame rows
     for index, row in df.iterrows():
+        if index < starting_index:
+            continue
+        start_time = time.time()
         prompt = row['prompt']
-        print(f"prompt: {prompt}")
 
         # Try 3 times to
         for attempt in range(3):  # Allows up to 3 attempts
@@ -294,12 +278,24 @@ if __name__ == "__main__":
 
                 save_in_csv(csv_path, prompt, llamp_response, gpt_response, config)
                 print(f"prompt {index} finish")
+                end_time = time.time()
+                total_time = end_time - start_time
+                print(f"Total execution time: {total_time} seconds, prompt: {prompt}")
                 break  # Exit loop on success
 
             except Exception as e:
                 print(f"Attempt {attempt + 1} failed with error: {e}")
+                error_message = str(e)
+                if "Error code:" in error_message:
+                    print(f"Attempt {attempt + 1}: Error received. Waiting for 1 minute before retrying.")
+                    time.sleep(1200)  # Wait for 10 minutes for the openai request issue
+                    print("Finish sleep")
                 if attempt == 2:  # Last attempt
                     print("Final attempt failed. Moving to next prompt.")
                 continue
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"Total execution time: {total_time} seconds, prompt: {prompt} with index {index}")
 
 print(f"#################################################### Finish Prompting #######################################################")
+
