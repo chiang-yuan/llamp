@@ -73,8 +73,12 @@ async def health():
     return {"status": "ok"}
 
 
-redis_client = redis.Redis(
-    host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASSWORD)
+redis_client = None
+if REDIS_PASSWORD is None:
+    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+else:
+    redis_client = redis.Redis(
+        host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASSWORD)
 
 
 async def listen_to_pubsub(pubsub: PubSub):
@@ -256,18 +260,17 @@ async def chat(query: Query):
 
 @app.get("/api/structures/{material_id}")
 async def get_structure(material_id: str):
-    out_dir = Path(__file__).parent.absolute() / "mp" / ".tmp"
-    print(out_dir)
-    fpath = out_dir / f"{material_id}.json"
+    material = redis_client.get(material_id)
+    trial = 0
+    while material is None and trial < 5:
+        await asyncio.sleep(1)
+        material = redis_client.get(material_id)
+        trial += 1
 
-    if fpath.exists():
-        with open(fpath) as f:
-            structure_data = json.load(f)
-            # TODO: temporarily remove file everytime after loading
-            os.remove(fpath)
-        return structure_data
-    else:
-        raise HTTPException(status_code=404, detail="Structure not found")
+    if material is not None:
+        return json.loads(material)
+
+    raise HTTPException(status_code=404, detail="Structure not found")
 
 
 if __name__ == "__main__":
