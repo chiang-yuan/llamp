@@ -91,6 +91,11 @@ class MaterialsStructureVis(MPTool):
     def __init__(self, *args, chat_id, **kwargs):
         super().__init__(*args, **kwargs)
         self.chat_id = chat_id
+        REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+        REDIS_PORT = os.getenv("REDIS_PORT", 6379)
+        REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
+        self.redis_client = redis.Redis(
+            host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASSWORD)
 
     def _run(self, **query_params):
         _response = super()._run(**query_params)
@@ -99,23 +104,14 @@ class MaterialsStructureVis(MPTool):
             material_id = entry["material_id"]
             structure = entry["structure"]
 
-            out_dir = Path(__file__).parent.absolute() / ".tmp"
-            os.makedirs(out_dir, exist_ok=True)
-            fpath = out_dir / f"{material_id}.json"
+            self.redis_client.set(material_id, json.dumps(structure), ex=3600)
 
-            with open(fpath, "w") as f:
-                f.write(json.dumps(structure))
         output = "[structures]" + ",".join(
             list(map(lambda x: x["material_id"], _response))
         )
 
         if self.chat_id != "":
             try:
-                REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-                REDIS_PORT = os.getenv("REDIS_PORT", 6379)
-                REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
-                self.redis_client = redis.Redis(
-                    host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASSWORD)
                 if self.redis_client.ping():
                     self.redis_client.publish(
                         self.chat_id, output)
