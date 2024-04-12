@@ -175,37 +175,6 @@ async def agent_stream(
     Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.
     Thought:"""
 
-    # SUFFIX = f"""
-    # Chat History {{{{chat_id}}}}
-    # Begin!
-    # Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate.
-
-    # For each action, format the output as follows:
-    # - For tool actions, use the [Tool] tag, followed by the tool name in angle brackets and the tool input in a separate tag.
-    # - For API actions, use the [Api] tag, followed by the API endpoint in angle brackets and the JSON parameters enclosed in triple backticks.
-    # - For observations, use the [Observation] tag, followed by the observation text.
-    # - For final answers, use the [Final Answer] tag, followed by the answer text.
-
-    # Example:
-    # [Tool]
-    # <tool-name>MPElasticityExpert</tool-name>
-    # <tool-input>
-    # What is the bulk modulus of iron (Fe)?
-    # </tool-input>
-
-    # [Api]
-    # <api-endpoint>search_materials_elasticity__get</api-endpoint>
-    # ```json
-    # {{
-    # "formula": "Fe"
-    # }}
-
-    # [Observation]
-    # Observation Result
-    # [Final Answer]
-    # Example Final Answer
-    # """
-
     agent_executor = initialize_agent(
         agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
         tools=tools,
@@ -218,7 +187,7 @@ async def agent_stream(
         memory=conversation_redis_memory,
         agent_kwargs={
             'suffix': SUFFIX,
-        }
+        },
     )
     pubsub = redis_client.pubsub()
     pubsub.subscribe(chat_id)
