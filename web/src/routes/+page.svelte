@@ -71,12 +71,8 @@
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
 
-    const stack = [];
-    let currentSection = '';
     let newChatId: string = '';
     let buffer = '';
-    let inCodeBlock = false;
-    let jsonStrings = [];
 
     while (true) {
       const { done, value } = await reader.read();
@@ -136,9 +132,11 @@
               content += action_input;
             } else if (action_input?.input) {
               content += action_input.input;
-            } else {
+            } else if (action.includes('_')) {
               content += `
 			  <div class="codeblock overflow-hidden shadow bg-neutral-900/90  text-sm text-white rounded-container-token shadow " data-testid="codeblock"><header class="codeblock-header text-xs text-white/50 uppercase flex justify-between items-center p-2 pl-4"><span class="codeblock-language">parameters</span></header> <pre class="codeblock-pre whitespace-pre-wrap break-all p-4 pt-1"><code class="codeblock-code language-plaintext lineNumbers">${JSON.stringify(action_input).trim()}</code></pre></div>`;
+            } else {
+              content += JSON.stringify(action_input).trim();
             }
             appendResponses([
               {
@@ -158,6 +156,13 @@
         }
       }
     }
+    current_chat_id.set(newChatId);
+    chats.update((currentChats: Chat[]) => {
+      if (!currentChats[$currentChatIndex].chat_id) {
+        currentChats[$currentChatIndex].chat_id = newChatId;
+      }
+      return currentChats;
+    });
   }
 
   async function askQuestion() {
@@ -189,46 +194,11 @@
     try {
       processing = true;
       await getStream(newMessage);
-
-      // Update chat_id
-      //  chats.update((currentChats: Chat[]) => {
-      //    if (!currentChats[$currentChatIndex].chat_id) {
-      //      currentChats[$currentChatIndex].chat_id = updated_chat_id;
-      //    }
-      //    return updated_chat_id;
-      //  });
-
-      //current_chat_id.set(updated_chat_id);
     } catch (error) {
       console.error('Error while asking question:', error);
     } finally {
       processing = false;
     }
-  }
-
-  function appendSimulation(simulation_data: any[], structures: any[]) {
-    chats.update((currentChats: Chat[]) => {
-      const updatedChats = [...currentChats]; // Create a shallow copy of the current chats array
-      const updatedMessages = [
-        ...updatedChats[$currentChatIndex].messages,
-        {
-          role: 'assistant',
-          content: 'Simulation:\n',
-          type: 'simulation',
-          structures: structures,
-          timestamp: new Date()
-        },
-        {
-          role: 'assistant',
-          content: 'Chart: ',
-          type: 'simulation_chart',
-          timestamp: new Date(),
-          simulationData: simulation_data
-        }
-      ];
-      updatedChats[$currentChatIndex].messages = updatedMessages;
-      return updatedChats;
-    });
   }
 
   async function loadStructures(materialIds: string[]): Promise<string[]> {
