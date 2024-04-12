@@ -73,6 +73,7 @@
 
     let newChatId: string = '';
     let buffer = '';
+    let existed: string[] = [];
 
     while (true) {
       const { done, value } = await reader.read();
@@ -119,7 +120,7 @@
             let { action, action_input } = JSON.parse(codeBlock);
             let content = '';
             if (action == 'Final Answer') {
-              //  content += `<p> <span class="font-bold">✅ Final Answer: </span></p>`;
+              // pass
             } else if (action.includes('MP')) {
               content += `<p> <span class="font-bold">🔨 Tool: </span>${action}</p>`;
             } else if (action.includes('_')) {
@@ -129,6 +130,11 @@
               content += `<p class="font-bold">${action}</p>`;
             }
             if (typeof action_input === 'string') {
+              if (existed.includes(action_input)) {
+                buffer = buffer.substring(endIdx + 3);
+                continue;
+              }
+              existed.push(action_input);
               content += action_input;
             } else if (action_input?.input) {
               content += action_input.input;
