@@ -103,6 +103,7 @@
                 role: 'assistant',
                 content: buffer
                   .substring(0, startIdx)
+                  .replace('Question:', '<p class="font-bold">？ Question:</p>')
                   .replace('Thought:', '<p class="font-bold">🤔 Thought:</p>')
                   .replace('Action:', '')
                   .trim(),
@@ -142,7 +143,7 @@
               content += `
 			  <div class="codeblock overflow-hidden shadow bg-neutral-900/90  text-sm text-white rounded-container-token shadow " data-testid="codeblock"><header class="codeblock-header text-xs text-white/50 uppercase flex justify-between items-center p-2 pl-4"><span class="codeblock-language">parameters</span></header> <pre class="codeblock-pre whitespace-pre-wrap break-all p-4 pt-1"><code class="codeblock-code language-plaintext lineNumbers">${JSON.stringify(action_input).trim()}</code></pre></div>`;
             } else {
-              content += JSON.stringify(action_input).trim();
+              content += JSON.stringify(action_input);
             }
             appendResponses([
               {
