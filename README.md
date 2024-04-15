@@ -18,7 +18,7 @@
 
 
 > [!TIP]
-> TL;DR: LLaMP is a multimodal retrieval-augmented generation (RAG) framework of hiearchical ReAct agents that can dynamically and recursively interact with Materials Project to ground LLMs on high-fidelity materials informatics.
+> TL;DR: LLaMP is a multimodal retrieval-augmented generation (RAG) framework of hiearchical ReAct agents that can dynamically and recursively interact with [Materials Project](https://materialsproject.org) to ground LLMs on high-fidelity materials informatics.
 
 This repository accompanies our paper [**LLaMP: Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation**](https://arxiv.org/abs/2401.17244). Our codebase is built upon [LangChain](https://github.com/langchain-ai/langchain) and is designed to be modular and extensible, and can be used to reproduce the experiments in the paper, as well as to develop new experiments.
 
