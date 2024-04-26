@@ -195,13 +195,24 @@ async def agent_stream(
         streaming=True,
         callbacks=[top_level_cb],
     )
+    PREFIX = """
+    You are a data-aware agent that can consult materials-related
+    data through Materials Project (MP) database, arXiv, Wikipedia, and a python 
+    REPL, which you can use to execute python code. If you get an error, debug 
+    your code and try again. Only use the output of your code to answer the 
+    question. Ask user to clarify their queries if needed. Please note that you 
+    don't have direct control over MP but through multiple assistant agents to 
+    help you. You need to provide complete context in the input for assistants to 
+    do their job.
+
+    Respond to the human as helpfully and accurately as possible. You have access to the following tools:"""
 
     SUFFIX = f"""
     Chat History {{{chat_id}}}
     For the response, whenever there is a math formula use mathjax expressions enclosed in double dollar signs. For example, to render the formula $x^2$, you should write $$x^2$$.
     Begin!
     Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.
-	REMEMBER: All the responses should always be in the format of ```$JSON_BLOB```
+    REMEMBER: All the responses should always be in the format of ```$JSON_BLOB```
     Thought:"""
 
     agent_executor = initialize_agent(
@@ -215,6 +226,7 @@ async def agent_stream(
             handlers=[top_level_cb]),
         memory=conversation_redis_memory,
         agent_kwargs={
+            'prefix': PREFIX,
             'suffix': SUFFIX,
         },
     )
