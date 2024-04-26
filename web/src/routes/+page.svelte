@@ -63,6 +63,18 @@
         chat_id: $current_chat_id
       })
     });
+    if (!response.ok) {
+      const json = await response.text();
+      appendResponses([
+        {
+          role: 'assistant',
+          content: `Error: ${JSON.parse(json).detail}`,
+          type: 'info',
+          timestamp: new Date()
+        }
+      ]);
+      return;
+    }
 
     if (!response.body) {
       throw new Error('No response body');

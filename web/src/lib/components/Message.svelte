@@ -9,15 +9,6 @@
 
   $: user = data.role === 'user';
   let w: number;
-  let messageType: string | null = null;
-  function getMessageType(content: string): string | null {
-    if (content.includes('⌛️ Action')) {
-      return 'action';
-    } else if (content.includes('🔎 Observation')) {
-      return 'observation';
-    }
-    return null;
-  }
 
   interface MessageFeed {
     id: number;
@@ -58,15 +49,8 @@
     }
 
     parsedContent = processLinks(DOMPurify.sanitize(marked.parse(data.content)));
-    messageType = getMessageType(data.content);
     //console.log(parsedContent);
   }
-  $: typeColor =
-    messageType === 'action'
-      ? 'text-pink-800 dark:text-pink-500'
-      : messageType === 'observation'
-        ? 'text-green-800 dark:text-lime-500'
-        : undefined;
 </script>
 
 {#if data.type == 'msg' && data.content.length > 0 && !parsedContent.startsWith('<p> log=') && !parsedContent.includes('<pre class="whitespace-pre-wrap"><code class="language-AGENT_ACTION:">')}

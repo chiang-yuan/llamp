@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 import uuid
-from pathlib import Path
+import openai
 
 import redis
 import uvicorn
@@ -87,6 +87,21 @@ async def listen_to_pubsub(pubsub: PubSub):
         if message and message["type"] == "message":
             yield message["data"].decode()
         await asyncio.sleep(0.01)  # Prevents busy-waiting
+
+
+def validate_openai_api_key(api_key: str):
+    try:
+        client = openai.OpenAI(api_key=api_key)
+        client.models.list()
+    except openai.AuthenticationError:
+        return False, "Invalid OpenAI API Key"
+    except openai.RateLimitError:
+        return False, "OpenAI API Rate Limit Exceeded"
+    except Exception as e:
+        print(e)
+        return False, "Unknown error"
+    else:
+        return True, None
 
 
 async def agent_stream(
@@ -217,6 +232,10 @@ async def chat(query: Query):
     if query.chat_id is None or query.chat_id == "":
         while redis_client.exists(chat_id := str(uuid.uuid4())):
             pass
+
+    valid, error = validate_openai_api_key(query.OpenAiAPIKey)
+    if not valid:
+        raise HTTPException(status_code=400, detail=error)
 
     return StreamingResponse(
         prepend_chat_id_to_stream(chat_id, agent_stream(
