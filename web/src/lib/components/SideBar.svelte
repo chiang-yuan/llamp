@@ -24,6 +24,16 @@
     };
     modalStore.trigger(modal);
   }
+  function removeChat(index: number) {
+    if ($chats.length === 1) {
+      return;
+    }
+    if (index === $currentChatIndex) {
+      setCurrentChat(0);
+    }
+
+    $chats = $chats.filter((_, i) => i !== index);
+  }
 </script>
 
 <div class="flex flex-col h-full variant-soft-surface">
@@ -45,7 +55,10 @@
           name="questions"
           value={chat.title}
         >
-          {chat.title.slice(0, 50) + '...'}
+          <div class="flex justify-between items-center">
+            <span>{chat.title.slice(0, 50) + '...'}</span>
+            <button class="ml-auto" on:click={() => removeChat(index)}>X</button>
+          </div>
         </ListBoxItem>
       {/each}
     </ListBox>

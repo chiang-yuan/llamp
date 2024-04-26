@@ -63,6 +63,18 @@
         chat_id: $current_chat_id
       })
     });
+    if (!response.ok) {
+      const json = await response.text();
+      appendResponses([
+        {
+          role: 'assistant',
+          content: `Error: ${JSON.parse(json).detail}`,
+          type: 'info',
+          timestamp: new Date()
+        }
+      ]);
+      return;
+    }
 
     if (!response.body) {
       throw new Error('No response body');
@@ -73,6 +85,7 @@
 
     let newChatId: string = '';
     let buffer = '';
+    let existed: string[] = [];
 
     while (true) {
       const { done, value } = await reader.read();
@@ -102,6 +115,7 @@
                 role: 'assistant',
                 content: buffer
                   .substring(0, startIdx)
+                  .replace('Question:', '<p class="font-bold">？ Question:</p>')
                   .replace('Thought:', '<p class="font-bold">🤔 Thought:</p>')
                   .replace('Action:', '')
                   .trim(),
@@ -119,7 +133,7 @@
             let { action, action_input } = JSON.parse(codeBlock);
             let content = '';
             if (action == 'Final Answer') {
-              //  content += `<p> <span class="font-bold">✅ Final Answer: </span></p>`;
+              // pass
             } else if (action.includes('MP')) {
               content += `<p> <span class="font-bold">🔨 Tool: </span>${action}</p>`;
             } else if (action.includes('_')) {
@@ -129,6 +143,11 @@
               content += `<p class="font-bold">${action}</p>`;
             }
             if (typeof action_input === 'string') {
+              if (existed.includes(action_input)) {
+                buffer = buffer.substring(endIdx + 3);
+                continue;
+              }
+              existed.push(action_input);
               content += action_input;
             } else if (action_input?.input) {
               content += action_input.input;
@@ -136,7 +155,7 @@
               content += `
 			  <div class="codeblock overflow-hidden shadow bg-neutral-900/90  text-sm text-white rounded-container-token shadow " data-testid="codeblock"><header class="codeblock-header text-xs text-white/50 uppercase flex justify-between items-center p-2 pl-4"><span class="codeblock-language">parameters</span></header> <pre class="codeblock-pre whitespace-pre-wrap break-all p-4 pt-1"><code class="codeblock-code language-plaintext lineNumbers">${JSON.stringify(action_input).trim()}</code></pre></div>`;
             } else {
-              content += JSON.stringify(action_input).trim();
+              content += JSON.stringify(action_input);
             }
             appendResponses([
               {

@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 import uuid
-from pathlib import Path
+import openai
 
 import redis
 import uvicorn
@@ -19,6 +19,7 @@ from langchain_experimental.tools import PythonREPLTool
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 from redis.client import PubSub
+from mp_api.client import MPRester
 
 from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
 from llamp.mp.agents import (
@@ -87,6 +88,32 @@ async def listen_to_pubsub(pubsub: PubSub):
         if message and message["type"] == "message":
             yield message["data"].decode()
         await asyncio.sleep(0.01)  # Prevents busy-waiting
+
+
+def validate_openai_api_key(api_key: str):
+    try:
+        client = openai.OpenAI(api_key=api_key)
+        client.models.list()
+    except openai.AuthenticationError:
+        return False, "Invalid OpenAI API Key"
+    except openai.RateLimitError:
+        return False, "OpenAI API Rate Limit Exceeded"
+    except Exception as e:
+        print(e)
+        return False, "Unknown error"
+    else:
+        return True, None
+
+
+def validate_mp_api_key(api_key: str):
+    try:
+        with MPRester(api_key) as mpr:
+            mpr.get_material_id_references("mp-568")
+    except Exception as e:
+        print(e)
+        return False, "Invalid MP API Key"
+    else:
+        return True, None
 
 
 async def agent_stream(
@@ -171,8 +198,10 @@ async def agent_stream(
 
     SUFFIX = f"""
     Chat History {{{chat_id}}}
+    For the response, whenever there is a math formula use mathjax expressions enclosed in double dollar signs. For example, to render the formula $x^2$, you should write $$x^2$$.
     Begin!
     Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.
+	REMEMBER: All the responses should always be in the format of ```$JSON_BLOB```
     Thought:"""
 
     agent_executor = initialize_agent(
@@ -217,6 +246,14 @@ async def chat(query: Query):
     if query.chat_id is None or query.chat_id == "":
         while redis_client.exists(chat_id := str(uuid.uuid4())):
             pass
+
+    valid, error = validate_openai_api_key(query.OpenAiAPIKey)
+    if not valid:
+        raise HTTPException(status_code=400, detail=error)
+
+    valid, error = validate_mp_api_key(query.mpAPIKey)
+    if not valid:
+        raise HTTPException(status_code=400, detail=error)
 
     return StreamingResponse(
         prepend_chat_id_to_stream(chat_id, agent_stream(
