@@ -7,6 +7,12 @@
   import DOMPurify from 'dompurify';
   export let data: ChatMessage;
 
+  function processMathJax(node) {
+    MathJax.typesetPromise([node]).catch((err) =>
+      console.error('MathJax typeset promise failed:', err)
+    );
+  }
+
   $: user = data.role === 'user';
   let w: number;
 
@@ -49,7 +55,6 @@
     }
 
     parsedContent = processLinks(DOMPurify.sanitize(marked.parse(data.content)));
-    //console.log(parsedContent);
   }
 </script>
 
@@ -72,7 +77,10 @@
         {/if}
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
-      {@html parsedContent}
+
+      <div use:processMathJax>
+        {@html parsedContent}
+      </div>
     </div>
   </div>
 {:else if data.type == 'structures'}
@@ -186,3 +194,9 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .math-inline {
+    font-style: italic; /* Style your math expressions as needed */
+  }
+</style>

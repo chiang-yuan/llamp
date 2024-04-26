@@ -198,6 +198,7 @@ async def agent_stream(
 
     SUFFIX = f"""
     Chat History {{{chat_id}}}
+    For the response, whenever there is a math formula use mathjax expressions enclosed in double dollar signs. For example, to render the formula $x^2$, you should write $$x^2$$.
     Begin!
     Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.
     Thought:"""
