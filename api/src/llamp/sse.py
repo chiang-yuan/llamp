@@ -19,6 +19,7 @@ from langchain_experimental.tools import PythonREPLTool
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 from redis.client import PubSub
+from mp_api.client import MPRester
 
 from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
 from llamp.mp.agents import (
@@ -100,6 +101,17 @@ def validate_openai_api_key(api_key: str):
     except Exception as e:
         print(e)
         return False, "Unknown error"
+    else:
+        return True, None
+
+
+def validate_mp_api_key(api_key: str):
+    try:
+        with MPRester(api_key) as mpr:
+            mpr.get_material_id_references("mp-568")
+    except Exception as e:
+        print(e)
+        return False, "Invalid MP API Key"
     else:
         return True, None
 
@@ -234,6 +246,10 @@ async def chat(query: Query):
             pass
 
     valid, error = validate_openai_api_key(query.OpenAiAPIKey)
+    if not valid:
+        raise HTTPException(status_code=400, detail=error)
+
+    valid, error = validate_mp_api_key(query.mpAPIKey)
     if not valid:
         raise HTTPException(status_code=400, detail=error)
 
