@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { mpAPIKey, OpenAiAPIKey } from '$lib/store.ts';
+  import { mpAPIKey, OpenAiAPIKey, OpenAiOrg } from '$lib/store.ts';
   import type { SvelteComponent } from 'svelte';
   export let parent: SvelteComponent;
 
@@ -23,6 +23,15 @@
         type="password"
         bind:value={$mpAPIKey}
         placeholder="Your Materials Project API Key"
+      />
+    </label>
+    <label class="label">
+      <span>OpenAI Organization ID</span>
+      <input
+        class="input"
+        type="password"
+        bind:value={$OpenAiOrg}
+        placeholder="org-xxx (optional)"
       />
     </label>
   </form>

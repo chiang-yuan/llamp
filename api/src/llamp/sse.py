@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 import uuid
-from pathlib import Path
+import openai
 
 import redis
 import uvicorn
@@ -19,6 +19,7 @@ from langchain_experimental.tools import PythonREPLTool
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 from redis.client import PubSub
+from mp_api.client import MPRester
 
 from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
 from llamp.mp.agents import (
@@ -36,7 +37,6 @@ from llamp.mp.agents import (
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
 OPENAI_GPT_MODEL = "gpt-4-1106-preview"  # TODO: allow user to choose LLMs
 # TODO: allow user to choose both top-level and bottom-level agent LLMs
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
@@ -66,6 +66,7 @@ class Query(BaseModel):
     OpenAiAPIKey: str
     mpAPIKey: str
     chat_id: str = None
+    OpenAiOrg: str = None
 
 
 @app.get("/api/health")
@@ -73,8 +74,12 @@ async def health():
     return {"status": "ok"}
 
 
-redis_client = redis.Redis(
-    host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASSWORD)
+redis_client = None
+if REDIS_PASSWORD is None:
+    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+else:
+    redis_client = redis.Redis(
+        host=REDIS_HOST, port=REDIS_PORT, db=0, password=REDIS_PASSWORD)
 
 
 async def listen_to_pubsub(pubsub: PubSub):
@@ -85,8 +90,34 @@ async def listen_to_pubsub(pubsub: PubSub):
         await asyncio.sleep(0.01)  # Prevents busy-waiting
 
 
+def validate_openai_api_key(api_key: str):
+    try:
+        client = openai.OpenAI(api_key=api_key)
+        client.models.list()
+    except openai.AuthenticationError:
+        return False, "Invalid OpenAI API Key"
+    except openai.RateLimitError:
+        return False, "OpenAI API Rate Limit Exceeded"
+    except Exception as e:
+        print(e)
+        return False, "Unknown error"
+    else:
+        return True, None
+
+
+def validate_mp_api_key(api_key: str):
+    try:
+        with MPRester(api_key) as mpr:
+            mpr.get_material_id_references("mp-568")
+    except Exception as e:
+        print(e)
+        return False, "Invalid MP API Key"
+    else:
+        return True, None
+
+
 async def agent_stream(
-    input_data: str, chat_id: str, user_openai_api_key: str, user_mp_api_key: str
+    input_data: str, chat_id: str, user_openai_api_key: str, user_mp_api_key: str, user_openai_org: str
 ):
     top_level_cb = StreamingRedisCallbackHandler(
         redis_host=REDIS_HOST, redis_port=REDIS_PORT, redis_channel=chat_id, redis_password=REDIS_PASSWORD
@@ -99,8 +130,7 @@ async def agent_stream(
         temperature=0,
         model=OPENAI_GPT_MODEL,
         openai_api_key=user_openai_api_key,
-        # TODO: organization
-        organization=None,
+        organization=user_openai_org,
         max_retries=5,
         streaming=True,
         callbacks=[bottom_level_cb],
@@ -160,49 +190,30 @@ async def agent_stream(
     llm = ChatOpenAI(
         temperature=0,
         model=OPENAI_GPT_MODEL,
-        # TODO: organization
-        organization=None,
+        organization=user_openai_org,
         openai_api_key=user_openai_api_key,
         streaming=True,
         callbacks=[top_level_cb],
     )
+    PREFIX = """
+    You are a data-aware agent that can consult materials-related
+    data through Materials Project (MP) database, arXiv, Wikipedia, and a python 
+    REPL, which you can use to execute python code. If you get an error, debug 
+    your code and try again. Only use the output of your code to answer the 
+    question. Ask user to clarify their queries if needed. Please note that you 
+    don't have direct control over MP but through multiple assistant agents to 
+    help you. You need to provide complete context in the input for assistants to 
+    do their job.
+
+    Respond to the human as helpfully and accurately as possible. You have access to the following tools:"""
 
     SUFFIX = f"""
     Chat History {{{chat_id}}}
+    For the response, whenever there is a math formula use mathjax expressions enclosed in double dollar signs. For example, to render the formula $x^2$, you should write $$x^2$$.
     Begin!
     Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation:.
+    REMEMBER: All the responses should always be in the format of ```$JSON_BLOB```
     Thought:"""
-
-    # SUFFIX = f"""
-    # Chat History {{{{chat_id}}}}
-    # Begin!
-    # Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate.
-
-    # For each action, format the output as follows:
-    # - For tool actions, use the [Tool] tag, followed by the tool name in angle brackets and the tool input in a separate tag.
-    # - For API actions, use the [Api] tag, followed by the API endpoint in angle brackets and the JSON parameters enclosed in triple backticks.
-    # - For observations, use the [Observation] tag, followed by the observation text.
-    # - For final answers, use the [Final Answer] tag, followed by the answer text.
-
-    # Example:
-    # [Tool]
-    # <tool-name>MPElasticityExpert</tool-name>
-    # <tool-input>
-    # What is the bulk modulus of iron (Fe)?
-    # </tool-input>
-
-    # [Api]
-    # <api-endpoint>search_materials_elasticity__get</api-endpoint>
-    # ```json
-    # {{
-    # "formula": "Fe"
-    # }}
-
-    # [Observation]
-    # Observation Result
-    # [Final Answer]
-    # Example Final Answer
-    # """
 
     agent_executor = initialize_agent(
         agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
@@ -215,8 +226,9 @@ async def agent_stream(
             handlers=[top_level_cb]),
         memory=conversation_redis_memory,
         agent_kwargs={
+            'prefix': PREFIX,
             'suffix': SUFFIX,
-        }
+        },
     )
     pubsub = redis_client.pubsub()
     pubsub.subscribe(chat_id)
@@ -244,30 +256,37 @@ async def prepend_chat_id_to_stream(chat_id, stream_generator):
 async def chat(query: Query):
     chat_id = query.chat_id
     if query.chat_id is None or query.chat_id == "":
-        # TODO: check if exists in redis
-        chat_id = str(uuid.uuid4())
+        while redis_client.exists(chat_id := str(uuid.uuid4())):
+            pass
+
+    valid, error = validate_openai_api_key(query.OpenAiAPIKey)
+    if not valid:
+        raise HTTPException(status_code=400, detail=error)
+
+    valid, error = validate_mp_api_key(query.mpAPIKey)
+    if not valid:
+        raise HTTPException(status_code=400, detail=error)
 
     return StreamingResponse(
         prepend_chat_id_to_stream(chat_id, agent_stream(
-            query.text, chat_id, query.OpenAiAPIKey, query.mpAPIKey)),
+            query.text, chat_id, query.OpenAiAPIKey, query.mpAPIKey, query.OpenAiOrg)),
         media_type="text/plain",
     )
 
 
 @app.get("/api/structures/{material_id}")
 async def get_structure(material_id: str):
-    out_dir = Path(__file__).parent.absolute() / "mp" / ".tmp"
-    print(out_dir)
-    fpath = out_dir / f"{material_id}.json"
+    material = redis_client.get(material_id)
+    trial = 0
+    while material is None and trial < 5:
+        await asyncio.sleep(1)
+        material = redis_client.get(material_id)
+        trial += 1
 
-    if fpath.exists():
-        with open(fpath) as f:
-            structure_data = json.load(f)
-            # TODO: temporarily remove file everytime after loading
-            os.remove(fpath)
-        return structure_data
-    else:
-        raise HTTPException(status_code=404, detail="Structure not found")
+    if material is not None:
+        return json.loads(material)
+
+    raise HTTPException(status_code=404, detail="Structure not found")
 
 
 if __name__ == "__main__":

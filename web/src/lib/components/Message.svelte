@@ -7,17 +7,14 @@
   import DOMPurify from 'dompurify';
   export let data: ChatMessage;
 
+  function processMathJax(node) {
+    MathJax.typesetPromise([node]).catch((err) =>
+      console.error('MathJax typeset promise failed:', err)
+    );
+  }
+
   $: user = data.role === 'user';
   let w: number;
-  let messageType: string | null = null;
-  function getMessageType(content: string): string | null {
-    if (content.includes('⌛️ Action')) {
-      return 'action';
-    } else if (content.includes('🔎 Observation')) {
-      return 'observation';
-    }
-    return null;
-  }
 
   interface MessageFeed {
     id: number;
@@ -58,15 +55,7 @@
     }
 
     parsedContent = processLinks(DOMPurify.sanitize(marked.parse(data.content)));
-    messageType = getMessageType(data.content);
-    //console.log(parsedContent);
   }
-  $: typeColor =
-    messageType === 'action'
-      ? 'text-pink-800 dark:text-pink-500'
-      : messageType === 'observation'
-        ? 'text-green-800 dark:text-lime-500'
-        : undefined;
 </script>
 
 {#if data.type == 'msg' && data.content.length > 0 && !parsedContent.startsWith('<p> log=') && !parsedContent.includes('<pre class="whitespace-pre-wrap"><code class="language-AGENT_ACTION:">')}
@@ -88,59 +77,10 @@
         {/if}
         <small class="opacity-50">{bubble.timestamp}</small>
       </header>
-      {#if parsedContent.startsWith("<p>\\n```'") && !parsedContent.startsWith("<p>\\n```'Action:</p>")}
-        <p class="font-bold">🤔 Thought:</p>
-        <p>
-          {parsedContent.split("<p>\\n```'")[0]}
-          {@html parsedContent.split("<p>\\n```'")[1].split('</p>').join('').split('<p>')[0]}
-        </p>
-      {:else if parsedContent.includes('"action": "Final Answer"')}
-        <p class="font-bold">
-          {#if parsedContent.includes('```')}
-            ✅ Final Answer:
-          {:else}
-            🔎 Observation:
-          {/if}
-        </p>
-        {@html parsedContent
-          .replace('\n', '')
-          .replace('```json', '')
-          .replace(
-            `{
-  "action": "Final Answer",`,
-            ''
-          )
-          .replace(`"action_input": "`, '')
-          .replace(
-            `"
-}`,
-            ''
-          )
-          .replace('<code class="language-Action:">', '')
-          .trim()}
-      {:else if parsedContent.startsWith('<p>Action:</p>')}
-        {#each parsedContent.split('<pre')[1].split('\n') as line}
-          {#if line.includes('"action":')}
-            <p class="font-bold mt-2">🛠️ {@html line.split('"')[3]}</p>
-          {/if}
-          {#if line.includes('"input":')}
-            <p class="mt-2">"{@html line.split('"')[3]}"</p>
-          {/if}
-        {/each}
-      {:else if parsedContent.startsWith("<p>\\n```'Action:</p>")}
-        {#each parsedContent.split('<pre')[1].split('\n') as line}
-          {#if line.includes('"action":')}
-            <p class="mt-2">🔮 <strong>API Endpoint:</strong> {@html line.split('"')[3]}</p>
-          {/if}
-          {#if line.includes('"formula":')}
-            <p class="mt-2"><strong>Formula:</strong> {@html line.split('"')[3]}</p>
-          {/if}
-        {/each}
-      {:else}
-        <pre
-          class="whitespace-normal {typeColor}"
-          bind:this={parsedContent}>{@html parsedContent}</pre>
-      {/if}
+
+      <div use:processMathJax>
+        {@html parsedContent}
+      </div>
     </div>
   </div>
 {:else if data.type == 'structures'}
@@ -254,3 +194,9 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .math-inline {
+    font-style: italic; /* Style your math expressions as needed */
+  }
+</style>
