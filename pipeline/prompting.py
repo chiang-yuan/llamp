@@ -259,7 +259,7 @@ if __name__ == "__main__":
     else:
         print("File not found. Creating a new one with basic structure.")
 
-    starting_index =  66 #TODO: find a way to print out the stopping index from the pipeline
+    starting_index = 997 #TODO: find a way to print out the stopping index from the pipeline
     # Iterate over the DataFrame rows
     for index, row in df.iterrows():
         if index < starting_index:
@@ -268,34 +268,39 @@ if __name__ == "__main__":
         prompt = row['prompt']
 
         # Try 3 times to
-        for attempt in range(3):  # Allows up to 3 attempts
-            try:
-                llamp_response, gpt_response = agent_prompting(prompt)
+        attempt = 0
+        # for attempt in range(1):  # Allows up to 3 attempts
+        try:
+            llamp_response, gpt_response = agent_prompting(prompt)
 
-                # Testing script below: 
-                # llamp_response, gpt_response = {"output":"The compound PmPd2Pb has a non-magnetic (NM) ordering. It crystallizes in the cubic Fm-3m space group (number 225) with a final magnetic moment of 0.001 μB per formula unit. This information is based on data from the Materials Project with the material ID mp-862950"},\
-                #       "The compound PmPd2Pb has a non-magnetic (NM) ordering. It crystallizes in the cubic Fm-3m space group (number 225) with a final magnetic moment of 0.001 μB per formula unit. This information is based on data from the Materials Project with the material ID mp-862950" #Testing script
+            # Testing script below: 
+            # llamp_response, gpt_response = {"output":"The compound PmPd2Pb has a non-magnetic (NM) ordering. It crystallizes in the cubic Fm-3m space group (number 225) with a final magnetic moment of 0.001 μB per formula unit. This information is based on data from the Materials Project with the material ID mp-862950"},\
+            #       "The compound PmPd2Pb has a non-magnetic (NM) ordering. It crystallizes in the cubic Fm-3m space group (number 225) with a final magnetic moment of 0.001 μB per formula unit. This information is based on data from the Materials Project with the material ID mp-862950" #Testing script
 
-                save_in_csv(csv_path, prompt, llamp_response, gpt_response, config)
-                print(f"prompt {index} finish")
-                end_time = time.time()
-                total_time = end_time - start_time
-                print(f"Total execution time: {total_time} seconds, prompt: {prompt}")
-                break  # Exit loop on success
+            save_in_csv(csv_path, prompt, llamp_response, gpt_response, config)
+            print(f"prompt {index} finish")
+            end_time = time.time()
+            total_time = end_time - start_time
+            print(f"Total execution time: {total_time} seconds, prompt: {prompt}")
+            # break  # Exit loop on success
 
-            except Exception as e:
-                print(f"Attempt {attempt + 1} failed with error: {e}")
-                error_message = str(e)
-                if "Error code:" in error_message:
-                    print(f"Attempt {attempt + 1}: Error received. Waiting for 1 minute before retrying.")
-                    time.sleep(1200)  # Wait for 10 minutes for the openai request issue
-                    print("Finish sleep")
-                if attempt == 2:  # Last attempt
-                    print("Final attempt failed. Moving to next prompt.")
-                continue
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed with error: {e} with index {index}", flush=True)
+            error_message = str(e)
+            if "Error code:" in error_message:
+                print(f"Attempt {attempt + 1}: Error received. Waiting for 1 minute before retrying with index {index}", flush=True)
+                # time.sleep(200)  # Wait for 10 minutes for the openai request issue
+                break
+                print("Finish sleep")
+            if attempt == 2:  # Last attempt
+                print("Final attempt failed. Moving to next prompt.")
+            continue
         end_time = time.time()
         total_time = end_time - start_time
         print(f"Total execution time: {total_time} seconds, prompt: {prompt} with index {index}")
+        if total_time > 600:
+            print("Operation Time Out")
+            break
 
 print(f"#################################################### Finish Prompting #######################################################")
 
