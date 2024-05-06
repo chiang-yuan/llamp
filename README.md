@@ -38,7 +38,7 @@ LLaMP is also a homonym of **Large Language model [Materials Project](https://ma
 ```shell
 git clone https://github.com/chiang-yuan/llamp.git
 cd api
-pip install .
+pip install -e .
 ```
 
 #### (Optional) Docker Web Interface 
