@@ -15,7 +15,6 @@ from pydantic import BaseModel, Field, model_validator
 
 logger = logging.getLogger(__name__)
 
-# NOTE: https://python.langchain.com/docs/modules/agents/tools/custom_tools
 
 DEFAULT_LIMIT = 10
 
@@ -90,7 +89,11 @@ class MPAPIWrapper(BaseModel):
             function_response = function_to_call(
                 query_params=json.loads(function_args))
         except Exception as e:
-            error_response = f"Error on {function_name}: {e}. Please provide more detailed reqeust arguments or try smaller request by specifying 'limit' in request."
+            error_response = (
+                f"Error on {function_name}: {e}. "
+                "Please provide more detailed request arguments "
+                "or try smaller request by specifying 'limit' in request."
+            )
             return error_response
 
         if debug:
@@ -447,12 +450,6 @@ class MPAPIWrapper(BaseModel):
 
             query_params["material_ids"] = material_ids
 
-            # return self.mpr.materials.magnetism.search(
-            #     material_ids=material_ids,
-            #     fields=query_params.get(
-            #         "fields", "material_id,formula_pretty,ordering,is_magnetic,exchange_symmetry,magmoms,types_of_magnetic_species,total_magnetization").split(",")
-            # )
-
         query_params["fields"] = query_params.get("fields", []) + [
             "material_id",
             "formula_pretty",
@@ -474,10 +471,6 @@ class MPAPIWrapper(BaseModel):
 
     def search_materials_elasticity(self, query_params):
         query_params = self._process_query_params(query_params)
-
-        # if "elasticity" not in query_params.get("fields", []):
-        #     query_params["fields"] = query_params.get(
-        #         "fields", []) + ["elasticity"]
 
         query_params["fields"] = query_params.get("fields", []) + [
             "material_id",

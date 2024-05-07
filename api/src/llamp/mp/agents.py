@@ -20,7 +20,6 @@ from langchain_core.language_models import LLM
 from langchain_core.prompts import ChatPromptTemplate
 
 from llamp.mp.schemas import SynthesisRecipe
-
 from llamp.mp.tools import (
     MaterialsBonds,
     MaterialsDielectric,
@@ -162,9 +161,9 @@ class MPStructureRetriever(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsSummary(
-                return_direct=False, handle_tool_error=True, mp_api_key=self.mp_api_key),
-            # MaterialsStructureVis(return_direct=True, handle_tool_error=True),
+            MaterialsSummary(return_direct=False, 
+                             handle_tool_error=True, 
+                             mp_api_key=self.mp_api_key),
         ]
 
 
@@ -179,7 +178,6 @@ class MPStructureVisualizer(MPAgent):
     @property
     def tools(self):
         return [
-            # MaterialsStructureVis(return_direct=True, handle_tool_error=True),
             MaterialsStructureVis(return_direct=False,
                                   handle_tool_error=True,
                                   chat_id=self.chat_id,

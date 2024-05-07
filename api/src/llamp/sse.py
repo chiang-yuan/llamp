@@ -2,8 +2,8 @@ import asyncio
 import json
 import os
 import uuid
-import openai
 
+import openai
 import redis
 import uvicorn
 from dotenv import load_dotenv
@@ -17,9 +17,9 @@ from langchain.tools import ArxivQueryRun, WikipediaQueryRun
 from langchain.utilities import ArxivAPIWrapper, WikipediaAPIWrapper
 from langchain_experimental.tools import PythonREPLTool
 from langchain_openai import ChatOpenAI
+from mp_api.client import MPRester
 from pydantic import BaseModel
 from redis.client import PubSub
-from mp_api.client import MPRester
 
 from llamp.callbacks.streaming_redis_handler import StreamingRedisCallbackHandler
 from llamp.mp.agents import (
