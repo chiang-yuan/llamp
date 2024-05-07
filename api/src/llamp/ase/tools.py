@@ -13,7 +13,7 @@ from ase.md import MDLogger
 from ase.md.npt import NPT
 from langchain.pydantic_v1 import Field
 from langchain.tools import BaseTool
-from mace.calculators import MACECalculator
+from mace.calculators import mace_mp
 from monty.json import MontyDecoder
 from monty.tempfile import ScratchDir
 from pymatgen.io.ase import AseAtomsAdaptor
@@ -87,13 +87,7 @@ class NoseHooverMD(BaseTool):
         # run md
         # with ScratchDir("."):
 
-        calculator = MACECalculator(
-            model_paths=[
-                Path(__file__).parent.absolute() / "2023-09-01-mace-universal.model"
-            ],
-            # FIXME: torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            device="cpu",
-        )
+        calculator = mace_mp()
 
         atoms.calc = calculator
 
