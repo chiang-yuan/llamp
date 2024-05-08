@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import warnings
 import pandas as pd
 import sys
@@ -51,7 +52,7 @@ def agent_setup():
     model=OPENAI_GPT_MODEL,
     openai_api_key=OPENAI_API_KEY,
     openai_organization=OPENAI_ORGANIZATION,
-    streaming=False,
+    streaming=True,
     callbacks=[StreamingStdOutCallbackHandler()],
     )
 
@@ -74,9 +75,6 @@ def agent_setup():
     tools = load_tools(["llm-math"], llm=bottom_llm)
     tools += [PythonREPLTool()]
     tools += [
-        MPSummaryExpert(llm=bottom_llm).as_tool(
-            agent_kwargs=dict(return_intermediate_steps=False)
-        ),
         MPThermoExpert(llm=bottom_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
@@ -95,17 +93,19 @@ def agent_setup():
         MPPiezoelectricExpert(llm=bottom_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
+        MPSummaryExpert(llm=bottom_llm).as_tool(
+            agent_kwargs=dict(return_intermediate_steps=False)
+        ),
         MPSynthesisExpert(llm=bottom_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
         MPStructureRetriever(llm=bottom_llm).as_tool(
             agent_kwargs=dict(return_intermediate_steps=False)
         ),
-        # ArxivAgent(llm=bottom_llm).as_tool(agent_kwargs=dict(return_intermediate_steps=False)),
         arxiv,
         wikipedia,
-        ]
-    # TODO: do prompt engineering
+    ]
+
     instructions = re.sub(
             r"\s+",
             " ",
@@ -118,8 +118,7 @@ def agent_setup():
         help you. You need to provide complete context in the input for assistants to 
         do their job.
         """,
-        ).replace("\n", " ") 
-    
+        ).replace("\n", " ")
     base_prompt = hub.pull("langchain-ai/react-agent-template")
     prompt = base_prompt.partial(instructions=instructions)
 
@@ -162,23 +161,6 @@ def agent_prompting(prompt):
 
     return llamp_response, gpt_response
 
-
-# create the pipeline to do evaluation
-def categorize_magnetic_ordering(ordering):
-    """String Matching Evalluator"""
-    categories = {
-        " Ferromag": "FM",
-        " Ferrimag": "FiM",
-        "Antiferromag": "AFM",
-        "Anti-ferromag": "AFM",
-        "non-mag": "NM",
-    }
-    # {'FiM', 'Unknown', 'NM', 'FM', None, 'AFM'}
-    for key, value in categories.items():
-        if key.lower() in ordering.lower():
-            return value
-    return None
-
 def llm_eval(response, config):
     """LLM Evalluator"""
     try: 
@@ -202,7 +184,6 @@ def save_in_csv(csv_path, prompt, llamp_response, gpt_response, config):
     llamp_output = llamp_response
     llamp_output = llamp_output["action_input"] if isinstance(llamp_output, dict) and "action_input" in llamp_output else llamp_output
     gpt_output = gpt_response if isinstance(gpt_response, str) else gpt_response.content
-
     llamp_value = llm_eval(llamp_output, config)
     gpt_value = llm_eval(gpt_output, config)
     llamp_value = eval(llamp_value)
@@ -222,11 +203,18 @@ def save_in_csv(csv_path, prompt, llamp_response, gpt_response, config):
             df.at[row_index, 'gpt_magnetic_ordering'] = gpt_value["magnetic_ordering"]
             df.at[row_index, 'gpt_mp_id'] = gpt_value["material_id"]
             df.at[row_index, 'gpt_magnetization_unit'] = gpt_value["total_magnetization_normalized_formula_units"]
+
         elif config.task == 7:
             df.at[row_index, 'llamp_volume'] = llamp_value["volume"]
             df.at[row_index, 'llamp_density'] = llamp_value["mass_density"]
             df.at[row_index, 'gpt_volume'] = gpt_value["volume"]
             df.at[row_index, 'gpt_density'] = gpt_value["mass_density"]
+
+        elif config.task == 8:
+            df.at[row_index, 'llamp_space_group'] = llamp_value["space_group"]
+            df.at[row_index, "llamp_lattice_parameters"] = str(llamp_value["lattice_parameters"])
+            df.at[row_index, 'gpt_space_group'] = gpt_value["space_group"]
+            df.at[row_index, 'gpt_lattice_parameters'] = str(gpt_value["lattice_parameters"])
         else:
             raise NotImplementedError("This task hasn't been implemented yet.")
     else:
@@ -259,11 +247,20 @@ if __name__ == "__main__":
     else:
         print("File not found. Creating a new one with basic structure.")
 
-    starting_index = 997 #TODO: find a way to print out the stopping index from the pipeline
+    if len(sys.argv) < 2:
+        starting_index = 0
+        print(f"Use default staring index = {starting_index}")
+    else:
+        starting_index = int(sys.argv[1])
+
     # Iterate over the DataFrame rows
     for index, row in df.iterrows():
+        
         if index < starting_index:
             continue
+        if index >= starting_index + 9:
+            break
+        
         start_time = time.time()
         prompt = row['prompt']
 
@@ -272,29 +269,33 @@ if __name__ == "__main__":
         # for attempt in range(1):  # Allows up to 3 attempts
         try:
             llamp_response, gpt_response = agent_prompting(prompt)
-
+        except:
+            llamp_response, gpt_response = "prompting error out", "prompting error out"
+        try:
             # Testing script below: 
-            # llamp_response, gpt_response = {"output":"The compound PmPd2Pb has a non-magnetic (NM) ordering. It crystallizes in the cubic Fm-3m space group (number 225) with a final magnetic moment of 0.001 μB per formula unit. This information is based on data from the Materials Project with the material ID mp-862950"},\
-            #       "The compound PmPd2Pb has a non-magnetic (NM) ordering. It crystallizes in the cubic Fm-3m space group (number 225) with a final magnetic moment of 0.001 μB per formula unit. This information is based on data from the Materials Project with the material ID mp-862950" #Testing script
-
+            # llamp_response="llamp_response The space group of the ground state HfSnRh is Fm-3m and its lattice parameters are [4.209, 4.209, 4.209, 90.0, 90.0, 90.0]"
+            # gpt_response="The space group of the ground state HfSnRh is Pm-3m and its lattice parameters are [4.04, 4.04, 4.04, 90, 90, 90]"
             save_in_csv(csv_path, prompt, llamp_response, gpt_response, config)
-            print(f"prompt {index} finish")
-            end_time = time.time()
-            total_time = end_time - start_time
-            print(f"Total execution time: {total_time} seconds, prompt: {prompt}")
-            # break  # Exit loop on success
+        except:
+            print("saving in csv fail")
 
-        except Exception as e:
-            print(f"Attempt {attempt + 1} failed with error: {e} with index {index}", flush=True)
-            error_message = str(e)
-            if "Error code:" in error_message:
-                print(f"Attempt {attempt + 1}: Error received. Waiting for 1 minute before retrying with index {index}", flush=True)
-                # time.sleep(200)  # Wait for 10 minutes for the openai request issue
-                break
-                print("Finish sleep")
-            if attempt == 2:  # Last attempt
-                print("Final attempt failed. Moving to next prompt.")
-            continue
+        print(f"prompt {index} finish")
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"Total execution time: {total_time} seconds, prompt: {prompt}")
+
+        # except Exception as e:
+        #     print(f"Attempt {attempt + 1} failed with error: {e} with index {index}", flush=True)
+        #     error_message = str(e)
+        #     if "Error code:" in error_message:
+        #         print(f"Attempt {attempt + 1}: Error received. Waiting for 1 minute before retrying with index {index}", flush=True)
+        #         # time.sleep(200)  # Wait for 10 minutes for the openai request issue
+        #         break
+        #         print("Finish sleep")
+        #     if attempt == 2:  # Last attempt
+        #         print("Final attempt failed. Moving to next prompt.")
+        #     continue
+        
         end_time = time.time()
         total_time = end_time - start_time
         print(f"Total execution time: {total_time} seconds, prompt: {prompt} with index {index}")

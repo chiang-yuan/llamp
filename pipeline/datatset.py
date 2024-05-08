@@ -34,7 +34,19 @@ def process_prompt(formula, config):
         
         """
         # return f"Please give me the mass density (in g/cm^3) and volume per atom (in Angstrom^3/atom) of stable {formula}. "
-    
+    elif config.task == 8:
+        return f"""Give me the space group of the ground state {formula} as well as its lattice parameters
+        space group should be one of 230 classes (string)
+        lattice parameters should be 6 numbers (array of a, b, c, angle1, angle2, angle3)
+        After you reason through, please output it in the python dictionary format below.
+        
+        "space_group": [your answer for mass density],
+        "lattice_parameters": [your answer for volume per atom],
+
+        Tips:
+        1. don't include the calculation process, only include the answers in one sentence
+        
+        """
     else:
         raise NotImplementedError("This task hasn't been implemented yet.")
 if __name__ == "__main__":
@@ -46,9 +58,11 @@ if __name__ == "__main__":
         summary_doc = mpr.materials.summary.search(
             is_stable=True,
             num_elements=[1,3],
-            # material_ids=["mp-149", "mp-13", "mp-22526"],
-            fields=["material_id", "formula_pretty", "total_magnetization_normalized_formula_units", "ordering", "volume", "density"],
+            # material_ids=["mp-21166"],
+            # material_ids=["mp-21166", "mp-149", "mp-13", "mp-22526"],
+            fields=["material_id", "formula_pretty", "total_magnetization_normalized_formula_units", "ordering", "volume", "density", "nsites", "symmetry", "structure"],
         )
+
 
     summary_doc = list(summary_doc)
     random.shuffle(summary_doc)
@@ -67,10 +81,16 @@ if __name__ == "__main__":
         headers = ["prompt", "formula", "material_id", "total_magnetization_normalized_formula_units", "ordering"]
     elif task_number == 7:
         data_rows = [
-        [process_prompt(doc.formula_pretty, config), doc.formula_pretty, doc.material_id, doc.volume, doc.density]
+        [process_prompt(doc.formula_pretty, config), doc.formula_pretty, doc.material_id, doc.volume, doc.density, doc.nsites]
         for doc in summary_doc
         ]
-        headers = ["prompt", "formula", "material_id", "volume", "density"]
+        headers = ["prompt", "formula", "material_id", "volume", "density", "nsites"]
+    elif task_number == 8:
+        data_rows = [
+        [process_prompt(doc.formula_pretty, config), doc.formula_pretty, doc.material_id, doc.structure.lattice.abc + doc.structure.lattice.angles, doc.symmetry.symbol ]
+        for doc in summary_doc
+        ]
+        headers = ["prompt", "formula", "material_id", "space_group", "lattice_parameters"]
     else:
             raise NotImplementedError("This task hasn't been implemented yet.")
 
