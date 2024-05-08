@@ -205,6 +205,7 @@ class MPAPIWrapper(BaseModel):
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
         query_params["_limit"] = query_params.pop("limit", DEFAULT_LIMIT)
+        # query_params["limit"] = query_params["_limit"]
         all_fields = query_params.pop("all_fields", None)
         if all_fields:
             query_params["_all_fields"] = all_fields
@@ -255,10 +256,12 @@ class MPAPIWrapper(BaseModel):
         if "formula_pretty" not in query_params.get("fields", []):
             query_params["fields"] = query_params.get(
                 "fields", []) + ["formula_pretty"]
+            
+        limit = query_params.get("_limit", DEFAULT_LIMIT)
 
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )
+        )[:limit]
 
     def search_materials_structure(self, query_params: dict):
         # NOTE: this is a convenient function to retrieve pymatgen structure in JSON

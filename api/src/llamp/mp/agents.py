@@ -44,7 +44,7 @@ REACT_MULTI_JSON_PROMPT = hub.pull("hwchase17/react-multi-input-json")
 class ChainInputSchema(BaseModel):
     input: str = Field(
         ...,
-        description="Complete question to ask the assistatn agent. Should include all the context and details needed to answer the question holistically.",
+        description="Complete question to ask the assistant agent. Should include all the context and details needed to answer the question holistically.",
     )
     # agent_scratchpad: str = ""
 
@@ -161,9 +161,9 @@ class MPStructureRetriever(MPAgent):
     @property
     def tools(self):
         return [
-            MaterialsSummary(return_direct=False, 
-                             handle_tool_error=True, 
-                             mp_api_key=self.mp_api_key),
+            MaterialsStructureText(return_direct=True, 
+                                   handle_tool_error=True, 
+                                   mp_api_key=self.mp_api_key),
         ]
 
 
