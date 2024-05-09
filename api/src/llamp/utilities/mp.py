@@ -205,7 +205,6 @@ class MPAPIWrapper(BaseModel):
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
         query_params["_limit"] = query_params.pop("limit", DEFAULT_LIMIT)
-        # query_params["limit"] = query_params["_limit"]
         all_fields = query_params.pop("all_fields", None)
         if all_fields:
             query_params["_all_fields"] = all_fields
@@ -282,9 +281,11 @@ class MPAPIWrapper(BaseModel):
 
         # chunk_size = min(query_params.get("_limit", 10), 100)
 
+        limit = query_params.get("_limit", DEFAULT_LIMIT)
+
         return self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )
+        )[:limit]
 
     def search_materials_robocrys(self, query_params: dict):
         query_params = self._process_query_params(query_params)

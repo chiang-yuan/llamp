@@ -25,7 +25,7 @@ class MLFFMD(BaseTool):
 
         job = ForceFieldMDMaker(**kwargs).make(structure)
         
-        response = run_locally(job, ensure_success=True)
+        response = run_locally(job, create_folders=True)
         task_doc = response[next(iter(response))][1].output
 
         return task_doc
