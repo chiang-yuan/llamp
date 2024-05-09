@@ -26,8 +26,6 @@ from llamp.mp.schemas import (
 )
 from llamp.utilities import MPAPIWrapper
 
-# NOTE: https://python.langchain.com/docs/modules/agents/tools/custom_tools
-
 
 class MPTool(BaseTool):
     name: str = None
