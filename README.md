@@ -25,7 +25,7 @@ This repository accompanies our paper [**LLaMP: Large Language Model Made Powerf
 LLaMP is also a homonym of **Large Language model [Materials Project](https://materialsproject.org)**. :wink: It empowers LLMs with large-scale computational materials databas to reduce the likelihood of hallucination for materials informatics. 
 
 <h4 align="center">
-  <img src="https://python.langchain.com/img/brand/wordmark-dark.png" height="30">
+  <img src="https://python.langchain.com/v0.1/img/brand/wordmark-dark.png" height="30">
   <img src="https://raw.githubusercontent.com/sveltejs/branding/master/svelte-horizontal.svg" height="30"/>
   <a href="https://elementari.janosh.dev/"><img src="https://raw.githubusercontent.com/janosh/elementari/main/static/favicon.svg" height="30"/></a>
   <a href="https://www.skeleton.dev/"><img src="https://user-images.githubusercontent.com/1509726/199282306-7454adcb-b765-4618-8438-67655a7dee47.png" height="30"/></a>
@@ -37,7 +37,7 @@ LLaMP is also a homonym of **Large Language model [Materials Project](https://ma
 
 ```shell
 git clone https://github.com/chiang-yuan/llamp.git
-cd api
+cd llamp/api
 pip install -e .
 ```
 
