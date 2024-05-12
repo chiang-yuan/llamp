@@ -1,22 +1,29 @@
+import json
 import re
+from pathlib import Path
 
 from langchain import hub
 from langchain.agents import AgentExecutor
 from langchain.agents.format_scratchpad import format_log_to_str
 from langchain.agents.output_parsers import JSONAgentOutputParser
+from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import StructuredTool, Tool
 from langchain.tools.render import render_text_description_and_args
-from langchain.pydantic_v1 import BaseModel, Field
 
+from llamp.atomate2.schemas import AtomDict, MLFF
 from llamp.atomate2.tools import MLFFMD
 
 REACT_MULTI_JSON_PROMPT = hub.pull("hwchase17/react-multi-input-json")
 
 
 class ChainInputSchema(BaseModel):
-    input: str = Field(
+    # atom_dict: Path | AtomDict | None = Field(
+    #     ...,
+    #     description="Path to a local file or ASE Atoms definition." + json.dumps(AtomDict.schema()),
+    # )
+    input: str | None = Field(
         ...,
-        description="Complete question to ask the assistant agent. Should include all the context and details needed to answer the question holistically.",
+        description="Complete instruction to run the atomate2 workflow.",
     )
 
 
@@ -120,7 +127,12 @@ class Atomate2Agent:
         )
     
 class MLFFMDAgent(Atomate2Agent):
-    """Agent that runs MLFF MD simulation using atomate2."""
+    
+
+    @property
+    def description(self) -> str:
+        return f"""Atomate2 agent that runs molecular dynamics simulation using ML force fields 
+        ({json.dumps([ff.value for ff in MLFF])})."""
     
     @property
     def tools(self):
