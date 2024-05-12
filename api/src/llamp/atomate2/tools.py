@@ -23,6 +23,8 @@ class MLFFMD(BaseTool):
         atoms = Atoms(**atom_dict.dict())
         structure = AseAtomsAdaptor.get_structure(atoms)
 
+        kwargs["ensemble"] = kwargs["ensemble"].lower()
+
         job = ForceFieldMDMaker(**kwargs).make(structure)
         
         response = run_locally(job, create_folders=True)
