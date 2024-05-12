@@ -29,20 +29,25 @@ class Atomate2Tool(BaseTool):
         super().__init__(*args, **kwargs)
 
     def _get_structure(self, atom_path_or_dict) -> Structure:
-        if isinstance(atom_path_or_dict, AtomDict):
-            atoms = Atoms(**atom_path_or_dict.dict())
-            structure = AseAtomsAdaptor.get_structure(atoms)
-        elif isinstance(atom_path_or_dict, Path | str):
 
-            atom_path_or_dict = Path(atom_path_or_dict)
-
-            if atom_path_or_dict.suffix == ".json":
-                structure = Structure.from_file(atom_path_or_dict)
-            else:
-                atoms = read(atom_path_or_dict)
+        try:
+            if isinstance(atom_path_or_dict, AtomDict):
+                atoms = Atoms(**atom_path_or_dict.dict())
                 structure = AseAtomsAdaptor.get_structure(atoms)
+            elif isinstance(atom_path_or_dict, Path | str):
 
-        return structure
+                atom_path_or_dict = Path(atom_path_or_dict)
+
+                if atom_path_or_dict.suffix == ".json":
+                    structure = Structure.from_file(atom_path_or_dict)
+                else:
+                    atoms = read(atom_path_or_dict)
+                    structure = AseAtomsAdaptor.get_structure(atoms)
+            return structure
+        except Exception as e:
+            raise ValueError(
+                f"Failed to load the structure from {atom_path_or_dict}. Error: {e}"
+            )
 
     def _submit_flow(self, flow, run_mode, project):
         if run_mode == "local":

@@ -81,7 +81,10 @@ class MLFFMDInput(Atomate2Input):
         default_factory=dict,
         description="Additional keyword arguments to pass to the calculator, such as `dispersion=True`."
     )
-    traj_file: str | Path | None = None
+    traj_file: str | Path | None = Field(
+        default="trajectory.traj",
+        description="The name of the trajectory file to write. If `None`, no trajectory file will be written."
+    )
     traj_file_fmt: Literal["pmg", "ase"] = "ase"
     traj_interval: int = 1
     mb_velocity_seed: int | None = None
