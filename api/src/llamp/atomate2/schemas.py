@@ -51,7 +51,7 @@ class MLFFMDInput(Atomate2Input):
     """
     Input model for MLFFMDTask
     """
-    atom_dict: Path | AtomDict = Field(
+    atom_path_or_dict: Path | AtomDict = Field(
         ..., 
         description="Path to a local file or ASE Atoms definition." + json.dumps(AtomDict.schema())
     )
@@ -98,7 +98,7 @@ class VASPInput(Atomate2Input):
     """
     Input model for VASPTask
     """
-    atom_dict: Path | AtomDict = Field(
+    atom_path_or_dict: Path | AtomDict = Field(
         ..., 
         description="Path to a local file or ASE Atoms definition." + json.dumps(AtomDict.schema())
     )

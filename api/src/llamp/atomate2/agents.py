@@ -70,6 +70,8 @@ class Atomate2Agent:
                 orchestrate atomate2 computational simulation workflow.
 
                 IMPORTANT: 
+                - Atomic structure should be provided as a path to a local file or a 
+                ASE Atoms dictionary
                 - When you create function input arguments, ALWAYS follow the schema s
                 trictly and DO NOT hallucinate invalid arguments
                 - Convert ALL acronyms and abbreviations to valid arguments, especially 

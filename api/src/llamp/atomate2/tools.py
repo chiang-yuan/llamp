@@ -1,11 +1,12 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
 from ase import Atoms
 from ase.io import read, write
 from atomate2.forcefields.md import ForceFieldMDMaker
 from jobflow import run_locally
 from langchain.tools import BaseTool
+from pymatgen.core import Structure
 from pymatgen.io.ase import AseAtomsAdaptor
 
 from llamp.atomate2.schemas import AtomDict, MLFFMDInput, VASPInput
@@ -15,7 +16,6 @@ try:
     from atomate2.vasp.powerups import add_metadata_to_flow
     from fireworks import LaunchPad
     from jobflow.managers.fireworks import flow_to_workflow
-    from pymatgen.core import Structure
 
     fireworks_imported = True
 except ImportError:
@@ -27,6 +27,22 @@ class Atomate2Tool(BaseTool):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def _get_structure(self, atom_path_or_dict) -> Structure:
+        if isinstance(atom_path_or_dict, AtomDict):
+            atoms = Atoms(**atom_path_or_dict.dict())
+            structure = AseAtomsAdaptor.get_structure(atoms)
+        elif isinstance(atom_path_or_dict, Path | str):
+
+            atom_path_or_dict = Path(atom_path_or_dict)
+
+            if atom_path_or_dict.suffix == ".json":
+                structure = Structure.from_file(atom_path_or_dict)
+            else:
+                atoms = read(atom_path_or_dict)
+                structure = AseAtomsAdaptor.get_structure(atoms)
+        
+        return structure
 
     def _submit_flow(self, flow, run_mode, project):
         if run_mode == "local":
@@ -74,13 +90,9 @@ class MLFFMD(Atomate2Tool):
 
     def _run(self, **kwargs):
 
-        atom_dict = kwargs.pop("atom_dict")
-        if isinstance(atom_dict, AtomDict):
-            atoms = Atoms(**atom_dict.dict())
-        elif isinstance(atom_dict, Path | str):
-            atoms = read(atom_dict)
-        structure = AseAtomsAdaptor.get_structure(atoms)
-
+        atom_path_or_dict = kwargs.pop("atom_path_or_dict")
+        structure = self._get_structure(atom_path_or_dict)
+        
         kwargs["ensemble"] = kwargs["ensemble"].lower()
 
         run_mode = kwargs.pop("run_mode")
@@ -100,12 +112,8 @@ class VASP(Atomate2Tool):
 
     def _run(self, **kwargs):
 
-        atom_dict = kwargs.pop("atom_dict")
-        if isinstance(atom_dict, AtomDict):
-            atoms = Atoms(**atom_dict.dict())
-        elif isinstance(atom_dict, Path | str):
-            atoms = read(atom_dict)
-        structure = AseAtomsAdaptor.get_structure(atoms)
+        atom_path_or_dict = kwargs.pop("atom_path_or_dict")
+        structure = self._get_structure(atom_path_or_dict)
 
         run_mode = kwargs.pop("run_mode")
         project = kwargs.pop("project")
