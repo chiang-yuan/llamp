@@ -41,24 +41,29 @@ class Atomate2Tool(BaseTool):
             else:
                 atoms = read(atom_path_or_dict)
                 structure = AseAtomsAdaptor.get_structure(atoms)
-        
+
         return structure
 
     def _submit_flow(self, flow, run_mode, project):
         if run_mode == "local":
-            response = run_locally(flow, create_folders=True, raise_immediately=True)
+            response = run_locally(flow, create_folders=False)
             task_doc = response[next(iter(response))][1].output
 
-            return task_doc
+            return {
+                "energy": task_doc.output.energy,
+                "n_steps": task_doc.output.n_steps,
+            }
         elif run_mode == "fireworks":
             if not fireworks_imported:
-                raise ImportError("Fireworks is not installed. Please install it to use this feature.")
-            
+                raise ImportError(
+                    "Fireworks is not installed. Please install it to use this feature."
+                )
+
             flow = add_metadata_to_flow(
-                flow, 
+                flow,
                 additional_fields={
                     "project": project,
-                }
+                },
             )
 
             wf = flow_to_workflow(flow)
@@ -67,7 +72,7 @@ class Atomate2Tool(BaseTool):
             lpad.add_wf(wf)
 
             return wf.to_display_dict()
-        
+
     def _run(self, **kwargs):
         raise NotImplementedError
 
@@ -83,7 +88,7 @@ class MLFFMD(Atomate2Tool):
         .strip()
         .replace("\n", " ")
     )
-    args_schema: type[MLFFMDInput]= MLFFMDInput
+    args_schema: type[MLFFMDInput] = MLFFMDInput
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -92,16 +97,17 @@ class MLFFMD(Atomate2Tool):
 
         atom_path_or_dict = kwargs.pop("atom_path_or_dict")
         structure = self._get_structure(atom_path_or_dict)
-        
+
         kwargs["ensemble"] = kwargs["ensemble"].lower()
 
-        run_mode = kwargs.pop("run_mode")
-        project = kwargs.pop("project")
+        run_mode = kwargs.pop("run_mode", "local")
+        project = kwargs.pop("project", "llamp-atomate2")
 
         flow = ForceFieldMDMaker(**kwargs).make(structure)
 
         return self._submit_flow(flow, run_mode, project)
-        
+
+
 class VASP(Atomate2Tool):
     name: str = "VASP"
     description: str = "Run VASP calculation"

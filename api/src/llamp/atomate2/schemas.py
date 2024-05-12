@@ -40,11 +40,11 @@ class Dynamics(Enum):
 
 class Atomate2Input(BaseModel):
     run_mode: Literal["local", "fireworks"] = Field(
-        "local",
+        default="local",
         description="If 'local', run the simulation locally instantaneously. If 'fireworks', submit a FireWorks workflow to the LaunchPad for job submission."
     )
     project: str = Field(
-        "llamp-atomate2",
+        default="llamp-atomate2",
         description="The project name to register for data store."
     )
 class MLFFMDInput(Atomate2Input):
@@ -57,7 +57,7 @@ class MLFFMDInput(Atomate2Input):
     )
     force_field_name: str = Field(
         f"{MLFF.MACE}",
-        description="The name of the force Field to use. Options are: " + json.dumps([ff.value for ff in MLFF])
+        description="The name of the force Field to use. Options are: " + json.dumps([str(ff) for ff in MLFF])
     )
     time_step: float | None = Field(
         None, description="Time step in fs. If `None`, defaults to 0.5 fs if a structure contains an isotope of hydrogen and 2 fs otherwise."
