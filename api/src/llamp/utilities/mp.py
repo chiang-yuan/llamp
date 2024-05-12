@@ -93,7 +93,7 @@ class MPAPIWrapper(BaseModel):
         except Exception as e:
             error_response = (
                 f"Error on {function_name}: {e}. "
-                "Please provide more detailed request arguments "
+                "Please revise arguments "
                 "or try smaller request by specifying 'limit' in request."
             )
             return error_response
@@ -299,11 +299,11 @@ class MPAPIWrapper(BaseModel):
             paths = []
             for doc in docs:
                 structure = Structure.from_dict(doc["structure"])
-                atoms = structure.to_ase_atoms()
-                path = f"{doc['material_id']}.extxyz"
-                write(path, atoms, format="extxyz")
+                path = f"{doc['material_id']}.json"
+                structure.to_file(filename=path, fmt="json")
+                # write(path, atoms, format="extxyz")
                 paths.append(path)
-            return "All retrieved structures are saved as extxyz files to the following paths: " + ", ".join(paths)
+            return "All retrieved structures are saved as Pymatgen Structure json files to the following paths: " + ", ".join(paths)
 
         # return [Structure.from_dict(doc["structure"]).to_ase_atoms() for doc in docs]
 
