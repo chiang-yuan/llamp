@@ -156,7 +156,7 @@ class MPSummaryExpert(MPAgent):
 
 
 class MPStructureRetriever(MPAgent):
-    """Structure expert who will retrieve the structure from Materials Project as a JSON text or save it to a local file for frontend visualization"""
+    """Structure expert who will retrieve structures from Materials Project"""
 
     @property
     def tools(self):
@@ -168,7 +168,7 @@ class MPStructureRetriever(MPAgent):
 
 
 class MPStructureVisualizer(MPAgent):
-    """Structure expert who will retrieve the structure from Materials Project, save it to local storage for frontend visualization"""
+    """Structure expert who will retrieve structures from Materials Project and save to local storage for frontend visualization"""
     chat_id: str = ""
 
     def __init__(self, llm, chat_id, mp_api_key=None):

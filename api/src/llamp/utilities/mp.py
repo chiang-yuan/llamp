@@ -8,10 +8,12 @@ from typing import Any
 import mp_api
 import mp_api.client
 import requests
+from ase.io import read, write
 from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
 from langchain.tools.json.tool import JsonSpec
 from langchain.utils import get_from_dict_or_env
 from pydantic import BaseModel, Field, model_validator
+from pymatgen.core import Structure
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +207,6 @@ class MPAPIWrapper(BaseModel):
             query_params["fields"] = query_params.get(
                 "fields", []) + _fields.split(",")
         query_params["_limit"] = query_params.pop("limit", DEFAULT_LIMIT)
-        # query_params["limit"] = query_params["_limit"]
         all_fields = query_params.pop("all_fields", None)
         if all_fields:
             query_params["_all_fields"] = all_fields
@@ -264,7 +265,7 @@ class MPAPIWrapper(BaseModel):
         )[:limit]
 
     def search_materials_structure(self, query_params: dict):
-        # NOTE: this is a convenient function to retrieve pymatgen structure in JSON
+        # NOTE: this is a convenient function to retrieve pymatgen structure
         # but not a real mp-api endpoint
 
         query_params = self._process_query_params(query_params)
@@ -280,11 +281,32 @@ class MPAPIWrapper(BaseModel):
         # query_params["fields"] = query_params.get(
         #     "fields", []) + ["structure", "material_id"]
 
-        # chunk_size = min(query_params.get("_limit", 10), 100)
+        return_mode = query_params.pop("return_mode", "file")
 
-        return self.mpr.materials.summary._search(
+        limit = query_params.get("_limit", DEFAULT_LIMIT)
+
+        # return self.mpr.materials.summary._search(
+        #     num_chunks=None, chunk_size=1000, all_fields=False, **query_params
+        # )[:limit]
+    
+        docs = self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )
+        )[:limit]
+
+        if return_mode == "text":
+            return docs
+        elif return_mode == "file":
+            paths = []
+            for doc in docs:
+                structure = Structure.from_dict(doc["structure"])
+                atoms = structure.to_ase_atoms()
+                path = f"{doc['material_id']}.extxyz"
+                write(path, atoms, format="extxyz")
+                paths.append(path)
+            return "All retrieved structures are saved as extxyz files to the following paths: " + ", ".join(paths)
+
+        # return [Structure.from_dict(doc["structure"]).to_ase_atoms() for doc in docs]
+
 
     def search_materials_robocrys(self, query_params: dict):
         query_params = self._process_query_params(query_params)
