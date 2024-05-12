@@ -4,8 +4,10 @@ import re
 from pathlib import Path
 
 import redis
+from ase.io import read, write
 from langchain.pydantic_v1 import Field
 from langchain.tools import BaseTool
+from pymatgen.core import Structure
 from redis.client import Redis
 
 from llamp.mp.schemas import (
@@ -82,7 +84,9 @@ class MaterialsStructureVis(MPTool):
         .strip()
         .replace("\n", " ")
     )
-    args_schema: type[StructureSchema] = StructureSchema
+    args_schema: type[StructureSchema] = StructureSchema(
+        return_mode="text"
+    )
     chat_id: str = ""
     redis_client: Redis = None
 
@@ -136,7 +140,9 @@ class MaterialsStructureText(MPTool):
         .strip()
         .replace("\n", " ")
     )
-    args_schema: type[StructureSchema] = StructureSchema
+    args_schema: type[StructureSchema] = StructureSchema(
+        return_mode="file"
+    )
 
 
 class MaterialsElasticity(MPTool):
