@@ -1,6 +1,5 @@
 import json
 import re
-from pathlib import Path
 
 from langchain import hub
 from langchain.agents import AgentExecutor
@@ -10,8 +9,8 @@ from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import StructuredTool, Tool
 from langchain.tools.render import render_text_description_and_args
 
-from llamp.atomate2.schemas import AtomDict, MLFF
-from llamp.atomate2.tools import MLFFMD
+from llamp.atomate2.schemas import MLFF
+from llamp.atomate2.tools import MLFFMD, MLFFElastic
 
 REACT_MULTI_JSON_PROMPT = hub.pull("hwchase17/react-multi-input-json")
 
@@ -126,20 +125,39 @@ class Atomate2Agent:
             return_direct=return_direct,
             args_schema=ChainInputSchema,
             **tool_kwargs,
-        )
-    
-class MLFFMDAgent(Atomate2Agent):
-    
+        )  # type: ignore
 
+
+class MLFFMDAgent(Atomate2Agent):
     @property
     def description(self) -> str:
         return f"""Atomate2 agent that runs molecular dynamics simulation using ML force fields 
         ({json.dumps([ff.value for ff in MLFF])})."""
-    
+
     @property
     def tools(self):
         return [
             MLFFMD(
+                return_direct=False,
+                handle_tool_error=True,
+            ),
+        ]
+
+
+class MLFFAgent(Atomate2Agent):
+    @property
+    def description(self) -> str:
+        return f"""Atomate2 agent that runs various calculations using ML force fields 
+        ({json.dumps([ff.value for ff in MLFF])})."""
+
+    @property
+    def tools(self):
+        return [
+            MLFFMD(
+                return_direct=False,
+                handle_tool_error=True,
+            ),
+            MLFFElastic(
                 return_direct=False,
                 handle_tool_error=True,
             ),

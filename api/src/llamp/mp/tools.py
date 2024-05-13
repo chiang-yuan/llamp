@@ -62,7 +62,11 @@ class MaterialsSummary(MPTool):
         when you need to perform filtering on chemical systems or sorting on materials 
         properties, also useful when you need high-level information about materials 
         (such as material_id) and use the results to perform further queries using 
-        other tools""",
+        other tools.
+        
+        TIPS:
+        - If pure elemental structure is desired, use `formula` instead of `elements`
+        """,
         )
         .strip()
         .replace("\n", " ")
@@ -79,7 +83,11 @@ class MaterialsStructureVis(MPTool):
             """useful when you need to save the pymatgen structures from Materials 
             Project into local storage and visualize them. Use 
             `search_materials_summary__get` tool instead to get statistics about all the
-            structures on MP.""",
+            structures on MP.
+            
+            TIPS:
+            - If pure elemental structure is desired, use `formula` instead of `elements`
+            """,
         )
         .strip()
         .replace("\n", " ")
@@ -135,7 +143,11 @@ class MaterialsStructureText(MPTool):
             r"\s+",
             " ",
             """useful when you need to get the pymatgen structures from Materials 
-            Project as JSON text for structure generation or manipulation.""",
+            Project as JSON text for structure generation or manipulation.
+
+            TIPS:
+            - If pure elemental structure is desired, use `formula` instead of `elements`
+            """,
         )
         .strip()
         .replace("\n", " ")

@@ -2,12 +2,15 @@ import json
 from collections.abc import Sequence
 from enum import Enum
 from pathlib import Path
-from typing import Literal
+from typing import Any, Dict, Literal, Union
 
+from atomate2 import SETTINGS
 from atomate2.forcefields import MLFF
 from atomate2.forcefields.md import _valid_dynamics
 from atomate2.vasp.sets.base import VaspInputGenerator
 from langchain.pydantic_v1 import BaseModel, Field
+
+from atomate2.forcefields.jobs import MACERelaxMaker
 
 
 class AtomDict(BaseModel):
@@ -49,7 +52,7 @@ class Atomate2Input(BaseModel):
     )
 class MLFFMDInput(Atomate2Input):
     """
-    Input model for MLFFMDTask
+    Input model for MLFF MD
     """
     atom_path_or_dict: Path | AtomDict = Field(
         ..., 
@@ -99,7 +102,7 @@ class MLFFMDInput(Atomate2Input):
 
 class VASPInput(Atomate2Input):
     """
-    Input model for VASPTask
+    Input model for VASP
     """
     atom_path_or_dict: Path | AtomDict = Field(
         ..., 
@@ -136,4 +139,45 @@ class VASPInput(Atomate2Input):
                     "Given as a dict of {filename: data}."
                     "If using FireWorks, keys cannot contain the '.' character; use ':' instead."
                     "E.g., {'my_file:txt': 'contents of the file'}."
+    )
+
+class MLFFElasticInput(Atomate2Input):
+    """ 
+    Input model for MLFF Elastic
+    """
+    atom_path_or_dict: Path | AtomDict = Field(
+        ..., 
+        description="Path to a local file or ASE Atoms definition." + json.dumps(AtomDict.schema())
+    )
+    force_field_name: str = Field(
+        f"{MLFF.MACE}",
+        description="The name of the force Field to use. Options are: " + json.dumps([str(ff) for ff in MLFF])
+    )
+    name: str = Field("elastic", description="Name of the flows produced by this maker.")
+    order: int = Field(2, description="Order of the tensor expansion to be determined. Can be either 2 or 3.")
+    sym_reduce: bool = Field(True, description="Whether to reduce the number of deformations using symmetry.")
+    symprec: float = Field(SETTINGS.SYMPREC, description="Symmetry precision to use in the reduction of symmetry.")
+    bulk_relax_maker: dict | None = Field(
+        default_factory=lambda: MACERelaxMaker(
+            relax_cell=True, relax_kwargs={"fmax": 0.00001}
+        ),
+        description="A maker to perform a tight relaxation on the bulk. Set to None to skip the bulk relaxation."
+    )
+    elastic_relax_maker: dict | None = Field(
+        default_factory=lambda: MACERelaxMaker(
+            relax_cell=False
+        ),
+        description="Maker used to generate elastic relaxations."
+    )
+    generate_elastic_deformations_kwargs: dict[str, Any] = Field(
+        {}, 
+        description="Keyword arguments passed to generate_elastic_deformations."
+    )
+    fit_elastic_tensor_kwargs: dict[str, Any] = Field(
+        {}, 
+        description="Keyword arguments passed to fit_elastic_tensor."
+    )
+    task_document_kwargs: dict[str, Any] = Field(
+        {}, 
+        description="Additional keyword args passed to ElasticDocument.from_stresses."
     )
