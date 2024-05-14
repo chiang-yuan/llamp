@@ -138,6 +138,7 @@ def agent_prompting(prompt):
         agent=agent, tools=tools, verbose=True,
         handle_parsing_errors=True,
         memory=conversational_memory,
+        max_iterations=100, #default value is 15
     )
 
 
@@ -156,7 +157,8 @@ def agent_prompting(prompt):
     )
 
     # lenght 2 stores the human input and AIM message for agent_executor.memory.chat_memory.messages
-    gpt_response = llm_gpt.invoke(agent_executor.memory.chat_memory.messages[0].content)
+    prompt = prompt + "\nTips:\n        1. don't include the calculation process, only include the answers in one sentence"
+    gpt_response = llm_gpt.invoke(prompt).content
     print("gpt_response", gpt_response)
 
     return llamp_response, gpt_response
@@ -179,7 +181,7 @@ def llm_eval(response, config):
 
     return value
 
-def save_error_info(csv_path, prompt, llamp_response, gpt_response, config):
+def save_error_info(csv_path, prompt, llamp_output, gpt_output, config):
     row_index = df.index[df['prompt'] == prompt].tolist()
     if row_index:
         row_index = row_index[0]
@@ -187,24 +189,24 @@ def save_error_info(csv_path, prompt, llamp_response, gpt_response, config):
         df.at[row_index, 'gpt_output'] = gpt_output
         # Update the existing row with new information
         if config.task == 6:
-            df.at[row_index, 'llamp_magnetic_ordering'] = llamp_response
-            df.at[row_index, 'llamp_mp_id'] = llamp_response
-            df.at[row_index, 'llamp_magnetization_unit'] = llamp_response
-            df.at[row_index, 'gpt_magnetic_ordering'] = gpt_response
-            df.at[row_index, 'gpt_mp_id'] = gpt_response
-            df.at[row_index, 'gpt_magnetization_unit'] = gpt_response
+            df.at[row_index, 'llamp_magnetic_ordering'] = llamp_output
+            df.at[row_index, 'llamp_mp_id'] = llamp_output
+            df.at[row_index, 'llamp_magnetization_unit'] = llamp_output
+            df.at[row_index, 'gpt_magnetic_ordering'] = gpt_output
+            df.at[row_index, 'gpt_mp_id'] = gpt_output
+            df.at[row_index, 'gpt_magnetization_unit'] = gpt_output
 
         elif config.task == 7:
-            df.at[row_index, 'llamp_volume'] = llamp_response
-            df.at[row_index, 'llamp_density'] = llamp_response
-            df.at[row_index, 'gpt_volume'] = gpt_response
-            df.at[row_index, 'gpt_density'] = gpt_response
+            df.at[row_index, 'llamp_volume'] = llamp_output
+            df.at[row_index, 'llamp_density'] = llamp_output
+            df.at[row_index, 'gpt_volume'] = gpt_output
+            df.at[row_index, 'gpt_density'] = gpt_output
 
         elif config.task == 8:
-            df.at[row_index, 'llamp_space_group'] = llamp_response
-            df.at[row_index, "llamp_lattice_parameters"] = llamp_response
-            df.at[row_index, 'gpt_space_group'] = gpt_response
-            df.at[row_index, 'gpt_lattice_parameters'] = gpt_response
+            df.at[row_index, 'llamp_space_group'] = llamp_output
+            df.at[row_index, "llamp_lattice_parameters"] = llamp_output
+            df.at[row_index, 'gpt_space_group'] = gpt_output
+            df.at[row_index, 'gpt_lattice_parameters'] = gpt_output
         else:
             raise NotImplementedError("This task hasn't been implemented yet.")
     else:
@@ -213,8 +215,7 @@ def save_error_info(csv_path, prompt, llamp_response, gpt_response, config):
 
 def save_in_csv(csv_path, prompt, llamp_response, gpt_response, config):
     df = pd.read_csv(csv_path)
-    llamp_output = llamp_response
-    llamp_output = llamp_output["action_input"] if isinstance(llamp_output, dict) and "action_input" in llamp_output else llamp_output
+    llamp_output = llamp_response["action_input"] if isinstance(llamp_response, dict) and "action_input" in llamp_response else llamp_response
     gpt_output = gpt_response if isinstance(gpt_response, str) else gpt_response.content
     try: 
         llamp_value = llm_eval(llamp_output, config)
@@ -222,7 +223,7 @@ def save_in_csv(csv_path, prompt, llamp_response, gpt_response, config):
         llamp_value = eval(llamp_value)
         gpt_value = eval(gpt_value)
     except:
-        save_error_info(csv_path, prompt, llamp_response, gpt_response, config)
+        save_error_info(csv_path, prompt, llamp_output, gpt_output, config)
         
     # Find the index of the row with the matching prompt
     row_index = df.index[df['prompt'] == prompt].tolist()
@@ -232,24 +233,24 @@ def save_in_csv(csv_path, prompt, llamp_response, gpt_response, config):
         df.at[row_index, 'gpt_output'] = gpt_output
         # Update the existing row with new information
         if config.task == 6:
-            df.at[row_index, 'llamp_magnetic_ordering'] = llamp_value["magnetic_ordering"]
-            df.at[row_index, 'llamp_mp_id'] = llamp_value["material_id"]
-            df.at[row_index, 'llamp_magnetization_unit'] = llamp_value["total_magnetization_normalized_formula_units"]
-            df.at[row_index, 'gpt_magnetic_ordering'] = gpt_value["magnetic_ordering"]
-            df.at[row_index, 'gpt_mp_id'] = gpt_value["material_id"]
-            df.at[row_index, 'gpt_magnetization_unit'] = gpt_value["total_magnetization_normalized_formula_units"]
+            df.at[row_index, 'llamp_magnetic_ordering'] = llamp_value["magnetic_ordering"] if isinstance(llamp_value, dict) else llamp_value
+            df.at[row_index, 'llamp_mp_id'] = llamp_value["material_id"] if isinstance(llamp_value, dict) else llamp_value
+            df.at[row_index, 'llamp_magnetization_unit'] = llamp_value["total_magnetization_normalized_formula_units"] if isinstance(llamp_value, dict) else llamp_value
+            df.at[row_index, 'gpt_magnetic_ordering'] = gpt_value["magnetic_ordering"] if isinstance(gpt_value, dict) else gpt_value
+            df.at[row_index, 'gpt_mp_id'] = gpt_value["material_id"] if isinstance(gpt_value, dict) else gpt_value
+            df.at[row_index, 'gpt_magnetization_unit'] = gpt_value["total_magnetization_normalized_formula_units"] if isinstance(gpt_value, dict) else gpt_value
 
         elif config.task == 7:
-            df.at[row_index, 'llamp_volume'] = llamp_value["volume"]
-            df.at[row_index, 'llamp_density'] = llamp_value["mass_density"]
-            df.at[row_index, 'gpt_volume'] = gpt_value["volume"]
-            df.at[row_index, 'gpt_density'] = gpt_value["mass_density"]
+            df.at[row_index, 'llamp_volume'] = llamp_value["volume"] if isinstance(llamp_value, dict) else llamp_value
+            df.at[row_index, 'llamp_density'] = llamp_value["mass_density"] if isinstance(llamp_value, dict) else llamp_value
+            df.at[row_index, 'gpt_volume'] = gpt_value["volume"] if isinstance(gpt_value, dict) else gpt_value
+            df.at[row_index, 'gpt_density'] = gpt_value["mass_density"] if isinstance(gpt_value, dict) else gpt_value
 
         elif config.task == 8:
-            df.at[row_index, 'llamp_space_group'] = llamp_value["space_group"]
-            df.at[row_index, "llamp_lattice_parameters"] = str(llamp_value["lattice_parameters"])
-            df.at[row_index, 'gpt_space_group'] = gpt_value["space_group"]
-            df.at[row_index, 'gpt_lattice_parameters'] = str(gpt_value["lattice_parameters"])
+            df.at[row_index, 'llamp_space_group'] = llamp_value["space_group"] if isinstance(llamp_value, dict) else llamp_value
+            df.at[row_index, "llamp_lattice_parameters"] = str(llamp_value["lattice_parameters"]) if isinstance(llamp_value, dict) else llamp_value
+            df.at[row_index, 'gpt_space_group'] = gpt_value["space_group"] if isinstance(gpt_value, dict) else gpt_value
+            df.at[row_index, 'gpt_lattice_parameters'] = str(gpt_value["lattice_parameters"]) if isinstance(gpt_value, dict) else gpt_value
         else:
             raise NotImplementedError("This task hasn't been implemented yet.")
     else:
@@ -293,7 +294,7 @@ if __name__ == "__main__":
         
         if index < starting_index:
             continue
-        if index >= starting_index + 9:
+        if index >= starting_index + 11:
             break
         
         start_time = time.time()

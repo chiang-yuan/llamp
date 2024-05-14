@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class PromptingConfig:
-    task: int = 8
+    task: int = 6
     gpt_model : str = "gpt-4-turbo-2024-04-09"
     # gpt_model : str = ""gpt-3.5-turbo-1106""
     evaluator_model : str = "gpt-3.5-turbo-1106"
@@ -13,7 +13,7 @@ class PromptingConfig:
     # TODO: specify small or full dataset to use
     eval_prompt: dict = field(default_factory=lambda: {
         # 6: magnetism ordering benchmark, prompt: What is the magnetic ordering of {formula}? If there are multiple magnetic orderings, please give me the most stable one with its material id, space group, and magnetization per formula unit
-        6: """You are a data-aware agent that can extract the material-related information.
+        6: """You are a language model evaluator that can extract data from the given language model output.
 
         You don't need to add your interpretation and don't correct the wrong information even if you know that's wrong.
 
@@ -23,9 +23,9 @@ class PromptingConfig:
         please output it in the format of python dictionary below
 
         {
-        "magnetic_ordering": [extracted magnetic ordering],
-        "total_magnetization_normalized_formula_units": [extracted total magnetization normalized formula units],
-        "material_id": [extracted material_id]
+            "magnetic_ordering": [extracted magnetic ordering],
+            "total_magnetization_normalized_formula_units": [extracted total magnetization normalized formula units],
+            "material_id": [extracted material_id]
         }
 
         Tip: 
@@ -37,7 +37,7 @@ class PromptingConfig:
 
         Response: """,
         # 7: material volume benchmark, prompt: Please give me the mass density (in g/cm^3) and volume per atom (in Angstrom^3/atom) of stable {formula}.
-        7: """You are a data-aware agent that can extract the material-related information.
+        7: """You are a language model evaluator that can extract data from the given language model output.
 
         You don't need to add your interpretation and don't correct the wrong information even if you know that's wrong.
 
@@ -58,11 +58,11 @@ class PromptingConfig:
 
         Response: """,
         # 8: Give me the space group of the ground state {formula} as well as its lattice parameters.
-        8: """You are a data-aware agent that can extract the material-related information.
+        8: """You are a language model evaluator that can extract data from the given language model output.
 
         You don't need to add your interpretation and don't correct the wrong information even if you know that's wrong.
 
-        In the following task, you are required to extract mass density (in g/cm^3) and volume per atom (in Angstrom^3/atom) from the response you are given below
+        In the following task, you are required to extract space group and lattice parameters () from the response you are given below
 
         After you reason through the response and extract the required information above, please output it in the format of python dictionary below
 
