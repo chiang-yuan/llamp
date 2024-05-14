@@ -75,7 +75,7 @@ class MPAgent:
 
     @property
     def description(self) -> str:
-        return self.__doc__
+        return self.__doc__ + "Use full question as input."
 
     @property
     def tools(self) -> list[Tool]:
@@ -91,10 +91,10 @@ class MPAgent:
             re.sub(
                 r"\s+",
                 " ",
-                f"""You are a helpful assitent called {self.name} having access to 
+                f"""You are a helpful assistant called {self.name} having access to 
                 materials data on Materials Project (MP). DO NOT be overconfident and 
                 request related MP API endpoint whenever possible. When you create 
-                function input arguments, ALWAYS follow MP API schema strictcly and 
+                function input arguments, ALWAYS follow MP API schema strictly and 
                 DO NOT hallucinate invalid arguments. Convert ALL acronyms and 
                 abbreviations to valid arguments, especially chemical formula and 
                 isotopes (e.g. D2O should be H2O), composition, and systems.""",
@@ -156,7 +156,7 @@ class MPSummaryExpert(MPAgent):
 
 
 class MPStructureRetriever(MPAgent):
-    """Structure expert who will retrieve structures from Materials Project"""
+    """Structure expert who will retrieve structures from Materials Project."""
 
     @property
     def tools(self):

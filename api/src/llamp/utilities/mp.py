@@ -277,6 +277,14 @@ class MPAPIWrapper(BaseModel):
         if "structure" not in query_params.get("fields", []):
             query_params["fields"] = query_params.get(
                 "fields", []) + ["structure"]
+            
+        if "formula_pretty" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["formula_pretty"]
+            
+        if "symmetry" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["symmetry"]
 
         # query_params["fields"] = query_params.get(
         #     "fields", []) + ["structure", "material_id"]
@@ -299,7 +307,7 @@ class MPAPIWrapper(BaseModel):
             paths = []
             for doc in docs:
                 structure = Structure.from_dict(doc["structure"])
-                path = f"{doc['material_id']}.json"
+                path = f"{doc['material_id']}-{doc['formula_pretty']}-sg{doc['symmetry']['number']}.json"
                 structure.to_file(filename=path, fmt="json")
                 # write(path, atoms, format="extxyz")
                 paths.append(path)
@@ -501,6 +509,12 @@ class MPAPIWrapper(BaseModel):
             "material_id",
             "formula_pretty",
             "elastic_tensor",
+            "bulk_modulus"
+            "shear_modulus",
+            "thermal_conductivity",
+            "young_modulus",
+            "universal_anisotropy",
+            "homogeneous_poisson"
         ]
 
         if "formula" in query_params:
