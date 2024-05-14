@@ -2,6 +2,14 @@ paper/
 *.tmp/
 lab/
 
+# data
+pipeline/saved_graphs/
+pipeline/saved_graphs/
+# *.csv
+*.pdf
+*.sh
+*.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
