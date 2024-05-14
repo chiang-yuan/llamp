@@ -502,7 +502,7 @@ class ThermoSchema(BaseModel):
         None, description="Comma-separated list of material_id to query on"
     )
     thermo_types: list[ThermoType | str] | None = Field(
-        default=[ThermoType.R2SCAN],
+        default=[ThermoType.GGA_GGA_U_R2SCAN],
         description=f"List of thermo types to query on: {', '.join([t.value for t in ThermoType]) }",
     )
     formula: str | None = Field(
@@ -593,7 +593,7 @@ class ThermoSchema(BaseModel):
         None, description="Minimum decomposition enthalpy in eV/atom"
     )
     sort_fields: str | None = Field(
-        None,
+        "energy_above_hull",
         description="Comma-delimited list of fields to sort on. Prefix with - for descending order.",
     )
     # _page: int = Field(description="Page number to request (takes precedent over _limit and _skip)")

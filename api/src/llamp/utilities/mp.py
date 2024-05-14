@@ -258,11 +258,30 @@ class MPAPIWrapper(BaseModel):
             query_params["fields"] = query_params.get(
                 "fields", []) + ["formula_pretty"]
             
-        limit = query_params.get("_limit", DEFAULT_LIMIT)
+        sort_fields = query_params.get("_sort_fields", "material_id")
+        sort_fields = sort_fields.split(",")
 
-        return self.mpr.materials.summary._search(
+        docs = self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
-        )[:limit]
+        )
+            
+        for sort_field in sort_fields:
+            if sort_field[0] == '-':
+                sort_field = sort_field[1:]
+                docs = sorted(
+                    docs, key=lambda x: x[sort_field], reverse=True
+                )
+            else:
+                docs = sorted(
+                    docs, key=lambda x: x[sort_field], reverse=False
+                )
+        return docs[:query_params.get("_limit", DEFAULT_LIMIT)]
+            
+        # limit = query_params.get("_limit", DEFAULT_LIMIT)
+
+        # return self.mpr.materials.summary._search(
+        #     num_chunks=None, chunk_size=1000, all_fields=False, **query_params
+        # )[:limit]
 
     def search_materials_structure(self, query_params: dict):
         # NOTE: this is a convenient function to retrieve pymatgen structure
@@ -404,15 +423,34 @@ class MPAPIWrapper(BaseModel):
         # FIXME: _limit is not a valid query parameter for thermo search
         # query_params["_limit"] = query_params.pop("limit", None)
 
-        thermo_types = query_params.pop("thermo_types", None)
+        thermo_types = query_params.pop("thermo_types", ["GGA_GGA+U_R2SCAN"])
         if thermo_types:
             query_params.update({"thermo_types": ",".join(thermo_types)})
 
         assert "fields" in query_params, "fields must be specified"
 
-        return self.mpr.materials.thermo._search(
+        if "energy_above_hull" not in query_params.get("fields", []):
+            query_params["fields"] = query_params.get(
+                "fields", []) + ["energy_above_hull"]
+
+        sort_fields = query_params.get("_sort_fields", "energy_above_hull")
+        sort_fields = sort_fields.split(",")
+        
+        thermo_docs =  self.mpr.materials.thermo._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
+
+        for sort_field in sort_fields:
+            if sort_field[0] == '-':
+                sort_field = sort_field[1:]
+                thermo_docs = sorted(
+                    thermo_docs, key=lambda x: x[sort_field], reverse=True
+                )
+            else:
+                thermo_docs = sorted(
+                    thermo_docs, key=lambda x: x[sort_field], reverse=False
+                )
+        return thermo_docs[:query_params.get("_limit", DEFAULT_LIMIT)]
 
     def search_materials_dielectric(self, query_params):
         query_params = self._process_query_params(query_params)
