@@ -212,7 +212,11 @@ class MPAPIWrapper(BaseModel):
             query_params["_all_fields"] = all_fields
         sort_fields = query_params.pop("sort_fields", None)
         if sort_fields:
-            query_params["_sort_fields"] = all_fields
+            query_params["_sort_fields"] = sort_fields
+            query_params["fields"] = list(
+                set(query_params.get("fields", []) + [
+                    f.lstrip('-') for f in sort_fields.split(",")])
+            )
         return query_params
 
     def search_materials_core(self, query_params: dict):
@@ -264,7 +268,6 @@ class MPAPIWrapper(BaseModel):
         docs = self.mpr.materials.summary._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
-            
         for sort_field in sort_fields:
             if sort_field[0] == '-':
                 sort_field = sort_field[1:]
@@ -598,10 +601,28 @@ class MPAPIWrapper(BaseModel):
         if "band_gap" not in query_params.get("fields", []):
             query_params["fields"] = query_params.get(
                 "fields", []) + ["band_gap"]
+            
+        sort_fields = query_params.get("_sort_fields", "material_id,band_gap")
+        sort_fields = sort_fields.split(",")
 
-        return self.mpr.materials.electronic_structure._search(
+        # BUG: this endpoint does not support sorting yet
+        query_params.pop("_sort_fields", None)
+
+        docs = self.mpr.materials.electronic_structure._search(
             num_chunks=None, chunk_size=1000, all_fields=False, **query_params
         )
+            
+        for sort_field in sort_fields:
+            if sort_field[0] == '-':
+                sort_field = sort_field[1:]
+                docs = sorted(
+                    docs, key=lambda x: x[sort_field], reverse=True
+                )
+            else:
+                docs = sorted(
+                    docs, key=lambda x: x[sort_field], reverse=False
+                )
+        return docs[:query_params.get("_limit", DEFAULT_LIMIT)]
 
     @property
     def endpoints(self):
