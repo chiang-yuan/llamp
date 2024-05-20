@@ -40,7 +40,7 @@ class SummarySchema(BaseModel):
     spacegroup_number: str | None = Field(
         None, description="Query by spacegroup number"
     )
-    is_stable: bool | None = Field(None, description="Whether the material is stable")
+    is_stable: bool | None = Field(None, description="Whether the material is stable at 0K")
     theoretical: bool | None = Field(
         None, description="Whether the material is theoretical"
     )
@@ -502,7 +502,7 @@ class ThermoSchema(BaseModel):
         None, description="Comma-separated list of material_id to query on"
     )
     thermo_types: list[ThermoType | str] | None = Field(
-        default=[ThermoType.R2SCAN],
+        default=[ThermoType.GGA_GGA_U_R2SCAN],
         description=f"List of thermo types to query on: {', '.join([t.value for t in ThermoType]) }",
     )
     formula: str | None = Field(
@@ -513,7 +513,7 @@ class ThermoSchema(BaseModel):
         None,
         description="A comma delimited string list of chemical systems. Wildcards for unknown elements only supported for single chemsys queries",
     )
-    is_stable: bool | None = Field(None, description="Whether the material is stable")
+    is_stable: bool | None = Field(None, description="Whether the material is stable at 0K")
     nsites_max: int | None = Field(None, description="Maximum number of sites")
     nsites_min: int | None = Field(None, description="Minimum number of sites")
     nsites: int | None = Field(
@@ -593,7 +593,7 @@ class ThermoSchema(BaseModel):
         None, description="Minimum decomposition enthalpy in eV/atom"
     )
     sort_fields: str | None = Field(
-        None,
+        "energy_above_hull",
         description="Comma-delimited list of fields to sort on. Prefix with - for descending order.",
     )
     # _page: int = Field(description="Page number to request (takes precedent over _limit and _skip)")
