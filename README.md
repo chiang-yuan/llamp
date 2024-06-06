@@ -22,7 +22,7 @@
 
 This repository accompanies our paper [**LLaMP: Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation**](https://arxiv.org/abs/2401.17244). Our codebase is built upon [LangChain](https://github.com/langchain-ai/langchain) and is designed to be modular and extensible, and can be used to reproduce the experiments in the paper, as well as to develop new experiments.
 
-LLaMP is also a homonym of **Large Language model [Materials Project](https://materialsproject.org)**. :wink: It empowers LLMs with large-scale computational materials databas to reduce the likelihood of hallucination for materials informatics. 
+LLaMP is also a homonym of **Large Language model [Materials Project](https://materialsproject.org)**. :wink: It empowers LLMs with large-scale computational materials database to reduce the likelihood of hallucination for materials informatics. 
 
 <h4 align="center">
   <img src="https://python.langchain.com/v0.1/img/brand/wordmark-dark.png" height="30">
@@ -40,6 +40,8 @@ git clone https://github.com/chiang-yuan/llamp.git
 cd llamp/api
 pip install -e .
 ```
+
+After installation, check out the notebooks in `experiments` to start.
 
 #### (Optional) Docker Web Interface 
 
@@ -66,7 +68,12 @@ To contirbute to LLaMP, please follow these steps:
 
 ## 🌟 Authors and Citation
 
-Authors: Yuan Chiang (@chiang-yuan), Oliver Chou (@knhn1004), Janosh Riebesell (@janosh), Elvis Hsieh (@Ht2214)
+<a href="https://github.com/chiang-yuan"><img src="https://avatars.githubusercontent.com/u/41962462?v=4" title="chiang-yuan" width="50" height="50"></a>
+<a href="https://github.com/knhn1004"><img src="https://avatars.githubusercontent.com/u/49494541?v=4" title="knhn1004" width="50" height="50"></a>
+<a href="https://github.com/Ht2214"><img src="https://avatars.githubusercontent.com/u/78026336?v=4" title="Ht2214" width="50" height="50"></a>
+<a href="https://github.com/janosh"><img src="https://avatars.githubusercontent.com/u/30958850?v=4" title="janosh" width="50" height="50"></a>
+
+![Alt](https://repobeats.axiom.co/api/embed/75e53e291a07ad8d4b60e5f800726debe01351fb.svg "Repobeats analytics image")
 
 If you use LLaMP, our code and data in your research, please cite our paper:
 
