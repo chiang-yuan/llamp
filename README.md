@@ -41,7 +41,15 @@ cd llamp/api
 pip install -e .
 ```
 
-After installation, check out the notebooks in `experiments` to start.
+After installation, check out [colab notebook chat](http://colab.research.google.com/github/chiang-yuan/llamp/blob/main/experiments/00-notebook-chat.ipynb) or the notebooks in `experiments` to start. 
+
+#### (Optional) Atomistic Simulation
+
+You may need to install additional packages to support atomistic simulations:
+
+```shell
+pip install ase, atomate2, jobflow, mace-torch
+```
 
 #### (Optional) Docker Web Interface 
 
