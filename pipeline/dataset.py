@@ -38,14 +38,11 @@ def process_prompt(formula, config):
         return f"""Give me the space group of the ground state {formula} as well as its lattice parameters
         space group should be one of 230 classes (string)
         lattice parameters should be 6 numbers (array of a, b, c, angle1, angle2, angle3)
-        After you reason through, please output it in the python dictionary format below.
-        
-        "space_group": [your answer for mass density],
-        "lattice_parameters": [your answer for volume per atom],
-
-        Tips:
-        1. don't include the calculation process, only include the answers in one sentence
-        
+        After you reason through, please output it in the  dictionary format below.
+        {{
+        "space_group": [your answer for mass density, data type = string],
+        "lattice_parameters": [your answer for volume per atom, data type = tuple of strings],
+        }}
         """
     else:
         raise NotImplementedError("This task hasn't been implemented yet.")
@@ -55,28 +52,30 @@ if __name__ == "__main__":
     
     with MPRester(MP_API_KEY) as mpr:
 
+        stable_element = mpr.materials.thermo.search(
+            is_stable=True,
+            num_elements=[1,3],
+            thermo_types=["GGA_GGA+U_R2SCAN"],
+            fields=["material_id", "formula_pretty", "total_magnetization_normalized_formula_units", "ordering", "volume", "density", "nsites", "symmetry", "structure"],
+        )
+        stable_element = list(stable_element)
+        random.shuffle(stable_element)
+        stable_element = stable_element[:1100]
+        stable_element_ids = [ele.material_id.string for ele in stable_element]
+
         summary_doc = mpr.materials.summary.search(
             is_stable=True,
             num_elements=[1,3],
             # material_ids=["mp-21166"],
-            # material_ids=["mp-21166", "mp-149", "mp-13", "mp-22526"],
+            material_ids=stable_element_ids,
             fields=["material_id", "formula_pretty", "total_magnetization_normalized_formula_units", "ordering", "volume", "density", "nsites", "symmetry", "structure"],
         )
-        # TODO: update the
-        with MPRester(MP_API_KEY) as mpr:
-
-        summary_docs = mpr.materials.thermo.search(
-            # energy_above_hull=(0, 0)
-            is_stable=True,
-            num_elements=(1, 3),
-            thermo_types=["GGA_GGA+U_R2SCAN"]
-        )
-
 
 
     summary_doc = list(summary_doc)
     random.shuffle(summary_doc)
     summary_doc = summary_doc[:1000]
+    breakpoint()
 
 
     task_number = config.task

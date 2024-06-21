@@ -42,7 +42,7 @@ def parse(df):
             In the following task, you are required to extract the magnetic ordering, total magnetization normalized formula units, and material_id, which starts with mp-XXX.
 
             After you reason through the response and extract the magnetic ordering, total magnetization normalized formula units, and material_id,
-            please output it in the format of python dictionary below
+            please output it in the format of dictionary below
             "
             {
                 "magnetic_ordering": [extracted magnetic ordering, data_type=string],
@@ -68,22 +68,35 @@ def parse(df):
                     message_content,
                     temperature=0,
                     max_tokens=1000,
-                    model="gpt-4-turbo-2024-04-09",
+                    model="gpt-4-turbo",
                 )
             
-            value = call_openai(request_body, "gpt-4-turbo-2024-04-09")
+            value = call_openai(request_body, "gpt-4-turbo")
             print("value", value)
             if "Unknown" in value or "N/A" in value or "python" in value:
                 return data, data, data
             try: 
                 mag_order, mag_unit, mp_id =  eval(value)["magnetic_ordering"], eval(value)["total_magnetization_normalized_formula_units"], eval(value)["material_id"]
+                data = mag_order, mag_unit, mp_id
             except:
                 breakpoint()
-            data = mag_order, mag_unit, mp_id
+                data = data, data, data
+        else: 
+            data = data, data, data
+        if len(data) != 3:
+            breakpoint()
+            data = data, data, data
         return data
-    
-    df["gpt_magnetic_ordering"], df["gpt_magnetization_unit"], df["gpt_mp_id"] = df["gpt_output"].apply(llm_parse)
-
+    csv_file = "cache/6_eval_dataset_gpt4.csv"
+    for index, row in df.iterrows():
+        print("index: ", index)
+        parsed_data = llm_parse(row['llamp_output'])
+        df.at[index, 'llamp_magnetic_ordering'] = parsed_data[0]
+        df.at[index, 'llamp_magnetization_unit'] = parsed_data[1]
+        df.at[index, 'llamp_mp_id'] = parsed_data[2]
+        if index % 20 == 0:
+            df.to_csv(csv_file, index=False)
+        
     # predicted2_mapped = data["gpt_magnetic_ordering"].apply(llm_parse)
     return df
     
@@ -91,6 +104,6 @@ def parse(df):
 
     
 df = parse(df)
-breakpoint()
-csv_file = "cache/6_eval_dataset_gpt4.csv"
-df.to_csv(csv_file, index=False)
+
+# csv_file = "cache/6_eval_dataset_gpt4.csv"
+# df.to_csv(csv_file, index=False)
