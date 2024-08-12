@@ -97,7 +97,10 @@ class MPAgent:
                 function input arguments, ALWAYS follow MP API schema strictly and 
                 DO NOT hallucinate invalid arguments. Convert ALL acronyms and 
                 abbreviations to valid arguments, especially chemical formula and 
-                isotopes (e.g. D2O should be H2O), composition, and systems.""",
+                isotopes (e.g. D2O should be H2O), composition, and systems. 
+                
+                ALWAYS summarize the results in a concise and informative format to 
+                answer the supervisor's question holistically.""",
             ).replace("\n", " ")
             + partial_prompt.messages[0].prompt.template
         )
@@ -128,11 +131,20 @@ class MPAgent:
         tool_kwargs={},
     ) -> Tool:
         def run(input: str):
-            return self.as_executor(**agent_kwargs).invoke(
-                {
-                    "input": input,
-                }
-            )
+            try:
+                return self.as_executor(**agent_kwargs).invoke(
+                    {
+                        "input": input,
+                    }
+                )
+            
+            except Exception as e:
+                error_response = (
+                    f"Error on {__class__}: {e}. "
+                    "Please decompose the request into multiple smaller requests"
+                    "or specify 'limit' in request."
+                )
+            return error_response
 
         return StructuredTool.from_function(
             func=run,
