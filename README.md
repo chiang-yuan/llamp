@@ -11,7 +11,7 @@
       <img src="https://img.shields.io/github/stars/chiang-yuan/llamp?style=social" alt="Github Stars">
     </a>
     <a href="http://colab.research.google.com/github/chiang-yuan/llamp/blob/main/experiments/00-notebook-chat.ipynb">
-      <img src="https://camo.githubusercontent.com/f5e0d0538a9c2972b5d413e0ace04cecd8efd828d133133933dfffec282a4e1b/68747470733a2f2f636f6c61622e72657365617263682e676f6f676c652e636f6d2f6173736574732f636f6c61622d62616467652e737667">
+      <img src="https://colab.research.google.com/assets/colab-badge.svg">
     </a>
 </h1>
 <h4 align="center">Large Language Model Made Powerful for High-fidelity Materials Knowledge Retrieval and Distillation</h4>
