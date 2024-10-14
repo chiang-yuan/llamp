@@ -52,7 +52,7 @@ include = ["llamp"]
 exclude = []
 
 
-[tool.ruff]
+[tool.ruff.lint]
 # Enable the pycodestyle (`E`) and Pyflakes (`F`) rules by default.
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
